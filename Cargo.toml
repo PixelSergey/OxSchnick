@@ -1,0 +1,17 @@
+[package]
+name = "fanschnick"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.100"
+askama = "0.14.0"
+axum = "0.8.7"
+axum-extra = { version = "0.12.2", features = ["typed-header", "cookie"] }
+diesel = { version = "2.3.3", features = ["postgres"] }
+diesel-async = { version = "0.7.4", features = ["postgres", "bb8"] }
+dotenvy = "0.15.7"
+qrcode = "0.14.1"
+serde = { version = "1.0.228", features = ["derive"] }
+tokio = { version = "1.48.0", features = ["full"] }
+uuid = { version = "1.18.1", features = ["v4"] }
