@@ -10,16 +10,16 @@ use tokio::{
     sync::{Mutex, RwLock},
 };
 
-use crate::{matches::IncompleteMatch, invite::invite};
+use crate::{schnick::OngoingSchnick, invite::invite};
 
-pub mod matches;
+pub mod schnick;
 pub mod schema;
 pub mod invite;
 
 #[derive(Debug, Clone)]
 pub struct Server(
     Pool<AsyncPgConnection>,
-    Arc<RwLock<HashMap<i32, Arc<Mutex<IncompleteMatch>>>>>,
+    Arc<RwLock<HashMap<i32, Arc<Mutex<OngoingSchnick>>>>>,
 );
 
 #[tokio::main]

@@ -12,7 +12,7 @@ use serde::Deserialize;
 use tokio::sync::{Mutex, RwLock};
 use uuid::Uuid;
 
-use crate::{Server, matches::IncompleteMatch};
+use crate::{Server, schnick::OngoingSchnick};
 
 #[derive(Debug, Clone, HasQuery)]
 #[diesel(table_name = crate::schema::users)]
@@ -67,16 +67,16 @@ pub async fn check_token(
     Ok(())
 }
 
-pub async fn create_match(
+pub async fn create_schnick(
     inviter: i32,
     invitee: i32,
-    matches: Arc<RwLock<HashMap<i32, Arc<Mutex<IncompleteMatch>>>>>,
+    matches: Arc<RwLock<HashMap<i32, Arc<Mutex<OngoingSchnick>>>>>,
 ) -> Result<(), StatusCode> {
     let mut matches = matches.write().await;
     if matches.get(&inviter).is_some() || matches.get(&invitee).is_some() {
         return Err(StatusCode::CONFLICT);
     };
-    let new = Arc::new(Mutex::new(IncompleteMatch {
+    let new = Arc::new(Mutex::new(OngoingSchnick {
         inviter,
         invitee,
         inviter_selection: None,
@@ -125,7 +125,7 @@ pub struct Invite {
 }
 
 pub async fn invite(
-    State(Server(pool, matches)): State<Server>,
+    State(Server(pool, schnicks)): State<Server>,
     mut cookies: CookieJar,
     Query(invite): Query<Invite>,
 ) -> Result<(CookieJar, impl IntoResponse), StatusCode> {
@@ -154,7 +154,7 @@ pub async fn invite(
             id
         }
     };
-    create_match(id, invite.id, matches).await?;
+    create_schnick(id, invite.id, schnicks).await?;
     renew_invite(&invite, &mut conn).await?;
     Ok((cookies, Redirect::temporary("match")))
 }
