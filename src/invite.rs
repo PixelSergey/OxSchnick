@@ -156,5 +156,5 @@ pub async fn invite(
     };
     create_schnick(id, invite.id, schnicks).await?;
     renew_invite(&invite, &mut conn).await?;
-    Ok((cookies, Redirect::temporary("match")))
+    Ok((cookies, Redirect::temporary("schnick")))
 }
