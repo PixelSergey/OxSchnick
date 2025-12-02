@@ -5,17 +5,24 @@ use diesel_async::{
     pooled_connection::{AsyncDieselConnectionManager, bb8::Pool},
 };
 use dotenvy::dotenv;
+use std::{collections::HashMap, env, hash::Hash, sync::Arc};
+use tokio::{
+    net::TcpListener,
+    sync::{Mutex, RwLock},
+};
 use uuid::Uuid;
-use std::{collections::HashMap, env, sync::Arc};
-use tokio::{net::TcpListener, sync::{Mutex, RwLock}};
 
 use crate::{matches::IncompleteMatch, users::invite};
 
+pub mod matches;
 pub mod schema;
 pub mod users;
-pub mod matches;
 
-pub struct Server (Pool<AsyncPgConnection>, RwLock<HashMap<Uuid, Arc<Mutex<IncompleteMatch>>>>);
+#[derive(Debug, Clone)]
+pub struct Server(
+    Pool<AsyncPgConnection>,
+    Arc<RwLock<HashMap<i32, Arc<Mutex<IncompleteMatch>>>>>,
+);
 
 #[tokio::main]
 pub async fn main() {
@@ -31,7 +38,7 @@ pub async fn main() {
     let app = Router::new()
         .route("/", get(async || "hi"))
         .route("/invite", get(invite))
-        .with_state(pool);
+        .with_state(Server(pool, Arc::new(RwLock::new(HashMap::new()))));
     let listener = TcpListener::bind("127.0.0.1:8080")
         .await
         .expect("Could not bind socket");

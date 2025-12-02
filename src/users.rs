@@ -1,20 +1,20 @@
+use std::{collections::HashMap, sync::Arc};
+
 use axum::{
     extract::{Query, State},
     http::StatusCode,
     response::{IntoResponse, Redirect},
 };
 use axum_extra::extract::{CookieJar, cookie::Cookie};
-use diesel::{dsl::insert_into, prelude::*};
-use diesel_async::{
-    AsyncPgConnection, RunQueryDsl,
-    pooled_connection::bb8::{Pool, PooledConnection},
-};
+use diesel::{dsl::insert_into, prelude::*, query_builder::AsQuery};
+use diesel_async::{AsyncPgConnection, RunQueryDsl, pooled_connection::bb8::PooledConnection};
 use serde::Deserialize;
+use tokio::sync::{Mutex, RwLock};
 use uuid::Uuid;
 
-use crate::Server;
+use crate::{Server, matches::IncompleteMatch};
 
-#[derive(Debug, Clone, Queryable, Selectable)]
+#[derive(Debug, Clone, HasQuery)]
 #[diesel(table_name = crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct User {
@@ -52,6 +52,70 @@ pub async fn create_user(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
+pub async fn check_token(
+    id: i32,
+    token: &str,
+    conn: &mut PooledConnection<'_, AsyncPgConnection>,
+) -> Result<(), StatusCode> {
+    use crate::schema::users;
+    User::query()
+        .filter(users::id.eq(id))
+        .filter(users::token.eq(token))
+        .first(conn)
+        .await
+        .map_err(|_| StatusCode::FORBIDDEN)?;
+    Ok(())
+}
+
+pub async fn create_match(
+    inviter: i32,
+    invitee: i32,
+    matches: Arc<RwLock<HashMap<i32, Arc<Mutex<IncompleteMatch>>>>>,
+) -> Result<(), StatusCode> {
+    let mut matches = matches.write().await;
+    if matches.get(&inviter).is_some() || matches.get(&invitee).is_some() {
+        return Err(StatusCode::CONFLICT);
+    };
+    let new = Arc::new(Mutex::new(IncompleteMatch {
+        inviter,
+        invitee,
+        inviter_selection: None,
+        invitee_selection: None,
+    }));
+    matches.insert(inviter, Arc::clone(&new));
+    matches.insert(invitee, new);
+    Ok(())
+}
+
+pub async fn check_invite(
+    id: i32,
+    invite: &str,
+    conn: &mut PooledConnection<'_, AsyncPgConnection>,
+) -> Result<(), StatusCode> {
+    use crate::schema::users;
+    users::table
+        .filter(users::id.eq(id))
+        .filter(users::invite.eq(invite))
+        .first::<User>(conn)
+        .await
+        .map_err(|_| StatusCode::FORBIDDEN)
+        .map(|_| ())
+}
+
+pub async fn renew_invite(
+    invite: &Invite,
+    conn: &mut PooledConnection<'_, AsyncPgConnection>,
+) -> Result<(), StatusCode> {
+    use crate::schema::users;
+    let new = Uuid::new_v4().to_string();
+    diesel::update(invite)
+        .set(users::invite.eq(new))
+        .execute(conn)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+        .map(|_| ())
+}
+
 #[derive(Debug, Clone, Deserialize, HasQuery, Identifiable)]
 #[diesel(table_name = crate::schema::users)]
 
@@ -60,57 +124,37 @@ pub struct Invite {
     pub invite: String,
 }
 
-impl Invite {
-    pub async fn get(
-        id: i32,
-        invite: String,
-        conn: &mut PooledConnection<'_, AsyncPgConnection>,
-    ) -> Result<Self, StatusCode> {
-        use crate::schema::users;
-        Invite::query()
-            .filter(users::id.eq(id))
-            .filter(users::invite.eq(invite))
-            .first(conn)
-            .await
-            .map_err(|_| StatusCode::NOT_FOUND)
-    }
-
-    pub async fn renew(
-        &self,
-        conn: &mut PooledConnection<'_, AsyncPgConnection>,
-    ) -> Result<(), StatusCode> {
-        use crate::schema::users;
-        let new = Uuid::new_v4().to_string();
-        diesel::update(self)
-            .set(users::invite.eq(new))
-            .execute(conn)
-            .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
-            .map(|_| ())
-    }
-}
-
 pub async fn invite(
     State(Server(pool, matches)): State<Server>,
-    cookies: CookieJar,
+    mut cookies: CookieJar,
     Query(invite): Query<Invite>,
 ) -> Result<(CookieJar, impl IntoResponse), StatusCode> {
     let mut conn = pool
         .get()
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let (id, token) = match (cookies.get("id"), cookies.get("token")) {
-        (Some(id), Some(token)) => (id.value().parse::<i32>().map_err(|_| StatusCode::BAD_REQUEST)?, token.value()),
+    check_invite(invite.id, &invite.invite, &mut conn).await?;
+    let id = match (cookies.get("id"), cookies.get("token")) {
+        (Some(id), Some(token)) => {
+            let (id, token) = (
+                id.value()
+                    .parse::<i32>()
+                    .map_err(|_| StatusCode::FORBIDDEN)?
+                    .clone(),
+                token.value().to_string(),
+            );
+            check_token(id, &token, &mut conn).await?;
+            id
+        }
         _ => {
-            let invite = Invite::get(invite.id, invite.invite, &mut conn).await?;
             let (id, token) = create_user(invite.id, &mut conn).await?;
-            return Ok((
-                cookies
-                    .add(Cookie::new("id", id.to_string()))
-                    .add(Cookie::new("token", token)),
-                Redirect::temporary(""),
-            ));
+            cookies = cookies
+                .add(Cookie::new("id", id.to_string()))
+                .add(Cookie::new("token", token.clone()));
+            id
         }
     };
-    Ok((cookies, "hello world"))
+    create_match(id, invite.id, matches).await?;
+    renew_invite(&invite, &mut conn).await?;
+    Ok((cookies, Redirect::temporary("match")))
 }

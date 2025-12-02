@@ -1,9 +1,9 @@
-pub type Symbol()
+pub type Symbol = usize;
 
 #[derive(Debug, Clone)]
 pub struct IncompleteMatch {
-    inviter: i32,
-    invitee: i32,
-    inviter_selection: Option<>    
+    pub inviter: i32,
+    pub invitee: i32,
+    pub inviter_selection: Option<Symbol>,
+    pub invitee_selection: Option<Symbol>,
 }
-
