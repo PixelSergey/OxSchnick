@@ -6,7 +6,7 @@ use axum::{
     response::{IntoResponse, Redirect},
 };
 use axum_extra::extract::{CookieJar, cookie::Cookie};
-use diesel::{dsl::insert_into, prelude::*, query_builder::AsQuery};
+use diesel::{dsl::insert_into, prelude::*};
 use diesel_async::{AsyncPgConnection, RunQueryDsl, pooled_connection::bb8::PooledConnection};
 use serde::Deserialize;
 use tokio::sync::{Mutex, RwLock};

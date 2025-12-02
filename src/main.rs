@@ -1,16 +1,14 @@
 use axum::{Router, routing::get};
-use diesel::prelude::*;
 use diesel_async::{
     AsyncPgConnection,
     pooled_connection::{AsyncDieselConnectionManager, bb8::Pool},
 };
 use dotenvy::dotenv;
-use std::{collections::HashMap, env, hash::Hash, sync::Arc};
+use std::{collections::HashMap, env, sync::Arc};
 use tokio::{
     net::TcpListener,
     sync::{Mutex, RwLock},
 };
-use uuid::Uuid;
 
 use crate::{matches::IncompleteMatch, users::invite};
 
