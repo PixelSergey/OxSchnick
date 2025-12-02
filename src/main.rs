@@ -10,11 +10,11 @@ use tokio::{
     sync::{Mutex, RwLock},
 };
 
-use crate::{matches::IncompleteMatch, users::invite};
+use crate::{matches::IncompleteMatch, invite::invite};
 
 pub mod matches;
 pub mod schema;
-pub mod users;
+pub mod invite;
 
 #[derive(Debug, Clone)]
 pub struct Server(
