@@ -8,11 +8,15 @@ use axum::{
 use axum_extra::extract::{CookieJar, cookie::Cookie};
 use diesel::{dsl::insert_into, prelude::*};
 use diesel_async::{AsyncPgConnection, RunQueryDsl, pooled_connection::bb8::PooledConnection};
+use log::{debug, trace};
 use serde::Deserialize;
-use tokio::sync::{Mutex, RwLock};
+use tokio::sync::{Mutex, RwLock, broadcast::Sender};
 use uuid::Uuid;
 
-use crate::{Server, schnick::OngoingSchnick};
+use crate::{
+    Server,
+    schnick::{Interaction, SchnickEvent},
+};
 
 #[derive(Debug, Clone, HasQuery)]
 #[diesel(table_name = crate::schema::users)]
@@ -63,25 +67,29 @@ pub async fn check_token(
         .filter(users::token.eq(token))
         .first(conn)
         .await
-        .map_err(|_| StatusCode::FORBIDDEN)?;
-    Ok(())
+        .map_err(|_| {
+            trace!(target: "invite::check_token", "invalid token");
+            StatusCode::FORBIDDEN
+        })
+        .map(|_| {
+            trace!(target: "invite::check_token", "valid token");
+        })
 }
 
 pub async fn create_schnick(
     inviter: i32,
     invitee: i32,
-    matches: Arc<RwLock<HashMap<i32, Arc<Mutex<OngoingSchnick>>>>>,
+    matches: Arc<
+        RwLock<HashMap<i32, Arc<(Mutex<Option<(i32, Interaction)>>, Sender<SchnickEvent>)>>>,
+    >,
 ) -> Result<(), StatusCode> {
     let mut matches = matches.write().await;
     if matches.get(&inviter).is_some() || matches.get(&invitee).is_some() {
         return Err(StatusCode::CONFLICT);
     };
-    let new = Arc::new(Mutex::new(OngoingSchnick {
-        inviter,
-        invitee,
-        inviter_selection: None,
-        invitee_selection: None,
-    }));
+    let schnick = Mutex::new(None);
+    let sender = Sender::new(8);
+    let new = Arc::new((schnick, sender));
     matches.insert(inviter, Arc::clone(&new));
     matches.insert(invitee, new);
     Ok(())
@@ -129,6 +137,7 @@ pub async fn invite(
     mut cookies: CookieJar,
     Query(invite): Query<Invite>,
 ) -> Result<(CookieJar, impl IntoResponse), StatusCode> {
+    debug!(target: "invite::invite", "invoked with cookies={cookies:?}, invite={invite:?}");
     let mut conn = pool
         .get()
         .await

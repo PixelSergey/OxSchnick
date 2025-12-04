@@ -1,0 +1,33 @@
+input[type="radio"] {
+  appearance: none;
+  display: block;
+  width: 1em;
+  height: 1em;
+  margin: 0;
+  opacity: 20%;
+  border: 1px solid black;
+}
+
+input[type="radio"]:checked {
+  opacity: 100%;
+}
+
+#won {
+    background-color: green;
+}
+
+#lost {
+    background-color: red;
+}
+
+#rock {
+    background-color: purple;
+}
+
+#scissor {
+    background-color: cyan;
+}
+
+#paper {
+    background-color: yellow;
+}

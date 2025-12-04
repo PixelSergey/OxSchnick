@@ -1,0 +1,29 @@
+<div>
+    {% if won %}
+    <input type="radio" id="won" name="won" value="true" checked>
+    <input type="radio" id="lost" name="won" value="false">
+    {% else %}
+    <input type="radio" id="won" name="won" value="true">
+    <input type="radio" id="lost" name="won" value="false" checked>
+    {% endif %}
+</div>
+<div>
+    {% match weapon %}
+    {% when Weapon::Rock %}
+        rock
+        <input type="radio" id="rock" name="weapon" value="0" checked>
+        <input type="radio" id="paper" name="weapon" value="2">
+        <input type="radio" id="scissors" name="weapon" value="1">
+    {% when Weapon::Paper %}
+        paper
+        <input type="radio" id="rock" name="weapon" value="0">
+        <input type="radio" id="paper" name="weapon" value="2" checked>
+        <input type="radio" id="scissors" name="weapon" value="1">
+    {% when Weapon::Scissors %}
+        scissors
+        <input type="radio" id="rock" name="weapon" value="0">
+        <input type="radio" id="paper" name="weapon" value="2">
+        <input type="radio" id="scissors" name="weapon" value="1" checked>
+    {% endmatch %}
+</div>
+<div id="select">select</div>

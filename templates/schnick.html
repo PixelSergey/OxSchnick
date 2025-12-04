@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js" integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.4" integrity="sha384-A986SAtodyH8eg8x8irJnYUk7i9inVQqYigD6qZ9evobksGNIXfeFvDwLSHcp31N" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="style.css">
+    <title>fanschnick</title>
+</head>
+<body>
+    <h1>fanschnick</h1>
+    <div hx-ext="sse" sse-connect="schnick/sse" sse-swap="message">
+        <form hx-post="schnick/select" hx-target="this" hx-swap="innerHTML" hx-trigger="click from:#select">
+            {% if waiting %}
+            {% include "form_empty.html" %}
+            {% else %}
+            <p>waiting for response</p>
+            {% endif %}
+        </form>
+    </div>
+</body>
+</html>
