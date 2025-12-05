@@ -4,7 +4,7 @@ use askama::Template;
 use async_stream::try_stream;
 use axum::{
     Form,
-    extract::{Query, State},
+    extract::{State},
     http::StatusCode,
     response::{Html, IntoResponse, Response, Sse, sse::Event},
 };
@@ -16,7 +16,7 @@ use futures::Stream;
 use log::{debug, trace};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use tokio::sync::{Mutex, broadcast::Sender};
+use tokio::sync::broadcast::Sender;
 
 use crate::{Server, invite::check_token};
 
@@ -47,7 +47,9 @@ pub struct Interaction {
 
 impl Interaction {
     pub fn compatible(&self, other: &Interaction) -> bool {
-        let expected = ((self.weapon as i32) + if self.won { 1 } else { -1 }) % 3;
+        trace!(target: "schnick::Interaction::compatible", "comparing {self:?} with {other:?}");
+        let expected = ((self.weapon as i32) + if self.won { 1 } else { 2 }) % 3;
+        trace!(target: "schnick::Interaction::compatible", "self.won ^ other.won = {}, expected = {}", self.won ^ other.won, expected);
         return (self.won ^ other.won) && ((other.weapon as i32) == expected);
     }
 }
@@ -91,7 +93,7 @@ pub async fn schnick_sse(
     debug!(target: "schnick::schnick_sse", "invoked with cookies={cookies:?}");
     let id = authenticate(&cookies, pool).await?;
     let mut receiver = if let Some(current) = schnicks.read().await.get(&id) {
-        current.1.subscribe()
+        current.sender.subscribe()
     } else {
         return Err(StatusCode::NOT_FOUND);
     };
@@ -149,17 +151,45 @@ pub async fn save_schnick(
 }
 
 pub fn remove_schnick(
-    ida: i32,
-    idb: i32,
-    schnicks: &mut HashMap<i32, Arc<(Mutex<Option<(i32, Interaction)>>, Sender<SchnickEvent>)>>,
+    id: i32,
+    other: i32,
+    schnicks: &mut HashMap<i32, OngoingSchnick>,
 ) -> Result<(), StatusCode> {
     schnicks
-        .remove(&ida)
+        .remove(&id)
         .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
     schnicks
-        .remove(&idb)
+        .remove(&other)
         .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
     Ok(())
+}
+
+#[derive(Debug, Clone)]
+pub struct OngoingSchnick {
+    pub other: i32,
+    pub partial: Option<(i32, Interaction)>,
+    pub sender: Sender<SchnickEvent>,
+}
+
+fn update_schnick(
+    id: i32,
+    other: i32,
+    partial: Option<(i32, Interaction)>,
+    sender: Sender<SchnickEvent>,
+    schnicks: &mut HashMap<i32, OngoingSchnick>,
+) {
+    let a = OngoingSchnick {
+        other,
+        partial,
+        sender: sender.clone(),
+    };
+    let b = OngoingSchnick {
+        other: id,
+        partial,
+        sender,
+    };
+    schnicks.insert(id, a);
+    schnicks.insert(other, b);
 }
 
 pub async fn schnick_select(
@@ -170,26 +200,31 @@ pub async fn schnick_select(
     debug!(target: "schnick::schnick_select", "invoked with cookies={cookies:?}, interaction={interaction:?}");
     let id = authenticate(&cookies, Arc::clone(&pool)).await?;
     let mut schnicks = schnicks.write().await;
-    let entry = schnicks.get(&id).clone().map(|a| Arc::clone(a));
+    let entry = schnicks.get(&id).clone();
     if let Some(schnick) = entry {
-        let mut current = schnick.0.lock().await;
-        debug!(target: "schnick::schnick_select", "id={id:?}, current={current:?}, interaction={interaction:?}");
-        match (*current, interaction) {
+        let sender = schnick.sender.clone();
+        debug!(target: "schnick::schnick_select", "id={id:?}, current={:?}, interaction={interaction:?}", schnick.partial);
+        match (schnick.partial, interaction) {
             (Some((other, old)), new) if new.compatible(&old) && other != id => {
                 debug!(target: "schnick::schnick_select", "got compatible interactions, saving");
                 let (winner, loser) = if new.won { (id, other) } else { (other, id) };
                 let weapon = if new.won { new.weapon } else { old.weapon };
                 save_schnick(winner, loser, weapon, pool).await?;
                 remove_schnick(id, other, &mut schnicks)?;
-                schnick
-                    .1
+                sender
                     .send(SchnickEvent::Done)
                     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
                 Ok(([("HX-Redirect", "")], StatusCode::OK).into_response())
             }
             (None, new) => {
                 debug!(target: "schnick::schnick_select", "got first interaction, replacing");
-                current.replace((id, new));
+                update_schnick(
+                    id,
+                    schnick.other,
+                    Some((id, new)),
+                    schnick.sender.clone(),
+                    &mut schnicks,
+                );
                 Ok(Html(
                     new.render()
                         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
@@ -198,7 +233,13 @@ pub async fn schnick_select(
             }
             (Some((other, _)), new) if id == other => {
                 debug!(target: "schnick::schnick_select", "got subsequent interaction from same user, replacing");
-                current.replace((id, new));
+                update_schnick(
+                    id,
+                    schnick.other,
+                    Some((id, new)),
+                    schnick.sender.clone(),
+                    &mut schnicks,
+                );
                 Ok(Html(
                     new.render()
                         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
@@ -207,9 +248,14 @@ pub async fn schnick_select(
             }
             _ => {
                 debug!(target: "schnick::schnick_select", "got invalid interactions, resetting");
-                current.take();
-                schnick
-                    .1
+                update_schnick(
+                    id,
+                    schnick.other,
+                    None,
+                    schnick.sender.clone(),
+                    &mut schnicks,
+                );
+                sender
                     .send(SchnickEvent::Retry)
                     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
                 Ok(Html(include_str!("../templates/form_empty.html")).into_response())
@@ -224,7 +270,7 @@ pub async fn schnick_select(
 #[derive(Debug, Clone, Template)]
 #[template(path = "schnick.html")]
 pub struct SchnickTemplate {
-    pub waiting: bool
+    pub waiting: bool,
 }
 
 pub async fn schnick(
@@ -233,15 +279,18 @@ pub async fn schnick(
 ) -> Result<impl IntoResponse, StatusCode> {
     debug!(target: "schnick::schnick", "invoked with cookies={cookies:?}");
     let id = authenticate(&cookies, pool).await?;
-    if let Some(handle) = schnicks.read().await.get(&id) {
-        Ok(Html::from(
-            SchnickTemplate {
-                waiting: false
-            }
-                .render()
-                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
-        ))
+    let waiting = if let Some(handle) = schnicks.read().await.get(&id) {
+        if let Some((old, _)) = handle.partial {
+            if old == id { true } else { false }
+        } else {
+            false
+        }
     } else {
-        Err(StatusCode::NOT_FOUND)
-    }
+        return Err(StatusCode::NOT_FOUND);
+    };
+    Ok(Html::from(
+        SchnickTemplate { waiting }
+            .render()
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+    ))
 }

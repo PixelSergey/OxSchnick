@@ -1,6 +1,5 @@
 use axum::{
     Router,
-    response::Html,
     routing::{get, post},
 };
 use axum_extra::response::Css;
@@ -10,14 +9,11 @@ use diesel_async::{
 };
 use dotenvy::dotenv;
 use std::{collections::HashMap, env, sync::Arc};
-use tokio::{
-    net::TcpListener,
-    sync::{Mutex, RwLock, broadcast::Sender},
-};
+use tokio::{net::TcpListener, sync::RwLock};
 
 use crate::{
     invite::invite,
-    schnick::{Interaction, SchnickEvent, schnick, schnick_select, schnick_sse},
+    schnick::{OngoingSchnick, schnick, schnick_select, schnick_sse},
 };
 
 pub mod invite;
@@ -27,7 +23,7 @@ pub mod schnick;
 #[derive(Debug, Clone)]
 pub struct Server(
     Arc<Pool<AsyncPgConnection>>,
-    Arc<RwLock<HashMap<i32, Arc<(Mutex<Option<(i32, Interaction)>>, Sender<SchnickEvent>)>>>>,
+    Arc<RwLock<HashMap<i32, OngoingSchnick>>>,
 );
 
 #[tokio::main]

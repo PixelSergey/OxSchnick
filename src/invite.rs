@@ -10,13 +10,10 @@ use diesel::{dsl::insert_into, prelude::*};
 use diesel_async::{AsyncPgConnection, RunQueryDsl, pooled_connection::bb8::PooledConnection};
 use log::{debug, trace};
 use serde::Deserialize;
-use tokio::sync::{Mutex, RwLock, broadcast::Sender};
+use tokio::sync::{RwLock, broadcast::Sender};
 use uuid::Uuid;
 
-use crate::{
-    Server,
-    schnick::{Interaction, SchnickEvent},
-};
+use crate::{Server, schnick::OngoingSchnick};
 
 #[derive(Debug, Clone, HasQuery)]
 #[diesel(table_name = crate::schema::users)]
@@ -79,19 +76,23 @@ pub async fn check_token(
 pub async fn create_schnick(
     inviter: i32,
     invitee: i32,
-    matches: Arc<
-        RwLock<HashMap<i32, Arc<(Mutex<Option<(i32, Interaction)>>, Sender<SchnickEvent>)>>>,
-    >,
+    schnicks: Arc<RwLock<HashMap<i32, OngoingSchnick>>>,
 ) -> Result<(), StatusCode> {
-    let mut matches = matches.write().await;
-    if matches.get(&inviter).is_some() || matches.get(&invitee).is_some() {
+    let mut schnicks = schnicks.write().await;
+    if schnicks.get(&inviter).is_some() || schnicks.get(&invitee).is_some() {
         return Err(StatusCode::CONFLICT);
     };
-    let schnick = Mutex::new(None);
     let sender = Sender::new(8);
-    let new = Arc::new((schnick, sender));
-    matches.insert(inviter, Arc::clone(&new));
-    matches.insert(invitee, new);
+    schnicks.insert(inviter, OngoingSchnick {
+        other: invitee,
+        partial: None,
+        sender: sender.clone(),
+    });
+    schnicks.insert(invitee, OngoingSchnick {
+        other: inviter,
+        partial: None,
+        sender,
+    });
     Ok(())
 }
 

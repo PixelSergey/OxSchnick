@@ -13,11 +13,14 @@
     <div hx-ext="sse" sse-connect="schnick/sse" sse-swap="message">
         <form hx-post="schnick/select" hx-target="this" hx-swap="innerHTML" hx-trigger="click from:#select">
             {% if waiting %}
-            {% include "form_empty.html" %}
-            {% else %}
             <p>waiting for response</p>
+            {% else %}
+            {% include "form_empty.html" %}
             {% endif %}
         </form>
     </div>
+    <script>
+        htmx.logAll();
+    </script>
 </body>
 </html>
