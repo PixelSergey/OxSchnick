@@ -1,59 +1,44 @@
-use axum::{
-    Router,
-    routing::{get, post},
-};
-use axum_extra::response::Css;
-use diesel_async::{
-    AsyncPgConnection,
-    pooled_connection::{AsyncDieselConnectionManager, bb8::Pool},
-};
+use axum::{Router, routing::get};
+use clap::Parser;
 use dotenvy::dotenv;
-use std::{collections::HashMap, env, sync::Arc};
-use tokio::{net::TcpListener, sync::RwLock};
+use log::info;
+use tokio::net::TcpListener;
+use url::Url;
 
-use crate::{
-    invite::invite,
-    schnick::{OngoingSchnick, schnick, schnick_select, schnick_sse},
-};
+use crate::{app::App, home::home, invite::{invite, qrcode}};
 
+pub mod app;
 pub mod invite;
 pub mod schema;
-pub mod schnick;
+pub mod home;
 
-#[derive(Debug, Clone)]
-pub struct Server(
-    Arc<Pool<AsyncPgConnection>>,
-    Arc<RwLock<HashMap<i32, OngoingSchnick>>>,
-);
+/// A server for tracking schnicks.
+#[derive(Debug, Clone, Parser)]
+pub struct Config {
+    /// base url the app will be served from
+    base: String,
+
+    /// address to bind to
+    bind: String,
+}
 
 #[tokio::main]
-pub async fn main() {
+async fn main() {
     env_logger::init();
     dotenv().ok();
-    let pool = {
-        let url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-        let config = AsyncDieselConnectionManager::<AsyncPgConnection>::new(url);
-        Pool::builder()
-            .build(config)
-            .await
-            .expect("Could not connect to database")
-    };
-    let app = Router::new()
-        .route("/", get(async || "hi"))
-        .route(
-            "/style.css",
-            get(async || Css(include_str!("../templates/style.css"))),
-        )
+    let config = Config::parse();
+    let base = Url::parse(&config.base).expect("could not parse base url");
+    info!(target: "main", "creating app");
+    let app = App::new(base).await;
+    let router = Router::new()
+        .route("/", get(home))
+        .route("/qrcode", get(qrcode))
         .route("/invite", get(invite))
-        .route("/schnick", get(schnick))
-        .route("/schnick/sse", get(schnick_sse))
-        .route("/schnick/select", post(schnick_select))
-        .with_state(Server(
-            Arc::new(pool),
-            Arc::new(RwLock::new(HashMap::new())),
-        ));
-    let listener = TcpListener::bind("127.0.0.1:8080")
+        .with_state(app);
+    let listener = TcpListener::bind(config.bind)
         .await
-        .expect("Could not bind socket");
-    axum::serve(listener, app).await.unwrap();
+        .expect("could not bind socket");
+    axum::serve(listener, router)
+        .await
+        .expect("could not serve router");
 }

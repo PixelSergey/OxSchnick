@@ -1,170 +1,74 @@
-use std::{collections::HashMap, sync::Arc};
-
 use axum::{
     extract::{Query, State},
-    http::StatusCode,
-    response::{IntoResponse, Redirect},
+    http::{StatusCode, header::CONTENT_TYPE},
+    response::{IntoResponse, Response},
 };
 use axum_extra::extract::{CookieJar, cookie::Cookie};
-use diesel::{dsl::insert_into, prelude::*};
-use diesel_async::{AsyncPgConnection, RunQueryDsl, pooled_connection::bb8::PooledConnection};
+use diesel::prelude::*;
 use log::{debug, trace};
-use serde::Deserialize;
-use tokio::sync::{RwLock, broadcast::Sender};
-use uuid::Uuid;
+use qrcode::{QrCode, render::svg};
+use serde::{Deserialize, Serialize};
+use url::Url;
 
-use crate::{Server, schnick::OngoingSchnick};
+use crate::app::{App, SESSION_COOKIE_NAME};
 
-#[derive(Debug, Clone, HasQuery)]
+/// Represents the login information needed to identify and authenticate a user.
+#[derive(Debug, Clone, Serialize, Deserialize, HasQuery)]
 #[diesel(table_name = crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct User {
-    pub id: i32,
-    pub username: Option<String>,
-    pub parent: Option<i32>,
-    pub token: String,
-    pub invite: String,
-}
-
-#[derive(Debug, Clone, Insertable, QueryableByName)]
-#[diesel(table_name = crate::schema::users)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct InsertUser {
-    pub parent: Option<i32>,
-    pub token: String,
-    pub invite: String,
-}
-
-pub async fn create_user(
-    parent: i32,
-    conn: &mut PooledConnection<'_, AsyncPgConnection>,
-) -> Result<(i32, String), StatusCode> {
-    use crate::schema::users;
-    let new = InsertUser {
-        parent: Some(parent),
-        token: Uuid::new_v4().to_string(),
-        invite: Uuid::new_v4().to_string(),
-    };
-    insert_into(users::table)
-        .values(&new)
-        .returning((users::id, users::token))
-        .get_result(conn)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
-}
-
-pub async fn check_token(
-    id: i32,
-    token: &str,
-    conn: &mut PooledConnection<'_, AsyncPgConnection>,
-) -> Result<(), StatusCode> {
-    use crate::schema::users;
-    User::query()
-        .filter(users::id.eq(id))
-        .filter(users::token.eq(token))
-        .first(conn)
-        .await
-        .map_err(|_| {
-            trace!(target: "invite::check_token", "invalid token");
-            StatusCode::FORBIDDEN
-        })
-        .map(|_| {
-            trace!(target: "invite::check_token", "valid token");
-        })
-}
-
-pub async fn create_schnick(
-    inviter: i32,
-    invitee: i32,
-    schnicks: Arc<RwLock<HashMap<i32, OngoingSchnick>>>,
-) -> Result<(), StatusCode> {
-    let mut schnicks = schnicks.write().await;
-    if schnicks.get(&inviter).is_some() || schnicks.get(&invitee).is_some() {
-        return Err(StatusCode::CONFLICT);
-    };
-    let sender = Sender::new(8);
-    schnicks.insert(inviter, OngoingSchnick {
-        other: invitee,
-        partial: None,
-        sender: sender.clone(),
-    });
-    schnicks.insert(invitee, OngoingSchnick {
-        other: inviter,
-        partial: None,
-        sender,
-    });
-    Ok(())
-}
-
-pub async fn check_invite(
-    id: i32,
-    invite: &str,
-    conn: &mut PooledConnection<'_, AsyncPgConnection>,
-) -> Result<(), StatusCode> {
-    use crate::schema::users;
-    users::table
-        .filter(users::id.eq(id))
-        .filter(users::invite.eq(invite))
-        .first::<User>(conn)
-        .await
-        .map_err(|_| StatusCode::FORBIDDEN)
-        .map(|_| ())
-}
-
-pub async fn renew_invite(
-    invite: &Invite,
-    conn: &mut PooledConnection<'_, AsyncPgConnection>,
-) -> Result<(), StatusCode> {
-    use crate::schema::users;
-    let new = Uuid::new_v4().to_string();
-    diesel::update(invite)
-        .set(users::invite.eq(new))
-        .execute(conn)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
-        .map(|_| ())
-}
-
-#[derive(Debug, Clone, Deserialize, HasQuery, Identifiable)]
-#[diesel(table_name = crate::schema::users)]
-
 pub struct Invite {
     pub id: i32,
-    pub invite: String,
+    #[diesel(column_name=invite)]
+    pub token: String,
 }
 
+impl Invite {
+    pub fn url(&self, base: &Url) -> Result<String, StatusCode> {
+        let mut url = base
+            .join("invite")
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        url.set_query(Some(&format!("id={}&token={}", self.id, self.token)));
+        Ok(url.to_string())
+    }
+    pub fn qrcode(&self, base: &Url) -> Result<String, StatusCode> {
+        let code = QrCode::new(&self.url(base)?).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        let image = code.render::<svg::Color>().build();
+        Ok(image)
+    }
+}
+
+/// The `/invite` route.
 pub async fn invite(
-    State(Server(pool, schnicks)): State<Server>,
-    mut cookies: CookieJar,
+    State(app): State<App>,
     Query(invite): Query<Invite>,
-) -> Result<(CookieJar, impl IntoResponse), StatusCode> {
-    debug!(target: "invite::invite", "invoked with cookies={cookies:?}, invite={invite:?}");
-    let mut conn = pool
-        .get()
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    check_invite(invite.id, &invite.invite, &mut conn).await?;
-    let id = match (cookies.get("id"), cookies.get("token")) {
-        (Some(id), Some(token)) => {
-            let (id, token) = (
-                id.value()
-                    .parse::<i32>()
-                    .map_err(|_| StatusCode::FORBIDDEN)?
-                    .clone(),
-                token.value().to_string(),
-            );
-            check_token(id, &token, &mut conn).await?;
-            id
-        }
-        _ => {
-            let (id, token) = create_user(invite.id, &mut conn).await?;
-            cookies = cookies
-                .add(Cookie::new("id", id.to_string()))
-                .add(Cookie::new("token", token.clone()));
-            id
-        }
+    mut cookies: CookieJar,
+) -> Result<(CookieJar, Response), StatusCode> {
+    debug!(target: "invite::invite", "invite={invite:?}, cookies={cookies:?}");
+    trace!(target: "invite::invite", "authenticating invite");
+    app.authenticate_invite(&invite).await?;
+    let id = if cookies.get(SESSION_COOKIE_NAME).is_some() {
+        trace!(target: "invite::invite", "found session cookie, authenticating");
+        app.authenticate(&cookies).await?
+    } else {
+        trace!(target: "invite::invite", "found no session cookie, registering");
+        let session = app.register(invite.id).await?;
+        app.renew_invite(invite.id).await?;
+        cookies = cookies.add(Cookie::new(
+            SESSION_COOKIE_NAME,
+            serde_json::to_string(&session).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+        ));
+        session.id
     };
-    create_schnick(id, invite.id, schnicks).await?;
-    renew_invite(&invite, &mut conn).await?;
-    Ok((cookies, Redirect::temporary("schnick")))
+    Ok((cookies, format!("registered as {id}").into_response()))
+}
+
+/// The `/qrcode` route.
+pub async fn qrcode(
+    State(app): State<App>,
+    cookies: CookieJar,
+) -> Result<impl IntoResponse, StatusCode> {
+    debug!(target: "invite::qrcode", "cookies={cookies:?}");
+    let id = app.authenticate(&cookies).await?;
+    let invite = app.get_invite(id).await?;
+    Ok(([(CONTENT_TYPE, "image/svg+xml")], invite.qrcode(&app.base)?))
 }
