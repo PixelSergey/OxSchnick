@@ -5,12 +5,17 @@ use log::info;
 use tokio::net::TcpListener;
 use url::Url;
 
-use crate::{app::App, home::home, invite::{invite, qrcode}};
+use crate::{
+    app::App,
+    home::home,
+    invite::{invite, qrcode},
+};
 
 pub mod app;
+pub mod home;
 pub mod invite;
 pub mod schema;
-pub mod home;
+pub mod schnick;
 
 /// A server for tracking schnicks.
 #[derive(Debug, Clone, Parser)]

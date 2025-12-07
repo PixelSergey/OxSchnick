@@ -1,7 +1,7 @@
 use axum::{
     extract::{Query, State},
     http::{StatusCode, header::CONTENT_TYPE},
-    response::{IntoResponse, Response},
+    response::{IntoResponse, Redirect},
 };
 use axum_extra::extract::{CookieJar, cookie::Cookie};
 use diesel::prelude::*;
@@ -42,7 +42,7 @@ pub async fn invite(
     State(app): State<App>,
     Query(invite): Query<Invite>,
     mut cookies: CookieJar,
-) -> Result<(CookieJar, Response), StatusCode> {
+) -> Result<(CookieJar, Redirect), StatusCode> {
     debug!(target: "invite::invite", "invite={invite:?}, cookies={cookies:?}");
     trace!(target: "invite::invite", "authenticating invite");
     app.authenticate_invite(&invite).await?;
@@ -59,7 +59,13 @@ pub async fn invite(
         ));
         session.id
     };
-    Ok((cookies, format!("registered as {id}").into_response()))
+    let other = invite.id;
+    if app.have_schnicked(id, other).await? {
+        // TODO: human-readable error here
+        return Err(StatusCode::CONFLICT);
+    }
+    app.start_schnick(id, other).await;
+    Ok((cookies, Redirect::temporary("schnick")))
 }
 
 /// The `/qrcode` route.
