@@ -60,11 +60,17 @@ pub async fn invite(
         session.id
     };
     let other = invite.id;
-    if app.have_schnicked(id, other).await? {
+    if app.have_schnicked(id, other).await? || id == other {
         // TODO: human-readable error here
         return Err(StatusCode::CONFLICT);
     }
     app.start_schnick(id, other).await;
+    if let Some(sender) = app.redirects.lock().await.get(&other) {
+        trace!(target: "invite::invite", "found redirect listener, sending");
+        sender.send_replace(());
+    } else {
+        trace!(target: "invite::invite", "found no redirect listener, sending");
+    };
     Ok((cookies, Redirect::temporary("schnick")))
 }
 

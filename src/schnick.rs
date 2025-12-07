@@ -1,5 +1,18 @@
-use axum::{extract::State, http::{Response, StatusCode}, response::IntoResponse};
+use std::{convert::Infallible, time::Duration};
+
+use async_stream::try_stream;
+use axum::{
+    debug_handler,
+    extract::State,
+    http::StatusCode,
+    response::{
+        Html, IntoResponse, Sse,
+        sse::{Event, KeepAlive},
+    },
+};
 use axum_extra::extract::CookieJar;
+use futures::Stream;
+use log::debug;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use tokio::sync::{Mutex, broadcast::Sender};
@@ -47,16 +60,42 @@ impl Interaction {
 pub struct Schnick {
     pub ids: (i32, i32),
     pub partial: Mutex<Option<(i32, Interaction)>>,
-    pub sender: Sender<()>,
+    /// The event channel for this schnick.
+    ///
+    /// This is subscribed to by event sources. A value of None means the schnick has been cancelled.
+    /// A value of Some(false) means the schnick has been reset and a value of Some(true) means it has successfully concluded.
+    pub sender: Sender<Option<bool>>,
+}
+
+#[debug_handler]
+/// Event source for schnick updates
+pub async fn schnick_events(
+    State(app): State<App>,
+    cookies: CookieJar,
+) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, StatusCode> {
+    debug!(target: "schnick::schnick_events", "cookies={cookies:?}");
+    let id = app.authenticate(&cookies).await?;
+    let schnick = app.active_schnick(id).await?;
+    let mut receiver = schnick.sender.subscribe();
+    let stream = try_stream! {
+        yield Event::default().data(include_str!("../templates/form.html"));
+        while let Ok(Some(event)) = receiver.recv().await {
+            if event {
+                yield Event::default().data("schnick has concluded");
+            } else {
+                yield Event::default().data(include_str!("../templates/form.html"))
+            }
+        }
+    };
+    Ok(Sse::new(stream).keep_alive(KeepAlive::new().interval(Duration::from_secs(1))))
 }
 
 /// The `/schnick` route.
 pub async fn schnick(
     State(app): State<App>,
-    cookies: CookieJar
+    cookies: CookieJar,
 ) -> Result<impl IntoResponse, StatusCode> {
     let id = app.authenticate(&cookies).await?;
-    let schnick = app.active_schnick(id).await?;
-    todo!("not yet implemented");
-    Ok(())
+    let _schnick = app.active_schnick(id).await?;
+    Ok(Html(include_str!("../templates/schnick.html")))
 }

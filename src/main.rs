@@ -7,8 +7,9 @@ use url::Url;
 
 use crate::{
     app::App,
-    home::home,
+    home::{home, home_events},
     invite::{invite, qrcode},
+    schnick::{schnick, schnick_events},
 };
 
 pub mod app;
@@ -37,8 +38,11 @@ async fn main() {
     let app = App::new(base).await;
     let router = Router::new()
         .route("/", get(home))
+        .route("/events", get(home_events))
         .route("/qrcode", get(qrcode))
         .route("/invite", get(invite))
+        .route("/schnick", get(schnick))
+        .route("/schnick/events", get(schnick_events))
         .with_state(app);
     let listener = TcpListener::bind(config.bind)
         .await

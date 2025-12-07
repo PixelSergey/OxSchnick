@@ -3,11 +3,7 @@ use std::{collections::HashMap, env, sync::Arc};
 use axum::http::StatusCode;
 use axum_extra::extract::CookieJar;
 use chrono::{DateTime, Utc};
-use diesel::{
-    dsl::insert_into,
-    prelude::*,
-    update,
-};
+use diesel::{dsl::insert_into, prelude::*, update};
 use diesel_async::{
     AsyncPgConnection, RunQueryDsl,
     pooled_connection::{
@@ -15,7 +11,7 @@ use diesel_async::{
         bb8::{Pool, PooledConnection},
     },
 };
-use log::{debug, info};
+use log::{debug, info, trace};
 use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, broadcast::Sender};
 use url::Url;
@@ -36,6 +32,7 @@ pub struct App {
     pub base: Url,
     pool: Arc<Pool<AsyncPgConnection>>,
     schnicks: Arc<Mutex<HashMap<i32, Arc<Schnick>>>>,
+    pub redirects: Arc<Mutex<HashMap<i32, tokio::sync::watch::Sender<()>>>>,
 }
 
 /// Represents the login information needed to identify and authenticate a user.
@@ -63,8 +60,10 @@ impl App {
             base,
             schnicks: Arc::new(Mutex::new(HashMap::new())),
             pool: Arc::new(pool),
+            redirects: Arc::new(Mutex::new(HashMap::new())),
         }
     }
+
     /// Returns a connection from the connection pool.
     async fn connection(&self) -> Result<PooledConnection<'_, AsyncPgConnection>, StatusCode> {
         self.pool
@@ -168,7 +167,12 @@ impl App {
 
     /// Gets the active schnick of the user with id `id`, if any.
     pub async fn active_schnick(&self, id: i32) -> Result<Arc<Schnick>, StatusCode> {
-        self.schnicks.lock().await.get(&id).cloned().ok_or(StatusCode::NOT_FOUND)
+        self.schnicks
+            .lock()
+            .await
+            .get(&id)
+            .cloned()
+            .ok_or(StatusCode::NOT_FOUND)
     }
 
     /// Starts a new active schnick between users with ids `id` and `other` and set it as their active schnick
@@ -223,5 +227,26 @@ impl App {
             .optional()
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
             .map(|schnick| schnick.is_some())
+    }
+
+    // TODO: fix this hack
+    pub async fn redirect(id: i32, redirects: Arc<Mutex<HashMap<i32, tokio::sync::watch::Sender<()>>>>) {
+        let mut receiver = {
+            let mut redirects = redirects.lock().await;
+            if let Some(sender) = redirects.get(&id) {
+                sender.subscribe()
+            } else {
+                let new = tokio::sync::watch::Sender::new(());
+                let receiver = new.subscribe();
+                trace!(target: "app::redirect", "sanity check (before)");
+                redirects.insert(id, new);
+                trace!(target: "app::redirect", "sanity check (after)");
+                receiver
+            }
+        };
+        trace!(target: "app::redirect", "got receiver, waiting for update");
+        let _ = receiver.changed().await;
+        trace!(target: "app::redirect", "got update, removing");
+        redirects.lock().await.remove(&id);
     }
 }
