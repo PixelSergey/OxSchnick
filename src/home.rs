@@ -28,7 +28,7 @@ pub async fn home_events(
         App::redirect(id, Arc::clone(&app.redirects))
             .map(move |_| {
                 trace!(target: "home::home_events", "sending for id={id:?}");
-                Ok(Event::default().event("redirect").data("location.href = \"schnick\""))
+                Ok(Event::default().event("redirect").data("location.href = 'schnick';"))
             })
             .into_stream(),
     ))

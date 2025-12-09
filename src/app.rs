@@ -19,7 +19,7 @@ use uuid::Uuid;
 
 use crate::{
     invite::Invite,
-    schnick::{Schnick, Weapon},
+    schnick::{Interaction, Schnick, Weapon},
 };
 
 pub const SESSION_COOKIE_NAME: &'static str = "session";
@@ -208,6 +208,7 @@ impl App {
                 schnicks::winner.eq(winner),
                 schnicks::loser.eq(loser),
                 schnicks::weapon.eq(weapon as i32),
+                schnicks::played_at.eq(Utc::now())
             ))
             .execute(&mut self.connection().await?)
             .await

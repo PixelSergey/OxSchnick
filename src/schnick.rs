@@ -1,18 +1,15 @@
-use std::{convert::Infallible, time::Duration};
+use std::{convert::Infallible, sync::Arc, time::Duration};
 
 use async_stream::try_stream;
 use axum::{
-    debug_handler,
-    extract::State,
-    http::StatusCode,
-    response::{
+    Form, extract::State, http::StatusCode, response::{
         Html, IntoResponse, Sse,
         sse::{Event, KeepAlive},
-    },
+    }
 };
 use axum_extra::extract::CookieJar;
 use futures::Stream;
-use log::debug;
+use log::{debug, trace};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use tokio::sync::{Mutex, broadcast::Sender};
@@ -67,7 +64,6 @@ pub struct Schnick {
     pub sender: Sender<Option<bool>>,
 }
 
-#[debug_handler]
 /// Event source for schnick updates
 pub async fn schnick_events(
     State(app): State<App>,
@@ -81,13 +77,55 @@ pub async fn schnick_events(
         yield Event::default().data(include_str!("../templates/form.html"));
         while let Ok(Some(event)) = receiver.recv().await {
             if event {
-                yield Event::default().data("schnick has concluded");
+                yield Event::default().event("redirect").data("location.href=\"..\";");
             } else {
                 yield Event::default().data(include_str!("../templates/form.html"))
             }
         }
     };
     Ok(Sse::new(stream).keep_alive(KeepAlive::new().interval(Duration::from_secs(1))))
+}
+
+/// Event source for schnick updates
+pub async fn schnick_select(
+    State(app): State<App>,
+    cookies: CookieJar,
+    Form(interaction): Form<Interaction>
+) -> Result<impl IntoResponse, StatusCode> {
+    debug!(target: "schnick::schnick_select", "cookies={cookies:?} interaction={interaction:?}");
+    let id = app.authenticate(&cookies).await?;
+    let schnick = app.active_schnick(id).await?;
+    // TODO: think about contention and timing attacks with inner mutability
+    let mut partial = schnick.partial.lock().await;
+    match *partial {
+        None => {
+            trace!(target: "schnick::schnick_select", "no partial interaction found, replacing");
+            partial.replace((id, interaction));
+            Ok(Html(include_str!("../templates/waiting.html")))
+        },
+        Some((other, old)) if old.compatible(&interaction) && id != other => {
+            trace!(target: "schnick::schnick_select", "compatible interaction received, concluding");
+            app.end_schnick(Arc::clone(&schnick)).await;
+            let (winner, loser, weapon) = if interaction.won {
+                (id, other, interaction.weapon)
+            } else {
+                (other, id, old.weapon)
+            };
+            app.save_schnick(winner, loser, weapon).await?;
+            let _ = schnick.sender.send(Some(true));
+            Ok(Html(include_str!("../templates/redirect.html")))
+        },
+        Some((other, _)) if id == other => {
+            trace!(target: "schnick::schnick_select", "new interaction received from same user, ignoring");
+            Ok(Html(include_str!("../templates/waiting.html")))
+        },
+        _ => {
+            trace!(target: "schnick::schnick_select", "invalid interaction received, resetting");
+            partial.take();
+            let _ = schnick.sender.send(Some(false));
+            Ok(Html(include_str!("../templates/form.html")))
+        }
+    }
 }
 
 /// The `/schnick` route.

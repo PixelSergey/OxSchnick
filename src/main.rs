@@ -1,4 +1,4 @@
-use axum::{Router, routing::get};
+use axum::{Router, routing::{get, post}};
 use clap::Parser;
 use dotenvy::dotenv;
 use log::info;
@@ -9,7 +9,7 @@ use crate::{
     app::App,
     home::{home, home_events},
     invite::{invite, qrcode},
-    schnick::{schnick, schnick_events},
+    schnick::{schnick, schnick_events, schnick_select},
 };
 
 pub mod app;
@@ -43,6 +43,7 @@ async fn main() {
         .route("/invite", get(invite))
         .route("/schnick", get(schnick))
         .route("/schnick/events", get(schnick_events))
+        .route("/schnick/select", post(schnick_select))
         .with_state(app);
     let listener = TcpListener::bind(config.bind)
         .await
