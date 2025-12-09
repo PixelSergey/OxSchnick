@@ -3,7 +3,6 @@ CREATE TABLE users (
     username varchar(32),
     parent integer references users(id) NOT NULL,
     token char(36) NOT NULL,
-    invite char(36) NOT NULL,
     created timestamptz NOT NULL,
     active boolean NOT NULL
 )

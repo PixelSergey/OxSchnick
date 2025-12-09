@@ -1,13 +1,14 @@
-use std::{convert::Infallible, sync::Arc};
+use std::{convert::Infallible};
 
 use askama::Template;
+use async_stream::try_stream;
 use axum::{
     extract::State,
     http::StatusCode,
     response::{Html, IntoResponse, Redirect, Response, Sse, sse::Event},
 };
 use axum_extra::extract::CookieJar;
-use futures::{FutureExt, Stream};
+use futures::Stream;
 use log::{debug, trace};
 
 use crate::app::App;
@@ -24,14 +25,19 @@ pub async fn home_events(
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, StatusCode> {
     let id = app.authenticate(&cookies).await?;
     debug!(target: "app::home::home_events", "subscribed id={id:?}");
-    Ok(Sse::new(
-        App::redirect(id, Arc::clone(&app.redirects))
-            .map(move |_| {
-                trace!(target: "home::home_events", "sending for id={id:?}");
-                Ok(Event::default().event("redirect").data("location.href = 'schnick';"))
-            })
-            .into_stream(),
-    ))
+    // TODO: think about what to do if no invite
+    if let Some(mut receiver) = app.inviter.receiver(id).await {
+        Ok(Sse::new(
+            try_stream! {
+                trace!(target: "home::home_events", "starting home event handler");
+                let _ = receiver.changed().await;
+                yield Event::default().event("redirect").data("location.href = 'schnick';")
+            }
+        ))
+    } else {
+        trace!(target: "home::home_events", "no invite receiver found");
+        Err(StatusCode::NOT_FOUND)
+    }
 }
 
 /// The `/` route.
@@ -43,9 +49,9 @@ pub async fn home(State(app): State<App>, cookies: CookieJar) -> Result<Response
     }
     Ok(Html(
         Home {
-            invite: app.get_invite(id).await?.url(&app.base)?,
+            invite: app.inviter.get(id).await.url(&app.base)?,
         }
         .render()
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+        .map_err(|_| StatusCode::NOT_FOUND)?,
     ).into_response())
 }

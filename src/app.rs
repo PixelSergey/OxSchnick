@@ -3,7 +3,7 @@ use std::{collections::HashMap, env, sync::Arc};
 use axum::http::StatusCode;
 use axum_extra::extract::CookieJar;
 use chrono::{DateTime, Utc};
-use diesel::{dsl::insert_into, prelude::*, update};
+use diesel::{dsl::insert_into, prelude::*};
 use diesel_async::{
     AsyncPgConnection, RunQueryDsl,
     pooled_connection::{
@@ -11,15 +11,15 @@ use diesel_async::{
         bb8::{Pool, PooledConnection},
     },
 };
-use log::{debug, info, trace};
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, broadcast::Sender};
 use url::Url;
 use uuid::Uuid;
 
 use crate::{
-    invite::Invite,
-    schnick::{Interaction, Schnick, Weapon},
+    invite::Inviter,
+    schnick::{Schnick, Weapon},
 };
 
 pub const SESSION_COOKIE_NAME: &'static str = "session";
@@ -32,7 +32,7 @@ pub struct App {
     pub base: Url,
     pool: Arc<Pool<AsyncPgConnection>>,
     schnicks: Arc<Mutex<HashMap<i32, Arc<Schnick>>>>,
-    pub redirects: Arc<Mutex<HashMap<i32, tokio::sync::watch::Sender<()>>>>,
+    pub inviter: Inviter,
 }
 
 /// Represents the login information needed to identify and authenticate a user.
@@ -60,7 +60,7 @@ impl App {
             base,
             schnicks: Arc::new(Mutex::new(HashMap::new())),
             pool: Arc::new(pool),
-            redirects: Arc::new(Mutex::new(HashMap::new())),
+            inviter: Default::default(),
         }
     }
 
@@ -109,12 +109,10 @@ impl App {
     pub async fn register(&self, parent: i32) -> Result<Session, StatusCode> {
         use crate::schema::users;
         let session_token = Uuid::new_v4().to_string();
-        let invite_token = Uuid::new_v4().to_string();
         let id = insert_into(users::table)
             .values((
                 users::parent.eq(parent),
                 users::token.eq(&session_token),
-                users::invite.eq(&invite_token),
                 users::created.eq(Utc::now()),
                 users::active.eq(true),
             ))
@@ -126,43 +124,6 @@ impl App {
             id,
             token: session_token,
         })
-    }
-
-    /// Authenticates a given `invite`.
-    ///
-    /// Checks whether a user with the id `invite.id` and invite token `invite.token` exists and is active.
-    pub async fn authenticate_invite(&self, invite: &Invite) -> Result<(), StatusCode> {
-        use crate::schema::users;
-        Invite::query()
-            .filter(users::id.eq(invite.id))
-            .filter(users::invite.eq(&invite.token))
-            //.filter(users::active.eq(true)) // UNCOMMENT TO ENFORCE ACTIVE FLAG
-            .first(&mut self.connection().await?)
-            .await
-            .map_err(|_| StatusCode::FORBIDDEN)
-            .map(|_| ())
-    }
-
-    /// Renews the invite token of the given user.
-    pub async fn renew_invite(&self, id: i32) -> Result<(), StatusCode> {
-        use crate::schema::users;
-        let invite_token = Uuid::new_v4().to_string();
-        update(users::table)
-            .filter(users::id.eq(id))
-            .set(users::invite.eq(&invite_token))
-            .execute(&mut self.connection().await?)
-            .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
-            .map(|_| ())
-    }
-
-    /// Gets the current `Invite` of the user with the given `id` fron the database.
-    pub async fn get_invite(&self, id: i32) -> Result<Invite, StatusCode> {
-        Invite::query()
-            .find(id)
-            .first(&mut self.connection().await?)
-            .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
     }
 
     /// Gets the active schnick of the user with id `id`, if any.
@@ -228,26 +189,5 @@ impl App {
             .optional()
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
             .map(|schnick| schnick.is_some())
-    }
-
-    // TODO: fix this hack
-    pub async fn redirect(id: i32, redirects: Arc<Mutex<HashMap<i32, tokio::sync::watch::Sender<()>>>>) {
-        let mut receiver = {
-            let mut redirects = redirects.lock().await;
-            if let Some(sender) = redirects.get(&id) {
-                sender.subscribe()
-            } else {
-                let new = tokio::sync::watch::Sender::new(());
-                let receiver = new.subscribe();
-                trace!(target: "app::redirect", "sanity check (before)");
-                redirects.insert(id, new);
-                trace!(target: "app::redirect", "sanity check (after)");
-                receiver
-            }
-        };
-        trace!(target: "app::redirect", "got receiver, waiting for update");
-        let _ = receiver.changed().await;
-        trace!(target: "app::redirect", "got update, removing");
-        redirects.lock().await.remove(&id);
     }
 }

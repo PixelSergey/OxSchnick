@@ -18,8 +18,6 @@ diesel::table! {
         parent -> Int4,
         #[max_length = 36]
         token -> Bpchar,
-        #[max_length = 36]
-        invite -> Bpchar,
         created -> Timestamptz,
         active -> Bool,
     }

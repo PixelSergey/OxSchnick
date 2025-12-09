@@ -35,7 +35,8 @@ async fn main() {
     let config = Config::parse();
     let base = Url::parse(&config.base).expect("could not parse base url");
     info!(target: "main", "creating app");
-    let app = App::new(base).await;
+    let app = App::new(base.clone()).await;
+    println!("{:?}", app.inviter.get(1).await.url(&base));
     let router = Router::new()
         .route("/", get(home))
         .route("/events", get(home_events))
