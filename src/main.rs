@@ -6,7 +6,7 @@ use tokio::net::TcpListener;
 use url::Url;
 
 use crate::{
-    app::App,
+    app::{App, Session},
     home::{home, home_events},
     invite::{invite, qrcode},
     schnick::{schnick, schnick_events, schnick_select},
@@ -17,6 +17,7 @@ pub mod home;
 pub mod invite;
 pub mod schema;
 pub mod schnick;
+pub mod session;
 
 /// A server for tracking schnicks.
 #[derive(Debug, Clone, Parser)]
@@ -36,7 +37,11 @@ async fn main() {
     let base = Url::parse(&config.base).expect("could not parse base url");
     info!(target: "main", "creating app");
     let app = App::new(base.clone()).await;
-    println!("{:?}", app.inviter.get(1).await.url(&base));
+    app.authenticate_session(&Session {
+        id: 1,
+        token: "00000000-0000-0000-0000-000000000000".to_string()
+    }).await.expect("could not authenticate root user");
+    println!("{:?}", app.sessions.get_invite(1).await.expect("no root user exists").url(&base));
     let router = Router::new()
         .route("/", get(home))
         .route("/events", get(home_events))

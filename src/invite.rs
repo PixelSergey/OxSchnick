@@ -1,4 +1,3 @@
-use std::{collections::HashMap, sync::Arc};
 
 use axum::{
     extract::{Query, State},
@@ -9,28 +8,15 @@ use axum_extra::extract::{CookieJar, cookie::Cookie};
 use log::{debug, trace};
 use qrcode::{QrCode, render::svg};
 use serde::{Deserialize, Serialize};
-use tokio::sync::{RwLock, watch::{Receiver, Sender}};
 use url::Url;
 use uuid::Uuid;
 
-use crate::app::{App, SESSION_COOKIE_NAME};
+use crate::{app::{App, SESSION_COOKIE_NAME}, session::{SessionManager, SessionUpdate}};
 
-#[derive(Debug, Clone)]
-pub struct InviteHandle {
-    token: String,
-    channel: Sender<()>
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct Inviter {
-    data: Arc<RwLock<HashMap<i32, InviteHandle>>>
-}
-
-impl Inviter {
-    /// Checks if a given invite is valid.
-    pub async fn check(&self, invite: &Invite) -> Result<(), StatusCode> {
-        if let Some(handler) = self.data.read().await.get(&invite.id) {
-            if handler.token == invite.token {
+impl SessionManager {
+    pub async fn check_invite(&self, invite: &Invite) -> Result<(), StatusCode> {
+        if let Some(handle) = self.data.read().await.get(&invite.id) {
+            if handle.invite == invite.token {
                 Ok(())
             } else {
                 Err(StatusCode::FORBIDDEN)
@@ -40,40 +26,23 @@ impl Inviter {
         }
     }
 
-    /// Get the active invite for a given user id or create it if it doesnt exist.
-    pub async fn get(&self, id: i32) -> Invite {
-        let mut data = self.data.write().await;
-        if let Some(handler) = data.get(&id) {
-            Invite {
-                id,
-                token: handler.token.clone()
-            }
+    pub async fn get_invite(&self, id: i32) -> Result<Invite, StatusCode> {
+        if let Some(handle) = self.data.read().await.get(&id) {
+            Ok(Invite {
+                id: id,
+                token: handle.invite.clone()
+            })
         } else {
-            let token = Uuid::new_v4().to_string();
-            data.insert(id, InviteHandle { token: token.clone(), channel: Sender::new(()) });
-            Invite { id, token }
+            Err(StatusCode::NOT_FOUND)
         }
     }
 
-    /// Invalidate the invite for the given user id.
-    pub async fn invalidate(&self, id: i32) {
-        self.data.write().await.remove(&id);
-    }
-
-    /// Get the receiver end of the channel for this users invite.
-    /// 
-    /// A `()` will be sent when the invite is used.
-    pub async fn receiver(&self, id: i32) -> Option<Receiver<()>> {
-        if let Some(handler) = self.data.read().await.get(&id) {
-            Some(handler.channel.subscribe())
+    pub async fn renew_invite(&self, id: i32) -> Result<(), StatusCode> {
+        if let Some(handle) = self.data.write().await.get_mut(&id) {
+            handle.invite = Uuid::new_v4().to_string();
+            Ok(())
         } else {
-            None
-        }
-    }
-
-    pub async fn notify(&self, id: i32) {
-        if let Some(handler) = self.data.read().await.get(&id) {
-            let _ = handler.channel.send(());
+            Err(StatusCode::NOT_FOUND)
         }
     }
 }
@@ -108,7 +77,7 @@ pub async fn invite(
 ) -> Result<(CookieJar, Redirect), StatusCode> {
     debug!(target: "invite::invite", "invite={invite:?}, cookies={cookies:?}");
     trace!(target: "invite::invite", "authenticating invite");
-    app.inviter.check(&invite).await?;
+    app.sessions.check_invite(&invite).await?;
     let id = if cookies.get(SESSION_COOKIE_NAME).is_some() {
         trace!(target: "invite::invite", "found session cookie, authenticating");
         app.authenticate(&cookies).await?
@@ -118,7 +87,7 @@ pub async fn invite(
         trace!(target: "invite::invite", "registered");
         cookies = cookies.add(Cookie::new(
             SESSION_COOKIE_NAME,
-            serde_json::to_string(&session).map_err(|_| StatusCode::INSUFFICIENT_STORAGE)?,
+            serde_json::to_string(&session).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
         ));
         session.id
     };
@@ -127,11 +96,11 @@ pub async fn invite(
         // TODO: human-readable error here
         return Err(StatusCode::CONFLICT);
     }
-    app.start_schnick(id, other).await;
+    app.sessions.start_schnick(id, other).await?;
     trace!(target: "invite::invite", "notifying");
-    app.inviter.notify(id).await;
+    let _ = app.sessions.sender(invite.id).await?.send(SessionUpdate::SchnickStarted);
     trace!(target: "invite::invite", "invalidating");
-    app.inviter.invalidate(invite.id).await;
+    app.sessions.renew_invite(invite.id).await?;
     trace!(target: "invite::invite", "returning");
     Ok((cookies, Redirect::temporary("schnick")))
 }
@@ -143,6 +112,6 @@ pub async fn qrcode(
 ) -> Result<impl IntoResponse, StatusCode> {
     debug!(target: "invite::qrcode", "cookies={cookies:?}");
     let id = app.authenticate(&cookies).await?;
-    let invite = app.inviter.get(id).await;
+    let invite = app.sessions.get_invite(id).await?;
     Ok(([(CONTENT_TYPE, "image/svg+xml")], invite.qrcode(&app.base)?))
 }

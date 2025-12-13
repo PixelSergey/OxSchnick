@@ -1,4 +1,4 @@
-use std::{collections::HashMap, env, sync::Arc};
+use std::{env, sync::Arc};
 
 use axum::http::StatusCode;
 use axum_extra::extract::CookieJar;
@@ -13,13 +13,11 @@ use diesel_async::{
 };
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
-use tokio::sync::{Mutex, broadcast::Sender};
 use url::Url;
 use uuid::Uuid;
 
 use crate::{
-    invite::Inviter,
-    schnick::{Schnick, Weapon},
+    schnick::Weapon, session::{SessionHandle, SessionManager},
 };
 
 pub const SESSION_COOKIE_NAME: &'static str = "session";
@@ -31,8 +29,7 @@ pub const SESSION_COOKIE_NAME: &'static str = "session";
 pub struct App {
     pub base: Url,
     pool: Arc<Pool<AsyncPgConnection>>,
-    schnicks: Arc<Mutex<HashMap<i32, Arc<Schnick>>>>,
-    pub inviter: Inviter,
+    pub sessions: SessionManager,
 }
 
 /// Represents the login information needed to identify and authenticate a user.
@@ -58,9 +55,8 @@ impl App {
         };
         Self {
             base,
-            schnicks: Arc::new(Mutex::new(HashMap::new())),
             pool: Arc::new(pool),
-            inviter: Default::default(),
+            sessions: Default::default()
         }
     }
 
@@ -77,17 +73,27 @@ impl App {
     /// Returns Ok(()) if user with id `session.id` and token `session.token` can be found in the database.
     pub async fn authenticate_session(&self, session: &Session) -> Result<(), StatusCode> {
         debug!(target: "app::authenticating_session", "session={session:?}");
-        let real = Session::query()
-            .find(session.id)
-            .first(&mut self.connection().await?)
-            .await
-            .map_err(|_| StatusCode::FORBIDDEN)?;
-        if real.token == session.token {
-            debug!(target: "app::authenticating_session", "token match");
-            Ok(())
+        let guard = self.sessions.data.read().await;
+        if let Some(handle) = guard.get(&session.id) {
+            if handle.token == session.token {
+                Ok(())
+            } else {
+                Err(StatusCode::FORBIDDEN)
+            }
         } else {
-            debug!(target: "app::authenticating_session", "token mismatch");
-            Err(StatusCode::FORBIDDEN)
+            let entry = Session::query()
+                .find(session.id)
+                .first(&mut self.connection().await?)
+                .await
+                .map_err(|_| StatusCode::FORBIDDEN)?;
+            if entry.token == session.token {
+                drop(guard);
+                self.sessions.data.write().await.insert(session.id, SessionHandle::with_token(session.token.clone()));
+                Ok(())
+            } else {
+                println!("{entry:?} vs {session:?}");
+                Err(StatusCode::FORBIDDEN)
+            }
         }
     }
 
@@ -120,40 +126,12 @@ impl App {
             .get_result(&mut self.connection().await?)
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-        Ok(Session {
+        let session = Session {
             id,
             token: session_token,
-        })
-    }
-
-    /// Gets the active schnick of the user with id `id`, if any.
-    pub async fn active_schnick(&self, id: i32) -> Result<Arc<Schnick>, StatusCode> {
-        self.schnicks
-            .lock()
-            .await
-            .get(&id)
-            .cloned()
-            .ok_or(StatusCode::NOT_FOUND)
-    }
-
-    /// Starts a new active schnick between users with ids `id` and `other` and set it as their active schnick
-    pub async fn start_schnick(&self, id: i32, other: i32) {
-        let schnick = Arc::new(Schnick {
-            ids: (id, other),
-            partial: Mutex::new(None),
-            sender: Sender::new(4),
-        });
-        let mut schnicks = self.schnicks.lock().await;
-        schnicks.insert(id, Arc::clone(&schnick));
-        schnicks.insert(other, schnick);
-    }
-
-    /// Ends the active schnick.
-    pub async fn end_schnick(&self, schnick: Arc<Schnick>) {
-        let (id, other) = schnick.ids;
-        let mut schnicks = self.schnicks.lock().await;
-        schnicks.remove(&id);
-        schnicks.remove(&other);
+        };
+        self.authenticate_session(&session).await?;
+        Ok(session)
     }
 
     /// Saves the conclusion of a schnick to the database.
