@@ -1,4 +1,9 @@
-use axum::{Router, routing::{get, post}};
+use axum::{
+    Router,
+    http::header::CONTENT_TYPE,
+    routing::{get, post},
+};
+use axum_extra::response::Css;
 use clap::Parser;
 use dotenvy::dotenv;
 use log::info;
@@ -7,12 +12,14 @@ use url::Url;
 
 use crate::{
     app::{App, Session},
-    home::{home, home_events},
+    events::events,
+    home::home,
     invite::{invite, qrcode},
-    schnick::{schnick, schnick_events, schnick_select},
+    schnick::schnick_select,
 };
 
 pub mod app;
+pub mod events;
 pub mod home;
 pub mod invite;
 pub mod schema;
@@ -39,17 +46,37 @@ async fn main() {
     let app = App::new(base.clone()).await;
     app.authenticate_session(&Session {
         id: 1,
-        token: "00000000-0000-0000-0000-000000000000".to_string()
-    }).await.expect("could not authenticate root user");
-    println!("{:?}", app.sessions.get_invite(1).await.expect("no root user exists").url(&base));
+        token: "00000000-0000-0000-0000-000000000000".to_string(),
+    })
+    .await
+    .expect("could not authenticate root user");
+    println!(
+        "{:?}",
+        app.sessions
+            .get_invite(1)
+            .await
+            .expect("no root user exists")
+            .url(&base)
+    );
     let router = Router::new()
         .route("/", get(home))
-        .route("/events", get(home_events))
+        .route("/events", get(events))
         .route("/qrcode", get(qrcode))
         .route("/invite", get(invite))
-        .route("/schnick", get(schnick))
-        .route("/schnick/events", get(schnick_events))
-        .route("/schnick/select", post(schnick_select))
+        .route("/select", post(schnick_select))
+        .route(
+            "/assets/style.css",
+            get(async || Css(include_str!("../assets/style.css"))),
+        )
+        .route(
+            "/assets/home.svg",
+            get(async || {
+                (
+                    [(CONTENT_TYPE, "image/svg+xml")],
+                    include_str!("../assets/home.svg"),
+                )
+            }),
+        )
         .with_state(app);
     let listener = TcpListener::bind(config.bind)
         .await

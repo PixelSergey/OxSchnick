@@ -1,0 +1,65 @@
+:root {
+    --background-color: #141414;
+    --foreground-color: #faf5f5;
+    --highlight-red: #ff3719;
+    --highlight-green: #00ff00;
+    --highlight-purple: #9673ff;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--foreground-color);
+    margin: 0;
+    padding: 0;
+    font-family: "Victor Mono", monospace;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--highlight-red);
+}
+
+nav {
+    display: flex;
+    justify-content: space-around;
+    padding: 1em;
+    div {
+        display: inline;
+        img {
+            color: inherit;
+            width: 2em;
+            height: 2em;
+        }
+    }
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    padding: 2em;
+}
+
+a {
+    text-decoration: none;
+}
+
+a:visited {
+    color: inherit;
+}
+
+h1 {
+    font-size: 2em;
+}
+
+#invite {
+    display: block;
+    padding: 1em 1em;
+    font-weight: bold;
+    background: var(--highlight-red);
+    border: none;
+    border-radius: 0.5em;
+    color: var(--foreground-color);
+    align-self: center;
+}

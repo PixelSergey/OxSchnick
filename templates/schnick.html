@@ -1,14 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js" integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.4" integrity="sha384-A986SAtodyH8eg8x8irJnYUk7i9inVQqYigD6qZ9evobksGNIXfeFvDwLSHcp31N" crossorigin="anonymous"></script>
-    <title>fanschnick</title>
-</head>
-<body>
-    <main hx-ext="sse" sse-connect="schnick/events" sse-swap="message">
-    </main>
-</body>
-</html>
+<form>
+    <div>
+        won
+        <input type="radio" id="won" name="won" value="true">
+        lost
+        <input type="radio" id="lost" name="won" value="false">
+    </div>
+    <div>
+        rock
+        <input type="radio" id="rock" name="weapon" value="0">
+        paper
+        <input type="radio" id="paper" name="weapon" value="2">
+        scissors
+        <input type="radio" id="scissors" name="weapon" value="1">
+    </div>
+    <button hx-post="select">select</div>
+</form>

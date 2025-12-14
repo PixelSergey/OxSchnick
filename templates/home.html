@@ -1,0 +1,15 @@
+<main>
+        <header>
+            <h1><span class="icon">🏠</span> Hi Fan!</h1>
+        </header>  
+        <a id="invite" href="qrcode">Let's schnick!</a>
+        <a href="{{ invite }}">invite link</a>
+    </main>
+    <footer>
+        <nav>
+            <div hx-get="/home" hx-target="main" hx-swap="innerHTML"><img src="assets/home.svg"></div>
+            <div hx-get="/graph" hx-target="main" hx-swap="innerHTML"><img src="assets/home.svg"></div>
+            <div hx-get="/metrics" hx-target="main" hx-swap="innerHTML"><img src="assets/home.svg"></div>
+            <div hx-get="/settings" hx-target="main" hx-swap="innerHTML"><img src="assets/home.svg"></div>
+        </nav>
+    </footer>

@@ -1,7 +1,10 @@
 use std::{collections::HashMap, sync::Arc};
 
 use axum::http::StatusCode;
-use tokio::sync::{RwLock, broadcast::{Receiver, Sender}};
+use tokio::sync::{
+    RwLock,
+    broadcast::{Receiver, Sender},
+};
 use uuid::Uuid;
 
 use crate::schnick::SchnickHandle;
@@ -10,7 +13,8 @@ use crate::schnick::SchnickHandle;
 pub enum SessionUpdate {
     SchnickStarted,
     SchnickRetried,
-    SchnickEnded
+    SchnickEnded,
+    SchnickUpdated,
 }
 
 /// Represents the server state of a single logged-in user.
@@ -23,7 +27,7 @@ pub struct SessionHandle {
     /// The current invite token of this user.
     pub invite: String,
     /// The channel used to notify a client of any updates.
-    channel: Sender<SessionUpdate>
+    channel: Sender<SessionUpdate>,
 }
 
 impl SessionHandle {
@@ -32,14 +36,14 @@ impl SessionHandle {
             schnick: None,
             token,
             invite: Uuid::new_v4().to_string(),
-            channel: Sender::new(4)
+            channel: Sender::new(4),
         }
     }
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct SessionManager {
-    pub(crate) data: Arc<RwLock<HashMap<i32, SessionHandle>>>
+    pub(crate) data: Arc<RwLock<HashMap<i32, SessionHandle>>>,
 }
 
 impl SessionManager {

@@ -1,4 +1,3 @@
-
 use axum::{
     extract::{Query, State},
     http::{StatusCode, header::CONTENT_TYPE},
@@ -11,7 +10,10 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 use uuid::Uuid;
 
-use crate::{app::{App, SESSION_COOKIE_NAME}, session::{SessionManager, SessionUpdate}};
+use crate::{
+    app::{App, SESSION_COOKIE_NAME},
+    session::{SessionManager, SessionUpdate},
+};
 
 impl SessionManager {
     pub async fn check_invite(&self, invite: &Invite) -> Result<(), StatusCode> {
@@ -30,7 +32,7 @@ impl SessionManager {
         if let Some(handle) = self.data.read().await.get(&id) {
             Ok(Invite {
                 id: id,
-                token: handle.invite.clone()
+                token: handle.invite.clone(),
             })
         } else {
             Err(StatusCode::NOT_FOUND)
@@ -98,11 +100,15 @@ pub async fn invite(
     }
     app.sessions.start_schnick(id, other).await?;
     trace!(target: "invite::invite", "notifying");
-    let _ = app.sessions.sender(invite.id).await?.send(SessionUpdate::SchnickStarted);
+    let _ = app
+        .sessions
+        .sender(invite.id)
+        .await?
+        .send(SessionUpdate::SchnickStarted);
     trace!(target: "invite::invite", "invalidating");
     app.sessions.renew_invite(invite.id).await?;
     trace!(target: "invite::invite", "returning");
-    Ok((cookies, Redirect::temporary("schnick")))
+    Ok((cookies, Redirect::temporary("..")))
 }
 
 /// The `/qrcode` route.

@@ -17,7 +17,8 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::{
-    schnick::Weapon, session::{SessionHandle, SessionManager},
+    schnick::Weapon,
+    session::{SessionHandle, SessionManager},
 };
 
 pub const SESSION_COOKIE_NAME: &'static str = "session";
@@ -56,7 +57,7 @@ impl App {
         Self {
             base,
             pool: Arc::new(pool),
-            sessions: Default::default()
+            sessions: Default::default(),
         }
     }
 
@@ -88,7 +89,11 @@ impl App {
                 .map_err(|_| StatusCode::FORBIDDEN)?;
             if entry.token == session.token {
                 drop(guard);
-                self.sessions.data.write().await.insert(session.id, SessionHandle::with_token(session.token.clone()));
+                self.sessions
+                    .data
+                    .write()
+                    .await
+                    .insert(session.id, SessionHandle::with_token(session.token.clone()));
                 Ok(())
             } else {
                 println!("{entry:?} vs {session:?}");
@@ -147,7 +152,7 @@ impl App {
                 schnicks::winner.eq(winner),
                 schnicks::loser.eq(loser),
                 schnicks::weapon.eq(weapon as i32),
-                schnicks::played_at.eq(Utc::now())
+                schnicks::played_at.eq(Utc::now()),
             ))
             .execute(&mut self.connection().await?)
             .await
