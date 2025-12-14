@@ -107,7 +107,6 @@ impl SessionManager {
     }
 }
 
-/// Event source for schnick updates
 pub async fn schnick_select(
     State(app): State<App>,
     cookies: CookieJar,
@@ -155,5 +154,17 @@ pub async fn schnick_select(
             let _ = senderb.send(SessionUpdate::SchnickRetried);
         }
     };
+    Ok(StatusCode::OK)
+}
+
+pub async fn schnick_abort(
+    State(app): State<App>,
+    cookies: CookieJar,
+) -> Result<impl IntoResponse, StatusCode> {
+    let id = app.authenticate(&cookies).await?;
+    let schnick = app.sessions.active_schnick(id).await?;
+    app.sessions.end_schnick(Arc::clone(&schnick)).await?;
+    let _ = app.sessions.sender(schnick.ids.0).await?.send(SessionUpdate::SchnickEnded);
+    let _ = app.sessions.sender(schnick.ids.1).await?.send(SessionUpdate::SchnickEnded);
     Ok(StatusCode::OK)
 }
