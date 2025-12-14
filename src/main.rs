@@ -104,7 +104,8 @@ async fn main() {
             ["paper.svg", "../assets/paper.svg", "image/svg+xml"],
             ["scissors.svg", "../assets/scissors.svg", "image/svg+xml"],
             ["won.svg", "../assets/won.svg", "image/svg+xml"],
-            ["lost.svg", "../assets/lost.svg", "image/svg+xml"]
+            ["lost.svg", "../assets/lost.svg", "image/svg+xml"],
+            ["abort.svg", "../assets/abort.svg", "image/svg+xml"]
         ])))
         .with_state(app);
     let listener = TcpListener::bind(config.bind)
