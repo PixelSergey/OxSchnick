@@ -65,6 +65,48 @@ h1 {
 }
 
 .weapon {
-    width: 2em;
-    height: 2em;
+    width: 3em;
+    height: 3em;
+}
+
+.weapon-selection, .outcome-selection {
+    display: flex;
+    justify-content: space-evenly;
+    gap: 1em;
+}
+
+#schnick {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    gap: 1em;
+    width: 90%;
+    margin: 1em auto;
+}
+
+#schnick input[type=radio] {
+    display: none;
+}
+
+#schnick input[type=radio]+label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: color-mix(in srgb, var(--background-color) 70%, var(--foreground-color) 30%);
+    padding: 0.5em;
+    flex-grow: 1;
+    border-radius: 0.5em;
+}
+
+#schnick input[type=radio]:checked+label {
+    background-color: var(--highlight-purple);
+}
+
+#schnick #won:checked+label {
+    background-color: var(--highlight-green);
+}
+
+#schnick #lost:checked+label {
+    background-color: var(--highlight-red);
 }
