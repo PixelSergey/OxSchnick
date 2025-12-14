@@ -1,13 +1,13 @@
 use axum::{
     Router,
-    extract::State,
+    extract::{Path, State},
     http::{StatusCode, header::CONTENT_TYPE},
     response::{Html, IntoResponse},
     routing::{get, post},
 };
-use axum_extra::{extract::CookieJar, response::Css};
+use axum_extra::{extract::CookieJar};
 use clap::Parser;
-use diesel::{dsl::select, prelude::*};
+use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use dotenvy::dotenv;
 use log::{debug, info};
@@ -51,6 +51,17 @@ pub async fn index(
     Ok(Html(include_str!("../templates/index.html")))
 }
 
+macro_rules! serve_static {
+    ( $name:expr, [ $( [ $path:literal, $file:expr, $type:literal ] ),* ]) => {
+        match $name {
+            $(
+                $path => Ok(([(CONTENT_TYPE, $type)], &include_bytes!($file)[..])),
+            )*
+            _ => Err(StatusCode::NOT_FOUND)
+        }
+    };
+}
+
 #[tokio::main]
 async fn main() {
     use crate::schema::users;
@@ -86,19 +97,13 @@ async fn main() {
         .route("/settings", get(settings))
         .route("/settings/username", post(settings_username))
         .route("/settings/dect", post(settings_dect))
-        .route(
-            "/assets/style.css",
-            get(async || Css(include_str!("../assets/style.css"))),
-        )
-        .route(
-            "/assets/home.svg",
-            get(async || {
-                (
-                    [(CONTENT_TYPE, "image/svg+xml")],
-                    include_str!("../assets/home.svg"),
-                )
-            }),
-        )
+        .route("/assets/{file}", get(async |Path(file): Path<String>| serve_static!(&file[..], [
+            ["style.css", "../assets/style.css", "text/css"],
+            ["home.svg", "../assets/home.svg", "image/svg+xml"],
+            ["rock.svg", "../assets/rock.svg", "image/svg+xml"],
+            ["paper.svg", "../assets/paper.svg", "image/svg+xml"],
+            ["scissors.svg", "../assets/scissors.svg", "image/svg+xml"]
+        ])))
         .with_state(app);
     let listener = TcpListener::bind(config.bind)
         .await

@@ -4,7 +4,7 @@ use axum::{
     Form,
     extract::State,
     http::StatusCode,
-    response::{Html, IntoResponse},
+    response::{IntoResponse},
 };
 use axum_extra::extract::CookieJar;
 use log::{debug, trace};
