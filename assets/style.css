@@ -63,3 +63,8 @@ h1 {
     color: var(--foreground-color);
     align-self: center;
 }
+
+.weapon {
+    width: 2em;
+    height: 2em;
+}
