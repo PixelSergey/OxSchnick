@@ -99,7 +99,6 @@ async fn main() {
         .route("/settings/dect", post(settings_dect))
         .route("/assets/{file}", get(async |Path(file): Path<String>| serve_static!(&file[..], [
             ["style.css", "../assets/style.css", "text/css"],
-            ["home.svg", "../assets/home.svg", "image/svg+xml"],
             ["rock.svg", "../assets/rock.svg", "image/svg+xml"],
             ["paper.svg", "../assets/paper.svg", "image/svg+xml"],
             ["scissors.svg", "../assets/scissors.svg", "image/svg+xml"],
