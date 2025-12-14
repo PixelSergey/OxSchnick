@@ -19,7 +19,7 @@ use crate::{
     events::events,
     home::home,
     invite::{invite, qrcode},
-    schnick::{schnick_abort, schnick_select}, settings::{settings, settings_username},
+    schnick::{schnick_abort, schnick_select}, settings::{settings, settings_dect, settings_username},
 };
 
 pub mod app;
@@ -85,6 +85,7 @@ async fn main() {
         .route("/home", get(home))
         .route("/settings", get(settings))
         .route("/settings/username", post(settings_username))
+        .route("/settings/dect", post(settings_dect))
         .route(
             "/assets/style.css",
             get(async || Css(include_str!("../assets/style.css"))),

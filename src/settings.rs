@@ -14,6 +14,7 @@ use crate::app::App;
 pub struct User {
     pub id: i32,
     pub username: Option<String>,
+    pub dect: Option<String>,
 }
 
 pub async fn settings(
@@ -45,7 +46,28 @@ pub async fn settings_username(
     let user = update(users::table)
         .filter(users::id.eq(id))
         .set(users::username.eq(data.username))
-        .returning((users::id, users::username))
+        .returning((users::id, users::username, users::dect))
+        .get_result::<User>(&mut app.connection().await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?)
+        .await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(Html(user.render().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?))
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct DectForm {
+    dect: String,
+}
+
+pub async fn settings_dect(
+    State(app): State<App>,
+    cookies: CookieJar,
+    Form(data): Form<DectForm>,
+) -> Result<impl IntoResponse, StatusCode> {
+    use crate::schema::users;
+    let id = app.authenticate(&cookies).await?;
+    let user = update(users::table)
+        .filter(users::id.eq(id))
+        .set(users::dect.eq(data.dect))
+        .returning((users::id, users::username, users::dect))
         .get_result::<User>(&mut app.connection().await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?)
         .await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     Ok(Html(user.render().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?))
