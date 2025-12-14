@@ -1,5 +1,9 @@
 <header>
+    {% if let Some(username) = username %}
+    <h1><span class="icon">🏠</span> Hi {{ username }}!</h1>
+    {% else %}
     <h1><span class="icon">🏠</span> Hi Fan!</h1>
+    {% endif %}
 </header>  
 <a id="invite" href="qrcode">Let's schnick!</a>
 <a href="{{ invite }}">invite link</a>

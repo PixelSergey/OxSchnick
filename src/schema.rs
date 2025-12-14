@@ -15,6 +15,8 @@ diesel::table! {
         id -> Int4,
         #[max_length = 32]
         username -> Nullable<Varchar>,
+        #[max_length = 4]
+        dect -> Nullable<Bpchar>,
         parent -> Int4,
         #[max_length = 36]
         token -> Bpchar,
