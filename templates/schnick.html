@@ -1,18 +1,17 @@
 <form>
     <div>
-        won
-        <input type="radio" id="won" name="won" value="true">
-        lost
-        <input type="radio" id="lost" name="won" value="false">
+        <label for="won">won</label><input type="radio" id="won" name="won" value="true">
+        <label for="lost">lost</label><input type="radio" id="lost" name="won" value="false">
     </div>
     <div>
-        rock
-        <input type="radio" id="rock" name="weapon" value="0">
-        paper
-        <input type="radio" id="paper" name="weapon" value="2">
-        scissors
-        <input type="radio" id="scissors" name="weapon" value="1">
+        <label for="rock">rock</label><input type="radio" id="rock" name="weapon" value="0">
+        <label for="paper">paper</label><input type="radio" id="paper" name="weapon" value="2">
+        <label for="scissors">scissors</label><input type="radio" id="scissors" name="weapon" value="1">
     </div>
     <button hx-post="select">select</button>
-    <button hx-post="abort">abort</button>
 </form>
+<footer>
+    <form>
+        <button hx-post="abort">abort</button>
+    </form>
+</footer>
