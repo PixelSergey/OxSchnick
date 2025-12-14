@@ -105,7 +105,11 @@ async fn main() {
             ["scissors.svg", "../assets/scissors.svg", "image/svg+xml"],
             ["won.svg", "../assets/won.svg", "image/svg+xml"],
             ["lost.svg", "../assets/lost.svg", "image/svg+xml"],
-            ["abort.svg", "../assets/abort.svg", "image/svg+xml"]
+            ["abort.svg", "../assets/abort.svg", "image/svg+xml"],
+            ["adult.svg", "../assets/adult.svg", "image/svg+xml"],
+            ["hash_char.svg", "../assets/hash_char.svg", "image/svg+xml"],
+            ["spider_web.svg", "../assets/spider_web.svg", "image/svg+xml"],
+            ["wrench.svg", "../assets/wrench.svg", "image/svg+xml"]
         ])))
         .with_state(app);
     let listener = TcpListener::bind(config.bind)
