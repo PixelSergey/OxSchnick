@@ -7,6 +7,8 @@ use axum::{
 };
 use axum_extra::{extract::CookieJar, response::Css};
 use clap::Parser;
+use diesel::{dsl::select, prelude::*};
+use diesel_async::RunQueryDsl;
 use dotenvy::dotenv;
 use log::{debug, info};
 use tokio::net::TcpListener;
@@ -51,15 +53,17 @@ pub async fn index(
 
 #[tokio::main]
 async fn main() {
+    use crate::schema::users;
     env_logger::init();
     dotenv().ok();
     let config = Config::parse();
     let base = Url::parse(&config.base).expect("could not parse base url");
     info!(target: "main", "creating app");
     let app = App::new(base.clone()).await;
+    let root_token =  users::table.filter(users::id.eq(1)).select(users::token).first::<String>(&mut app.connection().await.unwrap()).await.unwrap();
     app.authenticate_session(&Session {
         id: 1,
-        token: "00000000-0000-0000-0000-000000000000".to_string(),
+        token: root_token,
     })
     .await
     .expect("could not authenticate root user");
