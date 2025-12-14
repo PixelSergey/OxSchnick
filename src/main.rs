@@ -1,5 +1,9 @@
 use axum::{
-    Router, extract::State, http::{StatusCode, header::CONTENT_TYPE}, response::{Html, IntoResponse}, routing::{get, post}
+    Router,
+    extract::State,
+    http::{StatusCode, header::CONTENT_TYPE},
+    response::{Html, IntoResponse},
+    routing::{get, post},
 };
 use axum_extra::{extract::CookieJar, response::Css};
 use clap::Parser;
@@ -13,7 +17,7 @@ use crate::{
     events::events,
     home::home,
     invite::{invite, qrcode},
-    schnick::schnick_select,
+    schnick::schnick_select, settings::{settings, settings_username},
 };
 
 pub mod app;
@@ -23,6 +27,7 @@ pub mod invite;
 pub mod schema;
 pub mod schnick;
 pub mod session;
+pub mod settings;
 
 /// A server for tracking schnicks.
 #[derive(Debug, Clone, Parser)]
@@ -73,6 +78,8 @@ async fn main() {
         .route("/invite", get(invite))
         .route("/select", post(schnick_select))
         .route("/home", get(home))
+        .route("/settings", get(settings))
+        .route("/settings/username", post(settings_username))
         .route(
             "/assets/style.css",
             get(async || Css(include_str!("../assets/style.css"))),

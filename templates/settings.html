@@ -1,1 +1,8 @@
-settings
+<form>
+    {% if let Some(username) = username %}
+        <input type="text" name="username" id="username" value="{{ username }}">
+    {% else %}
+        <input type="text" name="username" id="username">
+    {% endif %}
+    <button hx-post="settings/username" hx-target="main" hx-swap="innerHTML">change</button>
+</form>

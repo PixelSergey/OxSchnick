@@ -9,13 +9,11 @@ use log::debug;
 
 use crate::app::App;
 
-
 #[derive(Template)]
 #[template(path = "home.html")]
 struct Home {
     pub invite: String,
 }
-
 
 /// The `/home` route.
 pub async fn home(
@@ -26,7 +24,9 @@ pub async fn home(
     let id = app.authenticate(&cookies).await?;
     let invite = app.sessions.get_invite(id).await?;
     let invite_url = invite.url(&app.base)?;
-    Ok(Html(Home {
-        invite: invite_url
-    }.render().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?))
+    Ok(Html(
+        Home { invite: invite_url }
+            .render()
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+    ))
 }

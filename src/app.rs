@@ -62,7 +62,7 @@ impl App {
     }
 
     /// Returns a connection from the connection pool.
-    async fn connection(&self) -> Result<PooledConnection<'_, AsyncPgConnection>, StatusCode> {
+    pub async fn connection(&self) -> Result<PooledConnection<'_, AsyncPgConnection>, StatusCode> {
         self.pool
             .get()
             .await
