@@ -1,6 +1,5 @@
 use std::convert::Infallible;
 
-use askama::Template;
 use async_stream::try_stream;
 use axum::{
     extract::State,
@@ -11,12 +10,6 @@ use axum_extra::extract::CookieJar;
 use futures::Stream;
 
 use crate::app::App;
-
-#[derive(Template)]
-#[template(path = "home.html")]
-struct Home {
-    pub invite: String,
-}
 
 pub async fn body(app: &App, id: i32) -> Event {
     if let Ok(schnick) = app.sessions.active_schnick(id).await {
@@ -30,9 +23,7 @@ pub async fn body(app: &App, id: i32) -> Event {
             Event::default().data(include_str!("../templates/schnick.html"))
         }
     } else {
-        let invite = app.sessions.get_invite(id).await.unwrap();
-        let url = invite.url(&app.base).unwrap();
-        Event::default().data(&Home { invite: url}.render().unwrap())
+        Event::default().data(include_str!("../templates/nav.html"))
     }
 }
 

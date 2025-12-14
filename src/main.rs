@@ -1,12 +1,10 @@
 use axum::{
-    Router,
-    http::header::CONTENT_TYPE,
-    routing::{get, post},
+    Router, extract::State, http::{StatusCode, header::CONTENT_TYPE}, response::{Html, IntoResponse}, routing::{get, post}
 };
-use axum_extra::response::Css;
+use axum_extra::{extract::CookieJar, response::Css};
 use clap::Parser;
 use dotenvy::dotenv;
-use log::info;
+use log::{debug, info};
 use tokio::net::TcpListener;
 use url::Url;
 
@@ -36,6 +34,16 @@ pub struct Config {
     bind: String,
 }
 
+/// The `/` route.
+pub async fn index(
+    State(app): State<App>,
+    cookies: CookieJar,
+) -> Result<impl IntoResponse, StatusCode> {
+    debug!(target: "home::home", "cookies={cookies:?}");
+    let _ = app.authenticate(&cookies).await?;
+    Ok(Html(include_str!("../templates/index.html")))
+}
+
 #[tokio::main]
 async fn main() {
     env_logger::init();
@@ -59,11 +67,12 @@ async fn main() {
             .url(&base)
     );
     let router = Router::new()
-        .route("/", get(home))
+        .route("/", get(index))
         .route("/events", get(events))
         .route("/qrcode", get(qrcode))
         .route("/invite", get(invite))
         .route("/select", post(schnick_select))
+        .route("/home", get(home))
         .route(
             "/assets/style.css",
             get(async || Css(include_str!("../assets/style.css"))),
