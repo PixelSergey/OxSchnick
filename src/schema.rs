@@ -11,6 +11,16 @@ diesel::table! {
 }
 
 diesel::table! {
+    streaks (user_id) {
+        user_id -> Int4,
+        longest_winning_streak -> Int4,
+        current_winning_streak -> Int4,
+        longest_losing_streak -> Int4,
+        current_losing_streak -> Int4,
+    }
+}
+
+diesel::table! {
     users (id) {
         id -> Int4,
         #[max_length = 32]
@@ -25,4 +35,6 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(schnicks, users,);
+diesel::joinable!(streaks -> users (user_id));
+
+diesel::allow_tables_to_appear_in_same_query!(schnicks, streaks, users,);
