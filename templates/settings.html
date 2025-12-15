@@ -1,23 +1,23 @@
 <div class="settings">
     <div>
-        <form>
+        <form hx-post="settings/username" hx-target="main" hx-swap="innerHTML" hx-validate="true">
             {% if let Some(username) = username %}
-                <input type="text" name="username" id="username" value="{{ username }}">
+                <input type="text" name="username" id="username" value="{{ username }}" maxlength="32" required>
             {% else %}
-                <input type="text" name="username" id="username">
+                <input type="text" name="username" id="username" maxlength="32" required>
             {% endif %}
-            <button hx-post="settings/username" hx-target="main" hx-swap="innerHTML">change</button>
+            <button>change</button>
         </form>
         <label for="username">username</label>
     </div>
     <div>
-        <form>
+        <form hx-post="settings/dect" hx-target="main" hx-swap="innerHTML" hx-validate="true">
             {% if let Some(dect) = dect %}
-                <input type="text" name="dect" id="dect" value="{{ dect }}">
+                <input type="number" name="dect" id="dect" value="{{ dect }}" min="1000" max="9999" required>
             {% else %}
-                <input type="text" name="dect" id="dect">
+                <input type="number" name="dect" id="dect" min="1000" max="9999" required>
             {% endif %}
-            <button hx-post="settings/dect" hx-target="main" hx-swap="innerHTML">change</button>
+            <button>change</button>
         </form>
         <label for="dect">dect</label>
     </div>
