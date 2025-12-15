@@ -64,9 +64,14 @@ pub async fn settings_dect(
 ) -> Result<impl IntoResponse, StatusCode> {
     use crate::schema::users;
     let id = app.authenticate(&cookies).await?;
+    let dect_value = if data.dect.is_empty() {
+        None
+    } else {
+        Some(data.dect)
+    };
     let user = update(users::table)
         .filter(users::id.eq(id))
-        .set(users::dect.eq(data.dect))
+        .set(users::dect.eq(dect_value))
         .returning((users::id, users::username, users::dect))
         .get_result::<User>(&mut app.connection().await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?)
         .await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
