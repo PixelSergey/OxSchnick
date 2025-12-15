@@ -176,7 +176,7 @@ h1 {
 .settings input, .settings button {
     background-color: var(--foreground-color);
     color: var(--background-color);
-    padding:  0.8em 1em;
+    padding: 0.8em 1em;
     border-radius: 0.5em;
     font-size: 1em;
     font-family: inherit;
@@ -210,4 +210,48 @@ h1 {
     display: flex;
     justify-content: center;
     gap: 2em;
+}
+
+/* https://www.geeksforgeeks.org/css/how-to-move-an-element-in-a-circular-path-using-css/ */
+@keyframes spin {
+    0% {
+        transform: translate(-50%, -50%) rotate(var(--start)) translateX(100px) rotate(calc(-1 * var(--start)));
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(calc(360deg + var(--start))) translateX(100px) rotate(calc(-360deg - var(--start)));
+    }
+}
+
+@keyframes rotate {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+.waiting-symbols {
+    margin: auto;
+    .symbols {
+        width: 5em;
+        position: absolute;
+    }
+    #arrows {
+        position: absolute;
+        animation: rotate 4s linear infinite;
+    }
+    #rock {
+        --start: 120deg;
+        animation: spin 4s linear infinite;
+    }
+    #paper {
+        --start: 0deg;
+        animation: spin 4s linear infinite;
+    }
+
+    #scissors {
+        --start: -120deg;
+        animation: spin 4s linear infinite;
+    }
 }

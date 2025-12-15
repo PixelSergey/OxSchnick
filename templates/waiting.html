@@ -1,1 +1,23 @@
-waiting for other use to conclude
+<div class="waiting-symbols">
+    <img class="symbols" id="rock" src="../assets/rock.svg" alt="waiting for other user to finish">
+    <img class="symbols" id="scissors" src="../assets/scissors.svg" alt="waiting for other user to finish">
+    <img class="symbols" id="paper" src="../assets/paper.svg" alt="waiting for other user to finish">
+
+    <!-- arrows -->
+    <svg id="arrows" width="200" height="200" viewBox="0 0 200 200">
+            <path id="arrow" d="M100,20 A80,80 0 0,1 170,60" stroke="var(--shadow-gray)" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
+            <use href="#arrow" transform-origin="center" transform="rotate(120)" />
+            <use href="#arrow" transform-origin="center" transform="rotate(240)" />
+        <!-- arrow heads -->
+        <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="var(--shadow-gray)"/>
+            </marker>
+        </defs>
+    </svg>
+</div>
+<footer>
+    <nav>
+        <button id="abort" hx-post="abort"><img src="../assets/abort.svg" alt="abort"></button>
+    </nav>
+</footer>
