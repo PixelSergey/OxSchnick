@@ -72,3 +72,11 @@ pub async fn settings_dect(
         .await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     Ok(Html(user.render().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?))
 }
+
+pub async fn settings_about() -> Result<impl IntoResponse, StatusCode> {
+    Ok(Html(include_str!("../templates/about_us.html")))
+}
+
+pub async fn settings_imprint() -> Result<impl IntoResponse, StatusCode> {
+    Ok(Html(include_str!("../templates/imprint.html")))
+}

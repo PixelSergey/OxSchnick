@@ -194,3 +194,9 @@ h1 {
 .settings button:active {
     background-color: var(--shadow-gray);
 }
+
+.settings-links {
+    display: flex;
+    justify-content: center;
+    gap: 2em;
+}

@@ -19,7 +19,8 @@ use crate::{
     events::events,
     home::home,
     invite::{invite, qrcode},
-    schnick::{schnick_abort, schnick_select}, settings::{settings, settings_dect, settings_username},
+    schnick::{schnick_abort, schnick_select},
+    settings::{settings, settings_about, settings_dect, settings_imprint, settings_username},
 };
 
 pub mod app;
@@ -97,6 +98,8 @@ async fn main() {
         .route("/settings", get(settings))
         .route("/settings/username", post(settings_username))
         .route("/settings/dect", post(settings_dect))
+        .route("/settings/about", get(settings_about))
+        .route("/settings/imprint", get(settings_imprint))
         .route("/assets/{file}", get(async |Path(file): Path<String>| serve_static!(&file[..], [
             ["style.css", "../assets/style.css", "text/css"],
             ["rock.svg", "../assets/rock.svg", "image/svg+xml"],
