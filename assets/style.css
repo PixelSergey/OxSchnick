@@ -163,7 +163,7 @@ h1 {
         display: flex;
         gap: 0.2em;
     }
-    div {
+    .input-section {
         /* vertical spacing between forms */
         margin: 0.5em 0;
     }
@@ -185,6 +185,17 @@ h1 {
 .settings input {
     min-width: 5em;
     flex: 1 1 auto;
+}
+
+.settings .error {
+    display: none;
+    color: var(--highlight-red);
+    font-size: 1em;
+    margin-top: 0.3em;
+}
+
+.input-section:has(input:invalid) .error {
+    display: inline;
 }
 
 .settings button {

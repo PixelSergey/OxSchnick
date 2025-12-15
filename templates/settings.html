@@ -1,6 +1,6 @@
 <div class="settings">
-    <div>
-        <form hx-post="settings/username" hx-target="main" hx-swap="innerHTML" hx-validate="true">
+    <div class="input-section">
+        <form hx-post="settings/username" hx-target="main" hx-swap="innerHTML" hx-validate="true" novalidate>
             {% if let Some(username) = username %}
                 <input type="text" name="username" id="username" value="{{ username }}" maxlength="32" required>
             {% else %}
@@ -8,18 +8,18 @@
             {% endif %}
             <button>change</button>
         </form>
-        <label for="username">username</label>
+            <label for="username">username<span class="error"> cannot be empty</span></label>
     </div>
-    <div>
-        <form hx-post="settings/dect" hx-target="main" hx-swap="innerHTML" hx-validate="true">
+    <div class="input-section">
+        <form hx-post="settings/dect" hx-target="main" hx-swap="innerHTML" hx-validate="true" novalidate>
             {% if let Some(dect) = dect %}
-                <input type="number" name="dect" id="dect" value="{{ dect }}" min="1000" max="9999" required>
+                <input type="text" name="dect" id="dect" value="{{ dect }}" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
             {% else %}
-                <input type="number" name="dect" id="dect" min="1000" max="9999" required>
+                <input type="text" name="dect" id="dect" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
             {% endif %}
             <button>change</button>
         </form>
-        <label for="dect">dect</label>
+        <label for="dect">dect<span class="error"> must be 4 digits or empty</span></label>
     </div>
 </div>
 <div class="settings-links">
