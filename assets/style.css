@@ -6,6 +6,13 @@
     --highlight-purple: #9673ff;
 }
 
+@media (prefers-color-scheme: light) {
+  :root {
+    --background-color: #faf5f5;
+    --foreground-color: #141414;
+  }
+}
+
 body {
     background-color: var(--background-color);
     color: var(--foreground-color);
