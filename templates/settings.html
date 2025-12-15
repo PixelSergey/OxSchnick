@@ -1,5 +1,5 @@
 <div class="settings">
-    <div class="input-section">
+    <div class="settings-input">
         <form hx-post="settings/username" hx-target="main" hx-swap="innerHTML" hx-validate="true" novalidate>
             {% if let Some(username) = username %}
                 <input type="text" name="username" id="username" value="{{ username }}" maxlength="32" required>
@@ -10,7 +10,7 @@
         </form>
             <label for="username">username<span class="error"> cannot be empty</span></label>
     </div>
-    <div class="input-section">
+    <div class="settings-input">
         <form hx-post="settings/dect" hx-target="main" hx-swap="innerHTML" hx-validate="true" novalidate>
             {% if let Some(dect) = dect %}
                 <input type="text" name="dect" id="dect" value="{{ dect }}" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">

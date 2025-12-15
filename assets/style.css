@@ -8,10 +8,10 @@
 }
 
 @media (prefers-color-scheme: light) {
-  :root {
-    --background-color: #faf5f5;
-    --foreground-color: #141414;
-  }
+    :root {
+        --background-color: #faf5f5;
+        --foreground-color: #141414;
+    }
 }
 
 body {
@@ -26,8 +26,6 @@ body {
 }
 
 footer {
-    /*position: fixed;
-    bottom: 0;*/
     width: 100%;
     background-color: var(--highlight-red);
     flex-grow: 0;
@@ -37,8 +35,10 @@ nav {
     display: flex;
     justify-content: space-around;
     padding: 1em;
+
     div {
         display: inline;
+
         img {
             color: inherit;
             width: 2em;
@@ -66,6 +66,10 @@ h1 {
     font-size: 2em;
 }
 
+/*************
+ * home page *
+ *************/
+
 #invite {
     display: block;
     padding: 1em 1em;
@@ -76,6 +80,10 @@ h1 {
     color: var(--foreground-color);
     align-self: center;
 }
+
+/****************
+ * schnick page *
+ ****************/
 
 .weapon {
     width: 3em;
@@ -103,7 +111,7 @@ h1 {
     display: none;
 }
 
-#schnick input[type=radio]+label {
+#schnick input[type=radio] + label {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -113,15 +121,15 @@ h1 {
     border-radius: 0.5em;
 }
 
-#schnick input[type=radio]:checked+label {
+#schnick input[type=radio]:checked + label {
     background-color: var(--highlight-purple);
 }
 
-#schnick #won:checked+label {
+#schnick #won:checked + label {
     background-color: var(--highlight-green);
 }
 
-#schnick #lost:checked+label {
+#schnick #lost:checked + label {
     background-color: var(--highlight-red);
 }
 
@@ -147,26 +155,31 @@ h1 {
 #abort img {
     width: 3em;
     height: 3em;
-    /*filter: grayscale();*/
+    filter: grayscale(100);
 }
 
 
-/*
-    settings page
- */
+/*****************
+ * settings page *
+ *****************/
+
 .settings {
     display: flex;
     flex-direction: column;
     justify-content: center;
     flex-grow: 1;
+    font-size: 1em;
+
     form {
         display: flex;
         gap: 0.2em;
     }
-    .input-section {
+
+    .settings-input {
         /* vertical spacing between forms */
         margin: 0.5em 0;
     }
+
     label {
         /* horizontal indent */
         margin: 0 1em;
@@ -178,7 +191,7 @@ h1 {
     color: var(--background-color);
     padding: 0.8em 1em;
     border-radius: 0.5em;
-    font-size: 1em;
+    font-size: inherit;
     font-family: inherit;
 }
 
@@ -190,11 +203,11 @@ h1 {
 .settings .error {
     display: none;
     color: var(--highlight-red);
-    font-size: 1em;
+    font-size: inherit;
     margin-top: 0.3em;
 }
 
-.input-section:has(input:invalid) .error {
+.settings-input:has(input:invalid) .error {
     display: inline;
 }
 
@@ -211,6 +224,10 @@ h1 {
     justify-content: center;
     gap: 2em;
 }
+
+/****************
+ * waiting page *
+ ****************/
 
 /* https://www.geeksforgeeks.org/css/how-to-move-an-element-in-a-circular-path-using-css/ */
 @keyframes spin {
@@ -233,18 +250,22 @@ h1 {
 
 .waiting-symbols {
     margin: auto;
+
     .symbols {
         width: 5em;
         position: absolute;
     }
+
     #arrows {
         position: absolute;
         animation: rotate 4s linear infinite;
     }
+
     #rock {
         --start: 120deg;
         animation: spin 4s linear infinite;
     }
+
     #paper {
         --start: 0deg;
         animation: spin 4s linear infinite;
