@@ -4,6 +4,7 @@
     --highlight-red: #ff3719;
     --highlight-green: #00ff00;
     --highlight-purple: #9673ff;
+    --shadow-gray: color-mix(in srgb, var(--background-color) 70%, var(--foreground-color) 30%);
 }
 
 @media (prefers-color-scheme: light) {
@@ -106,7 +107,7 @@ h1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: color-mix(in srgb, var(--background-color) 70%, var(--foreground-color) 30%);
+    background-color: var(--shadow-gray);
     padding: 0.5em;
     flex-grow: 1;
     border-radius: 0.5em;
@@ -146,5 +147,50 @@ h1 {
 #abort img {
     width: 3em;
     height: 3em;
-    filter: grayscale();
+    /*filter: grayscale();*/
+}
+
+
+/*
+    settings page
+ */
+.settings {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+    form {
+        display: flex;
+        gap: 0.2em;
+    }
+    div {
+        /* vertical spacing between forms */
+        margin: 0.5em 0;
+    }
+    label {
+        /* horizontal indent */
+        margin: 0 1em;
+    }
+}
+
+.settings input, .settings button {
+    background-color: var(--foreground-color);
+    color: var(--background-color);
+    padding:  0.8em 1em;
+    border-radius: 0.5em;
+    font-size: 1em;
+    font-family: inherit;
+}
+
+.settings input {
+    min-width: 5em;
+    flex: 1 1 auto;
+}
+
+.settings button {
+    flex: 0 0 auto;
+}
+
+.settings button:active {
+    background-color: var(--shadow-gray);
 }

@@ -1,16 +1,24 @@
-<form>
-    {% if let Some(username) = username %}
-        <input type="text" name="username" id="username" value="{{ username }}">
-    {% else %}
-        <input type="text" name="username" id="username">
-    {% endif %}
-    <button hx-post="settings/username" hx-target="main" hx-swap="innerHTML">change</button>
-</form>
-<form>
-    {% if let Some(dect) = dect %}
-        <input type="text" name="dect" id="dect" value="{{ dect }}">
-    {% else %}
-        <input type="text" name="dect" id="dect">
-    {% endif %}
-    <button hx-post="settings/dect" hx-target="main" hx-swap="innerHTML">change</button>
-</form>
+<div class="settings">
+    <div>
+        <form>
+            {% if let Some(username) = username %}
+                <input type="text" name="username" id="username" value="{{ username }}">
+            {% else %}
+                <input type="text" name="username" id="username">
+            {% endif %}
+            <button hx-post="settings/username" hx-target="main" hx-swap="innerHTML">change</button>
+        </form>
+        <label for="username">username</label>
+    </div>
+    <div>
+        <form>
+            {% if let Some(dect) = dect %}
+                <input type="text" name="dect" id="dect" value="{{ dect }}">
+            {% else %}
+                <input type="text" name="dect" id="dect">
+            {% endif %}
+            <button hx-post="settings/dect" hx-target="main" hx-swap="innerHTML">change</button>
+        </form>
+        <label for="dect">dect</label>
+    </div>
+</div>
