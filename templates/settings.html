@@ -6,9 +6,9 @@
             {% else %}
                 <input type="text" name="username" id="username" maxlength="32" required>
             {% endif %}
-            <button>change</button>
+            <button>Change</button>
         </form>
-            <label for="username">username<span class="error"> cannot be empty</span></label>
+            <label for="username">Username<span class="error"> cannot be empty</span></label>
     </div>
     <div class="settings-input">
         <form hx-post="settings/dect" hx-target="main" hx-swap="innerHTML" hx-validate="true" novalidate>
@@ -17,12 +17,12 @@
             {% else %}
                 <input type="text" name="dect" id="dect" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
             {% endif %}
-            <button>change</button>
+            <button>Change</button>
         </form>
-        <label for="dect">dect<span class="error"> must be 4 digits or empty</span></label>
+        <label for="dect">Dect<span class="error"> must be 4 digits or empty</span></label>
     </div>
 </div>
 <div class="settings-links">
-    <a href="/about" hx-get="settings/about" hx-target="body" hx-swap="innerHTML">about us</a>
-    <a href="/imprint" hx-get="settings/imprint" hx-target="body" hx-swap="innerHTML">imprint</a>
+    <a href="/about" hx-get="settings/about" hx-target="body" hx-swap="innerHTML">About Us</a>
+    <a href="/imprint" hx-get="settings/imprint" hx-target="body" hx-swap="innerHTML">Imprint</a>
 </div>

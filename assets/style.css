@@ -27,7 +27,7 @@ body {
 
 footer {
     flex-grow: 0;
-    padding: 2em;
+    padding: 0 2em 2em;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -98,9 +98,6 @@ main.qrcode {
 
 a {
     text-decoration: none;
-}
-
-a:visited {
     color: inherit;
 }
 
@@ -327,43 +324,43 @@ form:valid #select {
 /****************
  * about page *
  ****************/
-    .about {
-      max-width: 400px;
-      margin: 0 auto;
-      text-align: justify;
-    }
+.about {
+    max-width: 400px;
+    margin: 0 auto;
+    text-align: justify;
+}
 
-    .center-image {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+.center-image {
+    text-align: center;
+    margin-bottom: 20px;
+}
 
-    .emoji-text {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 20px;
-    }
+.emoji-text {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+}
 
-    .emoji-text .emoji {
-      flex: 0 0 20%;
-      text-align: center;
-      margin-left: -10px;
-    }
+.emoji-text .emoji {
+    flex: 0 0 20%;
+    text-align: center;
+    margin-left: -10px;
+}
 
-    .emoji-text .text {
-      flex: 1;
-      max-width: 320px;
-      text-align: justify;
-    }
+.emoji-text .text {
+    flex: 1;
+    max-width: 320px;
+    text-align: justify;
+}
 
  /****************
- * imprint page *
- ****************/
- .imprint{
+  * imprint page *
+  ****************/
+.imprint{
     max-width: 400px;
     margin: 3em auto;
- }
+}
 
 /********
  * tabs *
