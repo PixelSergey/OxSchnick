@@ -11,7 +11,7 @@ use diesel_async::{
         bb8::{Pool, PooledConnection},
     },
 };
-use log::{debug, info};
+use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
 use url::Url;
 use uuid::Uuid;
@@ -130,7 +130,8 @@ impl App {
             .returning(users::id)
             .get_result(&mut self.connection().await?)
             .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+            .map_err(|e| {
+                error!(target: "app::register", "{:?}", e); StatusCode::INTERNAL_SERVER_ERROR})?;
         let session = Session {
             id,
             token: session_token,
@@ -156,7 +157,10 @@ impl App {
             ))
             .execute(&mut self.connection().await?)
             .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+            .map_err(|e| {
+                error!(target: "app::save_schnick", "{:?}", e); 
+                StatusCode::INTERNAL_SERVER_ERROR
+            })
             .map(|_| ())
     }
 

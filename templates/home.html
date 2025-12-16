@@ -7,3 +7,8 @@
 </header>  
 <a hx-get="qrcode" hx-target="body" hx-swap="innerHTML" id="invite">Let's schnick!</a>
 <a href="{{ invite }}">invite link</a>
+<ul>
+    <li>#schnicks: {{ num_schnicks }}</li>
+    <li>#winstreak: {{ win_streak.0 }}/{{ win_streak.1 }}</li>
+    <li>#losestreak: {{ lose_streak.0 }}/{{ lose_streak.1 }}</li>
+</ul>

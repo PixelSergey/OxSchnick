@@ -1,10 +1,12 @@
 -- database to store more expensive stats
 CREATE TABLE metrics (
     id int PRIMARY KEY,
-    longest_winning_streak integer NOT NULL,
-    current_winning_streak integer NOT NULL,
-    longest_losing_streak integer NOT NULL,
-    current_losing_streak integer NOT NULL,
+    num_schnicks integer NOT NULL DEFAULT 0,
+    num_won integer NOT NULL DEFAULT 0,
+    longest_winning_streak integer NOT NULL DEFAULT 0,
+    current_winning_streak integer NOT NULL DEFAULT 0,
+    longest_losing_streak integer NOT NULL DEFAULT 0,
+    current_losing_streak integer NOT NULL DEFAULT 0,
     FOREIGN KEY(id) REFERENCES users(id)
 );
 
@@ -21,7 +23,7 @@ END;
 $$;
 
 -- trigger to add new users to the metrics table
-CREATE TRIGGER insertUserIntoStreaks
+CREATE TRIGGER insertUserIntoMetrics
 AFTER INSERT
 ON users
 FOR EACH ROW
@@ -55,3 +57,25 @@ AFTER INSERT
 ON schnicks
 FOR EACH ROW
 EXECUTE FUNCTION update_streak();
+
+-- function to update number of schnicks on new schnick
+CREATE FUNCTION update_num_schnicks()
+    RETURNS trigger
+    LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE metrics
+    SET num_schnicks = num_schnicks + 1
+    WHERE id = NEW.winner OR id = NEW.loser;
+    UPDATE metrics
+    SET num_won = num_won + 1
+    WHERE id = NEW.winner;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER updateNumSchnicks
+AFTER INSERT
+ON schnicks
+FOR EACH ROW
+EXECUTE FUNCTION update_num_schnicks();

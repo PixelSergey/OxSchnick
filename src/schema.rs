@@ -3,6 +3,8 @@
 diesel::table! {
     metrics (id) {
         id -> Int4,
+        num_schnicks -> Int4,
+        num_won -> Int4,
         longest_winning_streak -> Int4,
         current_winning_streak -> Int4,
         longest_losing_streak -> Int4,
