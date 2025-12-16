@@ -117,8 +117,6 @@ h1 {
     padding: 1em 1em;
     font-weight: bold;
     background: var(--highlight-red);
-    border: none;
-    border-radius: 0.5em;
     color: var(--foreground-color);
     align-self: center;
 }
