@@ -1,1 +1,1 @@
-DROP TABLE schnicks
+DROP TABLE schnicks;

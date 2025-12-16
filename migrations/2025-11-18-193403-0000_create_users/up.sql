@@ -8,4 +8,4 @@ CREATE TABLE users (
     active boolean NOT NULL
 );
 
-INSERT INTO users (username, parent, token, created, active) VALUES ('root', lastval(), uuidv4(), now(), true);
+INSERT INTO users (username, dect, parent, token, created, active) VALUES ('root', '5000', lastval(), uuidv4(), now(), true);
