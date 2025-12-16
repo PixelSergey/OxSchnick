@@ -5,5 +5,5 @@
     <h1><span class="icon">🏠</span> Hi Fan!</h1>
     {% endif %}
 </header>  
-<a id="invite" href="qrcode">Let's schnick!</a>
+<a hx-get="qrcode" hx-target="body" hx-swap="innerHTML" id="invite">Let's schnick!</a>
 <a href="{{ invite }}">invite link</a>
