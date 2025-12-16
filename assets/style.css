@@ -26,19 +26,56 @@ body {
 }
 
 footer {
-    width: 100%;
-    background-color: var(--highlight-red);
     flex-grow: 0;
+    padding: 2em;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+}
+
+.button {
+    background-color: var(--shadow-gray);
+    padding: 1rem;
+    border-color: black;
+    border-style: solid;
+}
+
+nav .button {
+    flex-grow: 1;
+}
+
+.button-single {
+    border-width: 0.2rem;
+    border-radius: 0.5rem;
+}
+
+.button-middle {
+    border-width: 0.2rem 0.1rem;
+}
+
+.button-right {
+    border-radius: 0 0.5rem 0.5rem 0;
+    border-width: 0.2rem 0.2rem 0.2rem 0.1rem;
+}
+
+.button-left {
+    border-radius: 0.5rem 0 0 0.5rem;
+    border-width: 0.2rem 0.1rem 0.2rem 0.2rem;
+}
+
+.button-active {
+    background-color: var(--highlight-red);
 }
 
 nav {
     display: flex;
     justify-content: space-around;
-    padding: 1em;
 
     div {
-        display: inline;
-
+        display: flex;
+        justify-content: center;
+        align-items: center;
         img {
             color: inherit;
             width: 2em;
@@ -110,7 +147,6 @@ table.metrics {
 .weapon-selection, .outcome-selection {
     display: flex;
     justify-content: space-evenly;
-    gap: 1em;
 }
 
 #schnick {
@@ -119,7 +155,7 @@ table.metrics {
     justify-content: center;
     align-items: stretch;
     gap: 1em;
-    width: 90%;
+    width: 100%;
     flex-grow: 1;
     margin: 1em auto;
 }
@@ -135,7 +171,6 @@ table.metrics {
     background-color: var(--shadow-gray);
     padding: 0.5em;
     flex-grow: 1;
-    border-radius: 0.5em;
 }
 
 #schnick input[type=radio]:checked + label {
@@ -153,20 +188,18 @@ table.metrics {
 #select {
     appearance: none;
     margin: 0;
-    padding: 0;
     font-size: 3em;
     font-family: inherit;
-    border: none;
-    border-radius: 0.5rem;
-    background-color: color-mix(in srgb, var(--background-color) 70%, var(--foreground-color) 30%);
+    height: fit-content;
+}
+
+form:valid #select {
+    background-color: var(--highlight-purple);
 }
 
 #abort {
     appearance: none;
     margin: 0;
-    padding: 0;
-    border: none;
-    background: none;
 }
 
 #abort img {

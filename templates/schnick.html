@@ -1,19 +1,19 @@
 <main>
 <form id="schnick">
     <div class="outcome-selection">
-        <input type="radio" id="won" name="won" value="true"><label for="won"><img class="weapon" src="assets/won.svg" alt="won"></label>
-        <input type="radio" id="lost" name="won" value="false"><label for="lost"><img class="weapon" src="assets/lost.svg" alt="lost"></label>
+        <input type="radio" id="won" name="won" value="true" required><label class="button button-left" for="won"><img class="weapon" src="assets/won.svg" alt="won"></label>
+        <input type="radio" id="lost" name="won" value="false" required><label class="button button-right" for="lost"><img class="weapon" src="assets/lost.svg" alt="lost"></label>
     </div>
     <div class="weapon-selection">
-        <input type="radio" id="rock" name="weapon" value="0"><label for="rock"><img class="weapon" src="assets/rock.svg" alt="rock"></label>
-        <input type="radio" id="paper" name="weapon" value="2"><label for="paper"><img class="weapon" src="assets/paper.svg" alt="paper"></label>
-        <input type="radio" id="scissors" name="weapon" value="1"><label for="scissors"><img class="weapon" src="assets/scissors.svg" alt="scissors"></label>
+        <input type="radio" id="rock" name="weapon" value="0" required><label class="button button-left" for="rock"><img class="weapon" src="assets/rock.svg" alt="rock"></label>
+        <input type="radio" id="paper" name="weapon" value="2" required><label class="button button-middle" for="paper"><img class="weapon" src="assets/paper.svg" alt="paper"></label>
+        <input type="radio" id="scissors" name="weapon" value="1" required><label class="button button-right" for="scissors"><img class="weapon" src="assets/scissors.svg" alt="scissors"></label>
     </div>
-    <button id="select" hx-post="select">select</button>
+    <button class="button button-single" id="select" hx-post="select">select</button>
 </form>
 </main>
 <footer>
     <nav>
-        <button id="abort" hx-post="abort"><img src="assets/abort.svg" alt="abort"></button>
+        <div class="button button-single" id="abort" hx-post="abort"><img src="assets/abort.svg" alt="abort"></div>
     </nav>
 </footer>
