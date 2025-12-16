@@ -22,7 +22,7 @@ struct Home {
     pub win_streak: (i32, i32),
     pub lose_streak: (i32, i32),
     pub children: i32,
-    pub favorite: Weapon,
+    pub favorites: Vec<Weapon>,
 }
 
 #[derive(Debug, Clone, Identifiable, HasQuery, QueryableByName)]
@@ -36,6 +36,40 @@ pub struct Stats {
     current_winning_streak: i32,
     longest_losing_streak: i32,
     current_losing_streak: i32,
+    num_children: i32,
+    num_rock: i32,
+    num_paper: i32,
+    num_scissors: i32,
+}
+
+impl Stats {
+    pub fn favorites(&self) -> Vec<Weapon> {
+        if self.num_rock < self.num_paper {
+            if self.num_paper < self.num_scissors {
+                vec![Weapon::Scissors]
+            } else if self.num_paper == self.num_scissors {
+                vec![Weapon::Scissors, Weapon::Paper]
+            } else {
+                vec![Weapon::Paper]
+            }
+        } else if self.num_rock == self.num_paper {
+            if self.num_paper < self.num_scissors {
+                vec![Weapon::Scissors]
+            } else if self.num_paper == self.num_scissors {
+                vec![Weapon::Rock, Weapon::Paper, Weapon::Scissors]
+            } else {
+                vec![Weapon::Rock, Weapon::Paper]
+            }
+        } else {
+            if self.num_rock < self.num_scissors {
+                vec![Weapon::Scissors]
+            } else if self.num_rock == self.num_scissors {
+                vec![Weapon::Rock, Weapon::Scissors]
+            } else {
+                vec![Weapon::Rock]
+            }
+        }
+    }
 }
 
 impl Home {
@@ -66,8 +100,8 @@ impl Home {
             score: 0,
             win_streak: (stats.current_winning_streak, stats.longest_winning_streak),
             lose_streak: (stats.current_losing_streak, stats.longest_losing_streak),
-            children: 0,
-            favorite: Weapon::Rock,
+            children: stats.num_children,
+            favorites: stats.favorites(),
         })
     }
 }

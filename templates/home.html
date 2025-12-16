@@ -37,6 +37,7 @@
         <tr>
             <td>Favorite</td>
             <td>
+            {% for favorite in favorites %}
             {% match favorite %}
             {% when Weapon::Rock %}
             <img class="weapon-inline" src="assets/rock.svg" alt="rock">
@@ -45,6 +46,7 @@
             {% when Weapon::Scissors %}
             <img class="weapon-inline" src="assets/scissors.svg" alt="scissors">
             {% endmatch %}
+            {% endfor %}
             </td>
         </tr>
     </tbody>
