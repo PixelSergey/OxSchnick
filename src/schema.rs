@@ -9,6 +9,10 @@ diesel::table! {
         current_winning_streak -> Int4,
         longest_losing_streak -> Int4,
         current_losing_streak -> Int4,
+        num_children -> Int4,
+        num_rock -> Int4,
+        num_scissors -> Int4,
+        num_paper -> Int4,
     }
 }
 

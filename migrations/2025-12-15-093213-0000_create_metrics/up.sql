@@ -7,8 +7,35 @@ CREATE TABLE metrics (
     current_winning_streak integer NOT NULL DEFAULT 0,
     longest_losing_streak integer NOT NULL DEFAULT 0,
     current_losing_streak integer NOT NULL DEFAULT 0,
+    num_children integer NOT NULL DEFAULT 0,
+    num_rock integer NOT NULL DEFAULT 0,
+    num_scissors integer NOT NULL DEFAULT 0,
+    num_paper integer NOT NULL DEFAULT 0,
     FOREIGN KEY(id) REFERENCES users(id)
 );
+
+-- function to update number of schnicks and wins on new schnick
+CREATE FUNCTION update_num_schnicks()
+    RETURNS trigger
+    LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE metrics
+        SET num_schnicks = num_schnicks + 1
+    WHERE id = NEW.winner OR id = NEW.loser;
+    UPDATE metrics
+        SET num_won = num_won + 1
+    WHERE id = NEW.winner;
+    RETURN NEW;
+END;
+$$;
+
+-- trigger to update number of schnicks and wins on new schnick
+CREATE TRIGGER updateNumSchnicks
+AFTER INSERT
+ON schnicks
+FOR EACH ROW
+EXECUTE FUNCTION update_num_schnicks();
 
 -- function to insert new user into metrics
 CREATE FUNCTION insert_user_into_metrics()
@@ -58,24 +85,68 @@ ON schnicks
 FOR EACH ROW
 EXECUTE FUNCTION update_streak();
 
--- function to update number of schnicks on new schnick
-CREATE FUNCTION update_num_schnicks()
+-- function to increase number of children of parent in new user
+CREATE FUNCTION update_children()
     RETURNS trigger
     LANGUAGE plpgsql
 AS $$
 BEGIN
     UPDATE metrics
-    SET num_schnicks = num_schnicks + 1
-    WHERE id = NEW.winner OR id = NEW.loser;
-    UPDATE metrics
-    SET num_won = num_won + 1
-    WHERE id = NEW.winner;
+    SET
+        num_children = num_children + 1
+    WHERE id = NEW.parent;
     RETURN NEW;
 END;
 $$;
 
-CREATE TRIGGER updateNumSchnicks
+-- trigger to increase number of children of parent in new user
+CREATE TRIGGER updateChildren
+AFTER INSERT
+ON users
+FOR EACH ROW
+EXECUTE FUNCTION update_children();
+
+-- function to increase number of used weapons on schnick
+CREATE FUNCTION update_weapons()
+    RETURNS trigger
+    LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF NEW.weapon = 0 THEN
+        UPDATE metrics
+            SET num_rock = num_rock + 1
+        WHERE id = NEW.winner;
+
+        UPDATE metrics
+            SET num_scissors = num_scissors + 1
+        WHERE id = NEW.loser;
+
+    ELSIF NEW.weapon = 1 THEN
+        UPDATE metrics
+            SET num_scissors = num_scissors + 1
+        WHERE id = NEW.winner;
+
+        UPDATE metrics
+            SET num_paper = num_paper + 1
+        WHERE id = NEW.loser;
+
+    ELSIF NEW.weapon = 2 THEN
+        UPDATE metrics
+            SET num_paper = num_paper + 1
+        WHERE id = NEW.winner;
+
+        UPDATE metrics
+            SET num_rock = num_rock + 1
+        WHERE id = NEW.loser;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+-- trigger to increase number of used weapons on schnick
+CREATE TRIGGER updateWeapons
 AFTER INSERT
 ON schnicks
 FOR EACH ROW
-EXECUTE FUNCTION update_num_schnicks();
+EXECUTE FUNCTION update_weapons();
