@@ -21,11 +21,13 @@ use crate::{
     invite::{invite, qrcode},
     schnick::{schnick_abort, schnick_select},
     settings::{settings, settings_about, settings_dect, settings_imprint, settings_username},
+    graphs::graphs,
 };
 
 pub mod app;
 pub mod events;
 pub mod home;
+pub mod graphs;
 pub mod invite;
 pub mod schema;
 pub mod schnick;
@@ -100,6 +102,7 @@ async fn main() {
         .route("/select", post(schnick_select))
         .route("/abort", post(schnick_abort))
         .route("/home", get(home))
+        .route("/graphs", get(graphs))
         .route("/settings", get(settings))
         .route("/settings/username", post(settings_username))
         .route("/settings/dect", post(settings_dect))
