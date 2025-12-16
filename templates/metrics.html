@@ -1,0 +1,7 @@
+<div id="tabs" hx-on:htmx-after-on-load="htmx.removeClass(htmx.find('.tab-active'), 'tab-active'); htmx.addClass(event.target, 'tab-active')">
+    <div class="tab tab-active" hx-get="metrics/score" hx-target="#metrics" hx-swap="innerHTML"><img src="assets/score.svg" alt="Score"></div>
+    <div class="tab" hx-get="metrics/streak" hx-target="#metrics" hx-swap="innerHTML"><img src="assets/streak.svg" alt="Streak"></div>
+    <div class="tab" hx-get="metrics/children" hx-target="#metrics" hx-swap="innerHTML"><img src="assets/children.svg" alt="Children"></div>
+    <div class="tab" hx-get="metrics/distance" hx-target="#metrics" hx-swap="innerHTML"><img src="assets/distance.svg" alt="Distance"></div>
+</div>
+<div id="metrics"></div>

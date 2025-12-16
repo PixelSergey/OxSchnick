@@ -17,11 +17,12 @@ use url::Url;
 use crate::{
     app::{App, Session},
     events::events,
+    graphs::graphs,
     home::home,
     invite::{invite, qrcode},
+    metrics::metrics,
     schnick::{schnick_abort, schnick_select},
     settings::{settings, settings_about, settings_dect, settings_imprint, settings_username},
-    graphs::graphs,
 };
 
 pub mod app;
@@ -29,6 +30,7 @@ pub mod events;
 pub mod home;
 pub mod graphs;
 pub mod invite;
+pub mod metrics;
 pub mod schema;
 pub mod schnick;
 pub mod session;
@@ -103,6 +105,7 @@ async fn main() {
         .route("/abort", post(schnick_abort))
         .route("/home", get(home))
         .route("/graphs", get(graphs))
+        .route("/metrics", get(metrics))
         .route("/settings", get(settings))
         .route("/settings/username", post(settings_username))
         .route("/settings/dect", post(settings_dect))
@@ -124,11 +127,11 @@ async fn main() {
                         ["abort.svg", "../assets/abort.svg", "image/svg+xml"],
                         ["adult.svg", "../assets/adult.svg", "image/svg+xml"],
                         ["hash_char.svg", "../assets/hash_char.svg", "image/svg+xml"],
-                        [
-                            "spider_web.svg",
-                            "../assets/spider_web.svg",
-                            "image/svg+xml"
-                        ],
+                        ["spider_web.svg", "../assets/spider_web.svg", "image/svg+xml"],
+                        ["children.svg", "../assets/children.svg", "image/svg+xml"],
+                        ["distance.svg", "../assets/distance.svg", "image/svg+xml"],
+                        ["score.svg", "../assets/score.svg", "image/svg+xml"],
+                        ["streak.svg", "../assets/streak.svg", "image/svg+xml"],
                         ["wrench.svg", "../assets/wrench.svg", "image/svg+xml"]
                     ]
                 )

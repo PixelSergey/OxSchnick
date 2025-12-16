@@ -376,12 +376,21 @@ form:valid #select {
 
 .tab {
     background-color: var(--shadow-gray);
+    border-color: black;
+    border-style: solid;
     border-radius: 1em;
     color: var(--foreground-color);
-    padding: 0.5em 0;
-    width: 5em;
+    height: 2em;
+    width: 3.7em;
     cursor: pointer;
     text-align: center;
+    place-content: center;
+    font-weight: bold;
+    img {
+        width: 1.5em;
+        filter: grayscale(100);
+        vertical-align: middle;
+    }
 }
 
 .tab-active {
