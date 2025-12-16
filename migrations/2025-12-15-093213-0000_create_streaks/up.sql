@@ -1,11 +1,11 @@
 -- database to store more expensive stats
 CREATE TABLE streaks (
-    user_id int PRIMARY KEY,
+    id int PRIMARY KEY,
     longest_winning_streak integer NOT NULL,
     current_winning_streak integer NOT NULL,
     longest_losing_streak integer NOT NULL,
     current_losing_streak integer NOT NULL,
-    FOREIGN KEY(user_id) REFERENCES users(id)
+    FOREIGN KEY(id) REFERENCES users(id)
 );
 
 -- function to insert new user into streaks
