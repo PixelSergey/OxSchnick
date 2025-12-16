@@ -5,7 +5,7 @@ use axum::{
     response::{Html, IntoResponse},
     routing::{get, post},
 };
-use axum_extra::{extract::CookieJar};
+use axum_extra::extract::CookieJar;
 use clap::Parser;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -72,7 +72,12 @@ async fn main() {
     let base = Url::parse(&config.base).expect("could not parse base url");
     info!(target: "main", "creating app");
     let app = App::new(base.clone()).await;
-    let root_token =  users::table.filter(users::id.eq(1)).select(users::token).first::<String>(&mut app.connection().await.unwrap()).await.unwrap();
+    let root_token = users::table
+        .filter(users::id.eq(1))
+        .select(users::token)
+        .first::<String>(&mut app.connection().await.unwrap())
+        .await
+        .unwrap();
     app.authenticate_session(&Session {
         id: 1,
         token: root_token,
@@ -100,19 +105,31 @@ async fn main() {
         .route("/settings/dect", post(settings_dect))
         .route("/settings/about", get(settings_about))
         .route("/settings/imprint", get(settings_imprint))
-        .route("/assets/{file}", get(async |Path(file): Path<String>| serve_static!(&file[..], [
-            ["style.css", "../assets/style.css", "text/css"],
-            ["rock.svg", "../assets/rock.svg", "image/svg+xml"],
-            ["paper.svg", "../assets/paper.svg", "image/svg+xml"],
-            ["scissors.svg", "../assets/scissors.svg", "image/svg+xml"],
-            ["won.svg", "../assets/won.svg", "image/svg+xml"],
-            ["lost.svg", "../assets/lost.svg", "image/svg+xml"],
-            ["abort.svg", "../assets/abort.svg", "image/svg+xml"],
-            ["adult.svg", "../assets/adult.svg", "image/svg+xml"],
-            ["hash_char.svg", "../assets/hash_char.svg", "image/svg+xml"],
-            ["spider_web.svg", "../assets/spider_web.svg", "image/svg+xml"],
-            ["wrench.svg", "../assets/wrench.svg", "image/svg+xml"]
-        ])))
+        .route(
+            "/assets/{file}",
+            get(async |Path(file): Path<String>| {
+                serve_static!(
+                    &file[..],
+                    [
+                        ["style.css", "../assets/style.css", "text/css"],
+                        ["rock.svg", "../assets/rock.svg", "image/svg+xml"],
+                        ["paper.svg", "../assets/paper.svg", "image/svg+xml"],
+                        ["scissors.svg", "../assets/scissors.svg", "image/svg+xml"],
+                        ["won.svg", "../assets/won.svg", "image/svg+xml"],
+                        ["lost.svg", "../assets/lost.svg", "image/svg+xml"],
+                        ["abort.svg", "../assets/abort.svg", "image/svg+xml"],
+                        ["adult.svg", "../assets/adult.svg", "image/svg+xml"],
+                        ["hash_char.svg", "../assets/hash_char.svg", "image/svg+xml"],
+                        [
+                            "spider_web.svg",
+                            "../assets/spider_web.svg",
+                            "image/svg+xml"
+                        ],
+                        ["wrench.svg", "../assets/wrench.svg", "image/svg+xml"]
+                    ]
+                )
+            }),
+        )
         .with_state(app);
     let listener = TcpListener::bind(config.bind)
         .await

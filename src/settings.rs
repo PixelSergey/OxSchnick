@@ -1,5 +1,10 @@
 use askama::Template;
-use axum::{Form, extract::State, http::StatusCode, response::{Html, IntoResponse}};
+use axum::{
+    Form,
+    extract::State,
+    http::StatusCode,
+    response::{Html, IntoResponse},
+};
 use axum_extra::extract::CookieJar;
 use diesel::{prelude::*, update};
 use diesel_async::RunQueryDsl;
@@ -8,7 +13,7 @@ use serde::Deserialize;
 use crate::app::App;
 
 #[derive(Debug, Clone, HasQuery, Identifiable, Template, QueryableByName)]
-#[template(path="settings.html")]
+#[template(path = "settings.html")]
 #[diesel(table_name=crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct User {
@@ -28,7 +33,10 @@ pub async fn settings(
         .first(&mut app.connection().await?)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(Html(user.render().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?))
+    Ok(Html(
+        user.render()
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+    ))
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -47,9 +55,18 @@ pub async fn settings_username(
         .filter(users::id.eq(id))
         .set(users::username.eq(data.username))
         .returning((users::id, users::username, users::dect))
-        .get_result::<User>(&mut app.connection().await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?)
-        .await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(Html(user.render().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?))
+        .get_result::<User>(
+            &mut app
+                .connection()
+                .await
+                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+        )
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(Html(
+        user.render()
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+    ))
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -73,9 +90,18 @@ pub async fn settings_dect(
         .filter(users::id.eq(id))
         .set(users::dect.eq(dect_value))
         .returning((users::id, users::username, users::dect))
-        .get_result::<User>(&mut app.connection().await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?)
-        .await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(Html(user.render().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?))
+        .get_result::<User>(
+            &mut app
+                .connection()
+                .await
+                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+        )
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(Html(
+        user.render()
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+    ))
 }
 
 pub async fn settings_about() -> Result<impl IntoResponse, StatusCode> {

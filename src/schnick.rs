@@ -1,11 +1,6 @@
 use std::sync::Arc;
 
-use axum::{
-    Form,
-    extract::State,
-    http::StatusCode,
-    response::{IntoResponse},
-};
+use axum::{Form, extract::State, http::StatusCode, response::IntoResponse};
 use axum_extra::extract::CookieJar;
 use log::{debug, trace};
 use serde::{Deserialize, Serialize};
@@ -164,7 +159,15 @@ pub async fn schnick_abort(
     let id = app.authenticate(&cookies).await?;
     let schnick = app.sessions.active_schnick(id).await?;
     app.sessions.end_schnick(Arc::clone(&schnick)).await?;
-    let _ = app.sessions.sender(schnick.ids.0).await?.send(SessionUpdate::SchnickEnded);
-    let _ = app.sessions.sender(schnick.ids.1).await?.send(SessionUpdate::SchnickEnded);
+    let _ = app
+        .sessions
+        .sender(schnick.ids.0)
+        .await?
+        .send(SessionUpdate::SchnickEnded);
+    let _ = app
+        .sessions
+        .sender(schnick.ids.1)
+        .await?
+        .send(SessionUpdate::SchnickEnded);
     Ok(StatusCode::OK)
 }

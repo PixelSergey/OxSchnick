@@ -27,15 +27,23 @@ pub async fn home(
     debug!(target: "home::home", "cookies={cookies:?}");
     let id = app.authenticate(&cookies).await?;
     let user = User::query()
-    .filter(users::id.eq(id))
-    .first(&mut app.connection().await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?)
-    .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .filter(users::id.eq(id))
+        .first(
+            &mut app
+                .connection()
+                .await
+                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+        )
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     let invite = app.sessions.get_invite(id).await?;
     let invite_url = invite.url(&app.base)?;
     Ok(Html(
-        Home { username: user.username, invite: invite_url }
-            .render()
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+        Home {
+            username: user.username,
+            invite: invite_url,
+        }
+        .render()
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
     ))
 }

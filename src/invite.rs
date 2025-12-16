@@ -1,7 +1,7 @@
 use askama::Template;
 use axum::{
     extract::{Query, State},
-    http::{StatusCode, header::CONTENT_TYPE},
+    http::StatusCode,
     response::{Html, IntoResponse, Redirect},
 };
 use axum_extra::extract::{CookieJar, cookie::Cookie};
@@ -113,7 +113,7 @@ pub async fn invite(
 }
 
 #[derive(Debug, Clone, Template)]
-#[template(path="qrcode.html")]
+#[template(path = "qrcode.html")]
 pub struct Qrcode {
     pub qrcode: String,
 }
@@ -127,7 +127,9 @@ pub async fn qrcode(
     let id = app.authenticate(&cookies).await?;
     let invite = app.sessions.get_invite(id).await?;
     let qrcode = invite.qrcode(&app.base)?;
-    Ok(Html(Qrcode {
-        qrcode
-    }.render().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?))
+    Ok(Html(
+        Qrcode { qrcode }
+            .render()
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+    ))
 }
