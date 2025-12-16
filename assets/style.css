@@ -364,3 +364,26 @@ form:valid #select {
     max-width: 400px;
     margin: 3em auto;
  }
+
+/********
+ * tabs *
+ ********/
+
+#tabs {
+    display: flex;
+    gap: 0.5em;
+}
+
+.tab {
+    background-color: var(--shadow-gray);
+    border-radius: 1em;
+    color: var(--foreground-color);
+    padding: 0.5em 0;
+    width: 5em;
+    cursor: pointer;
+    text-align: center;
+}
+
+.tab-active {
+    background-color: var(--highlight-red);
+}
