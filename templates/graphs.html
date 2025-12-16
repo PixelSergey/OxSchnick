@@ -1,5 +1,5 @@
 <div id="tabs" hx-on:htmx-after-on-load="htmx.removeClass(htmx.find('.tab-active'), 'tab-active'); htmx.addClass(event.target, 'tab-active')">
-    <div class="tab tab-active" hx-get="graph" hx-target="#graph" hx-swap="innerHTML">Graph</div>
+    <div class="tab tab-active" hx-get="graph" hx-target="#graph" hx-swap="innerHTML" hx-trigger="load, click">Graph</div>
     <div class="tab" hx-get="tree" hx-target="#graph" hx-swap="innerHTML">Tree</div>
 </div>
 <div id="graph"></div>
