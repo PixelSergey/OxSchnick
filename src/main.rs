@@ -115,6 +115,7 @@ async fn main() {
                     &file[..],
                     [
                         ["style.css", "../assets/style.css", "text/css"],
+                        ["phone_receiver.svg", "../assets/phone_receiver.svg", "image/svg+xml"],
                         ["rock.svg", "../assets/rock.svg", "image/svg+xml"],
                         ["paper.svg", "../assets/paper.svg", "image/svg+xml"],
                         ["scissors.svg", "../assets/scissors.svg", "image/svg+xml"],
