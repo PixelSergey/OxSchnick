@@ -7,8 +7,45 @@
 </header>  
 <a hx-get="qrcode" hx-target="body" hx-swap="innerHTML" id="invite">Let's schnick!</a>
 <a href="{{ invite }}">invite link</a>
-<ul>
-    <li>#schnicks: {{ num_schnicks }}</li>
-    <li>#winstreak: {{ win_streak.0 }}/{{ win_streak.1 }}</li>
-    <li>#losestreak: {{ lose_streak.0 }}/{{ lose_streak.1 }}</li>
-</ul>
+<h2>Metrics</h2>
+<table class="metrics">
+    <tbody>
+        <tr>
+            <td>Schnicks</td>
+            <td>{{ num_schnicks }}</td>
+        </tr>
+        <tr>
+            <td>Won</td>
+            <td>{{ num_won }}</td>
+        </tr>
+        <tr>
+            <td>Score</td>
+            <td>{{ score }}</td>
+        </tr>
+        <tr>
+            <td>Win Streak</td>
+            <td>{{ win_streak.0 }}/{{ win_streak.1 }} </td>
+        </tr>
+        <tr>
+            <td>Lose Streak</td>
+            <td>{{ lose_streak.0 }}/{{ lose_streak.1 }} </td>
+        </tr>
+        <tr>
+            <td>Children</td>
+            <td>{{ children }}</td>
+        </tr>
+        <tr>
+            <td>Favorite</td>
+            <td>
+            {% match favorite %}
+            {% when Weapon::Rock %}
+            <img class="weapon-inline" src="assets/rock.svg" alt="rock">
+            {% when Weapon::Paper %}
+            <img class="weapon-inline" src="assets/paper.svg" alt="paper">
+            {% when Weapon::Scissors %}
+            <img class="weapon-inline" src="assets/scissors.svg" alt="scissors">
+            {% endmatch %}
+            </td>
+        </tr>
+    </tbody>
+</table>

@@ -86,6 +86,12 @@ h1 {
     align-self: center;
 }
 
+table.metrics {
+    tr td:nth-child(2) {
+        text-align: right;
+    }
+}
+
 /****************
  * schnick page *
  ****************/
@@ -93,6 +99,12 @@ h1 {
 .weapon {
     width: 3em;
     height: 3em;
+}
+
+.weapon-inline {
+    width: 1lh;
+    height: 1lh;
+    vertical-align: middle;
 }
 
 .weapon-selection, .outcome-selection {
