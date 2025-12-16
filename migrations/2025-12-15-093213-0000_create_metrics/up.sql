@@ -38,18 +38,27 @@ FOR EACH ROW
 EXECUTE FUNCTION update_num_schnicks();
 
 -- function to insert new user into metrics
+-- also updates count of children for parent
 CREATE FUNCTION insert_user_into_metrics()
     RETURNS trigger
     LANGUAGE plpgsql
 AS $$
 BEGIN
+    -- insert user
     INSERT INTO metrics(id)
     VALUES(NEW.id);
+
+    -- update children count for parent
+    UPDATE METRICS
+    SET
+        num_children = num_children + 1
+    WHERE id = NEW.parent;
     RETURN NEW;
 END;
 $$;
 
 -- trigger to add new users to the metrics table
+-- also updates count of children for parent
 CREATE TRIGGER insertUserIntoMetrics
 AFTER INSERT
 ON users
@@ -84,27 +93,6 @@ AFTER INSERT
 ON schnicks
 FOR EACH ROW
 EXECUTE FUNCTION update_streak();
-
--- function to increase number of children of parent in new user
-CREATE FUNCTION update_children()
-    RETURNS trigger
-    LANGUAGE plpgsql
-AS $$
-BEGIN
-    UPDATE metrics
-    SET
-        num_children = num_children + 1
-    WHERE id = NEW.parent;
-    RETURN NEW;
-END;
-$$;
-
--- trigger to increase number of children of parent in new user
-CREATE TRIGGER updateChildren
-AFTER INSERT
-ON users
-FOR EACH ROW
-EXECUTE FUNCTION update_children();
 
 -- function to increase number of used weapons on schnick
 CREATE FUNCTION update_weapons()
