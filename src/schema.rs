@@ -1,22 +1,22 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    metrics (id) {
+        id -> Int4,
+        longest_winning_streak -> Int4,
+        current_winning_streak -> Int4,
+        longest_losing_streak -> Int4,
+        current_losing_streak -> Int4,
+    }
+}
+
+diesel::table! {
     schnicks (id) {
         id -> Int4,
         winner -> Int4,
         loser -> Int4,
         weapon -> Int4,
         played_at -> Timestamptz,
-    }
-}
-
-diesel::table! {
-    streaks (id) {
-        id -> Int4,
-        longest_winning_streak -> Int4,
-        current_winning_streak -> Int4,
-        longest_losing_streak -> Int4,
-        current_losing_streak -> Int4,
     }
 }
 
@@ -35,6 +35,6 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(streaks -> users (id));
+diesel::joinable!(metrics -> users (id));
 
-diesel::allow_tables_to_appear_in_same_query!(schnicks, streaks, users,);
+diesel::allow_tables_to_appear_in_same_query!(metrics, schnicks, users,);
