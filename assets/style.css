@@ -72,7 +72,7 @@ nav {
     display: flex;
     justify-content: space-around;
 
-    div {
+    div, a {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -196,13 +196,12 @@ form:valid #select {
 }
 
 #abort {
+    align-self: center;
     appearance: none;
     margin: 0;
 }
 
 #abort img {
-    width: 3em;
-    height: 3em;
     filter: grayscale(100);
 }
 
