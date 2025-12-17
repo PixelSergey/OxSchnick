@@ -132,7 +132,8 @@ async fn main() {
                         ["distance.svg", "../assets/distance.svg", "image/svg+xml"],
                         ["score.svg", "../assets/score.svg", "image/svg+xml"],
                         ["streak.svg", "../assets/streak.svg", "image/svg+xml"],
-                        ["wrench.svg", "../assets/wrench.svg", "image/svg+xml"]
+                        ["wrench.svg", "../assets/wrench.svg", "image/svg+xml"],
+                        ["arrow_right.svg", "../assets/arrow_right.svg", "image/svg+xml"]
                     ]
                 )
             }),

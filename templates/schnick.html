@@ -1,4 +1,22 @@
 <main>
+    <div id="overlay" hx-on:click='document.getElementById("overlay").remove()'>
+        <h1>Schnick!</h1>
+        <div class="rules">
+            <img src="assets/rock.svg" alt="rock">
+            <img class="icon" src="assets/arrow_right.svg" alt="beats">
+            <img src="assets/scissors.svg" alt="scissors">
+        </div>
+        <div class="rules">
+            <img src="assets/scissors.svg" alt="scissors">
+            <img class="icon" src="assets/arrow_right.svg" alt="beats">
+            <img src="assets/paper.svg" alt="paper">
+        </div>
+        <div class="rules">
+            <img src="assets/paper.svg" alt="paper">
+            <img class="icon" src="assets/arrow_right.svg" alt="beats">
+            <img src="assets/rock.svg" alt="rock">
+        </div>
+    </div>
 <form id="schnick">
     <div class="outcome-selection">
         <input type="radio" id="won" name="won" value="true" required><label class="button button-left" for="won"><img class="weapon" src="assets/won.svg" alt="won"></label>
@@ -14,6 +32,6 @@
 </main>
 <footer>
     <nav>
-        <div class="button button-single button-active" id="abort" hx-post="abort"><img src="assets/abort.svg" alt="abort"></div>
+        <div class="button button-single button-active" id="abort" hx-post="abort"><img class="icon" src="assets/abort.svg" alt="abort"></div>
     </nav>
 </footer>
