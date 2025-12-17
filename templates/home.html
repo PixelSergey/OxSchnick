@@ -1,10 +1,6 @@
 <header>
-    {% if let Some(username) = username %}
     <h1><img class="weapon-inline" src="assets/adult.svg"> Hi {{ username }}!</h1>
-    {% else %}
-    <h1><img class="weapon-inline" src="assets/adult.svg"> Hi Fan!</h1>
-    {% endif %}
-</header>  
+</header>
 <a hx-get="qrcode" hx-target="body" hx-swap="innerHTML" id="invite" class="button button-single">Let's schnick!</a>
 <a href="{{ invite }}">invite link</a>
 <h2>Metrics</h2>

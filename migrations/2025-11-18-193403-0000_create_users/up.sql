@@ -1,6 +1,6 @@
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    username varchar(32),
+    username varchar(32) NOT NULL DEFAULT 'Fan',
     dect char(4),
     parent integer references users(id) NOT NULL,
     token char(36) NOT NULL,

@@ -14,7 +14,7 @@ use crate::{app::App, schnick::Weapon, settings::User};
 #[derive(Template)]
 #[template(path = "home.html")]
 struct Home {
-    pub username: Option<String>,
+    pub username: String,
     pub invite: String,
     pub num_schnicks: i32,
     pub num_won: i32,

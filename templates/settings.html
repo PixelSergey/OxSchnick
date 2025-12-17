@@ -1,11 +1,7 @@
 <div class="settings">
     <div class="settings-input">
         <form hx-post="settings/username" hx-target="main" hx-swap="innerHTML" hx-validate="true" novalidate>
-            {% if let Some(username) = username %}
-                <input type="text" name="username" id="username" value="{{ username }}" maxlength="32" required>
-            {% else %}
-                <input type="text" name="username" id="username" maxlength="32" required>
-            {% endif %}
+            <input type="text" name="username" id="username" value="{{ username }}" maxlength="32" required>
             <button>Change</button>
         </form>
             <label for="username">Username<span class="error"> cannot be empty</span></label>

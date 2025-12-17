@@ -30,7 +30,7 @@ diesel::table! {
     users (id) {
         id -> Int4,
         #[max_length = 32]
-        username -> Nullable<Varchar>,
+        username -> Varchar,
         #[max_length = 4]
         dect -> Nullable<Bpchar>,
         parent -> Int4,
