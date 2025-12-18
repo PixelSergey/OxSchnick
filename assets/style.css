@@ -4,7 +4,7 @@
     --highlight-red: #ff3719;
     --highlight-green: #00ff00;
     --highlight-purple: #9673ff;
-    --shadow-gray: color-mix(in srgb, var(--background-color) 70%, var(--foreground-color) 30%);
+    --shadow-gray: #878585;
 }
 
 @media (prefers-color-scheme: light) {
