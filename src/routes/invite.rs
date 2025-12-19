@@ -17,5 +17,5 @@ pub async fn invite(
 ) -> Result<impl IntoResponse, StatusCode> {
     Schnicker::request_start_schnick(id, invite.id, &state.schnicker).await?;
     Authenticator::request_renew_invite(invite.id, &state.authenticator).await?;
-    Ok(Redirect::temporary("schnick"))
+    Ok(Redirect::to("schnick"))
 }
