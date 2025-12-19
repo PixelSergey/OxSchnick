@@ -1,39 +1,42 @@
+{% extends "base.html" %}
+{% block nav_home %}button-active{% endblock %}
+{% block main %}
 <header>
-    <h1><img class="weapon-inline" src="assets/adult.svg"> Hi {{ username }}!</h1>
+    <h1><img class="weapon-inline" src="assets/adult.svg"> Hi {{ user.username }}!</h1>
 </header>
-<a hx-get="qrcode" hx-target="body" hx-swap="innerHTML" id="invite" class="button button-single">Let's schnick!</a>
+<a href="home/invite" id="invite" class="button button-single">Let's schnick!</a>
 <a href="{{ invite }}">invite link</a>
 <h2>Metrics</h2>
 <table class="metrics">
     <tbody>
         <tr>
             <td>Schnicks</td>
-            <td>{{ num_schnicks }}</td>
+            <td>{{ stats.num_schnicks }}</td>
         </tr>
         <tr>
             <td>Won</td>
-            <td>{{ num_won }}</td>
+            <td>{{ stats.num_won }}</td>
         </tr>
         <tr>
             <td>Score</td>
-            <td>{{ score }}</td>
+            <td>TODO</td>
         </tr>
         <tr>
             <td>Win Streak</td>
-            <td>{{ win_streak.0 }}/{{ win_streak.1 }} </td>
+            <td>{{ stats.current_winning_streak }}/{{ stats.longest_winning_streak }} </td>
         </tr>
         <tr>
             <td>Lose Streak</td>
-            <td>{{ lose_streak.0 }}/{{ lose_streak.1 }} </td>
+            <td>{{ stats.current_losing_streak }}/{{ stats.longest_losing_streak }}</td>
         </tr>
         <tr>
             <td>Children</td>
-            <td>{{ children }}</td>
+            <td>{{ stats.num_children }}</td>
         </tr>
         <tr>
             <td>Favorite</td>
             <td>
-            {% for favorite in favorites %}
+            {% for favorite in stats.favorites() %}
             {% match favorite %}
             {% when Weapon::Rock %}
             <img class="weapon-inline" src="assets/rock.svg" alt="rock">
@@ -47,3 +50,4 @@
         </tr>
     </tbody>
 </table>
+{% endblock %}
