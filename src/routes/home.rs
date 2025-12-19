@@ -1,5 +1,8 @@
+use std::convert::Infallible;
+
 use askama::Template;
-use axum::{extract, http::StatusCode, response::{Html, IntoResponse}};
+use axum::{extract, http::StatusCode, response::{Html, IntoResponse, Sse, sse::Event}};
+use futures::FutureExt;
 use url::Url;
 use uuid::Uuid;
 
@@ -13,6 +16,18 @@ struct HomeTemplate<'a> {
     pub user: &'a User,
     pub stats: &'a Stats,
     pub invite: &'a str,
+}
+
+pub async fn home_sse(
+    AuthenticatorEntry { channel, ..}: AuthenticatorEntry
+) -> impl IntoResponse {
+    let mut receiver = channel.subscribe();
+    let stream = (async move {
+        let _ = receiver.changed().await;
+        Ok::<Event, Infallible>(Event::default().data("schnick"))
+    })
+    .into_stream();
+    Sse::new(stream)
 }
 
 fn invite_url(base: &Url, id: i32, token: &Uuid) -> Option<Url>  {

@@ -1,4 +1,12 @@
 {% extends "base.html" %}
+{% block head %}
+<script>
+    let sse = new EventSource("home/sse");
+    sse.onmessage = (e) => {
+        window.location.href = e.data;
+    };
+</script>
+{% endblock %}
 {% block nav_home %}button-active{% endblock %}
 {% block main %}
 <header>

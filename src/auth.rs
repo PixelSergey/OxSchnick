@@ -159,6 +159,7 @@ impl Authenticator {
     async fn renew_invite(&mut self, id: i32) -> Result<(), StatusCode> {
         let entry = self.cache.get_mut(&id).ok_or(StatusCode::NOT_FOUND)?;
         entry.invite = Uuid::new_v4();
+        entry.channel.send_replace(());
         Ok(())
     }
 
@@ -373,23 +374,3 @@ impl<S: Send + Sync + 'static> FromRequestParts<S> for User {
             .map(|(a, _)| User(*a))
     }
 }
-
-/*#[derive(Debug, Clone)]
-pub struct SchnickOutcomeReceiver(pub watch::Receiver<()>);
-
-impl FromRequestParts<State> for SchnickOutcomeReceiver {
-    type Rejection = StatusCode;
-
-    async fn from_request_parts(
-        parts: &mut axum::http::request::Parts,
-        state: &State,
-    ) -> Result<Self, Self::Rejection> {
-        let authenticated = parts
-            .extensions
-            .get::<Authenticated>()
-            .ok_or(StatusCode::FORBIDDEN)?;
-        let receiver =
-            Authenticator::req
-        Ok(Self(receiver))
-    }
-}*/
