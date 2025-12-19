@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use tokio::sync::{mpsc, oneshot, watch};
 
-use crate::{auth::Authenticated, state::State};
+use crate::{auth::AuthenticatorEntry, state::State};
 
 const SCHNICKS_CHANNEL_BUFFER: usize = 128usize;
 
@@ -363,12 +363,12 @@ impl FromRequestParts<State> for SchnickOutcomeReceiver {
         parts: &mut axum::http::request::Parts,
         state: &State,
     ) -> Result<Self, Self::Rejection> {
-        let authenticated = parts
+        let (id, _) = parts
             .extensions
-            .get::<Authenticated>()
+            .get::<(i32, AuthenticatorEntry)>()
             .ok_or(StatusCode::FORBIDDEN)?;
         let receiver =
-            Schnicker::request_get_outcome_receiver(authenticated.id, &state.schnicker).await?;
+            Schnicker::request_get_outcome_receiver(*id, &state.schnicker).await?;
         Ok(Self(receiver))
     }
 }

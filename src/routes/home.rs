@@ -4,7 +4,7 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::{
-    auth::{UserInvite}, schnicks::Weapon, state::State, users::{Stats, User}
+    auth::AuthenticatorEntry, schnicks::Weapon, state::State, users::{Stats, User}
 };
 
 #[derive(Template)]
@@ -24,7 +24,7 @@ fn invite_url(base: &Url, id: i32, token: &Uuid) -> Option<Url>  {
 pub async fn home(
     extract::State(state): extract::State<State>,
     (user, stats): (User, Stats),
-    UserInvite(invite): UserInvite,
+    AuthenticatorEntry { invite, ..}: AuthenticatorEntry,
 ) -> Result<impl IntoResponse, StatusCode> {
     Ok(Html(HomeTemplate {
         user: &user,

@@ -1,4 +1,4 @@
-use crate::{auth::Authenticated, schnicks::Weapon, state::State};
+use crate::{auth::AuthenticatorEntry, schnicks::Weapon, state::State};
 use axum::{extract::FromRequestParts, http::StatusCode};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -69,9 +69,9 @@ impl FromRequestParts<State> for (User, Stats) {
     ) -> Result<Self, Self::Rejection> {
         use crate::schema::metrics;
         use crate::schema::users;
-        let Authenticated { id, .. } = parts
+        let (id, _) = parts
             .extensions
-            .get::<Authenticated>()
+            .get::<(i32, AuthenticatorEntry)>()
             .ok_or(StatusCode::FORBIDDEN)?;
         users::table
             .filter(users::id.eq(id))

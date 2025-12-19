@@ -5,14 +5,14 @@ use axum::{
 };
 
 use crate::{
-    auth::{Authenticated, Authenticator, Invite},
+    auth::{Authenticator, Invite, User},
     schnicks::Schnicker,
     state::State,
 };
 
 pub async fn invite(
     extract::State(state): extract::State<State>,
-    Authenticated { id, .. }: Authenticated,
+    User(id): User,
     Query(invite): Query<Invite>,
 ) -> Result<impl IntoResponse, StatusCode> {
     Schnicker::request_start_schnick(id, invite.id, &state.schnicker).await?;

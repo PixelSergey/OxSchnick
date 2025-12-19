@@ -25,12 +25,12 @@ pub enum AuthenticationRequest {
     Authenticate {
         id: i32,
         token: Uuid,
-        callback: oneshot::Sender<Result<Uuid, StatusCode>>,
+        callback: oneshot::Sender<Result<AuthenticatorEntry, StatusCode>>,
     },
     Register {
         parent: i32,
         invite: Uuid,
-        callback: oneshot::Sender<Result<(Authenticated, Uuid), StatusCode>>,
+        callback: oneshot::Sender<Result<(i32, AuthenticatorEntry), StatusCode>>,
     },
     RenewInvite {
         id: i32,
@@ -88,7 +88,7 @@ impl Authenticator {
         &mut self,
         parent: i32,
         submitted_invite: &Uuid,
-    ) -> Result<(Authenticated, Uuid), StatusCode> {
+    ) -> Result<(i32, AuthenticatorEntry), StatusCode> {
         use crate::schema::users;
         let entry = self
             .cache
@@ -106,25 +106,25 @@ impl Authenticator {
                     error!(target: "auth::register", "{:?}", e);
                     StatusCode::INTERNAL_SERVER_ERROR
                 })?;
-            let invite = Uuid::new_v4();
+            let new_entry = AuthenticatorEntry {
+                token: new_authenticated.token,
+                invite: Uuid::new_v4(),
+                channel: watch::Sender::new(())
+            };
             self.cache.insert(
                 new_authenticated.id,
-                AuthenticatorEntry {
-                    token: new_authenticated.token,
-                    invite: Uuid::new_v4(),
-                    channel: watch::Sender::new(()),
-                },
+                new_entry.clone()
             );
-            Ok((new_authenticated, invite))
+            Ok((new_authenticated.id, new_entry))
         } else {
             Err(StatusCode::FORBIDDEN)
         }
     }
 
-    async fn authenticate(&mut self, id: i32, submitted_token: &Uuid) -> Result<Uuid, StatusCode> {
-        if let Some(AuthenticatorEntry { token, invite, .. }) = self.cache.get(&id) {
-            if token == submitted_token {
-                Ok(*invite)
+    async fn authenticate(&mut self, id: i32, submitted_token: &Uuid) -> Result<AuthenticatorEntry, StatusCode> {
+        if let Some(entry) = self.cache.get(&id) {
+            if &entry.token == submitted_token {
+                Ok(entry.clone())
             } else {
                 Err(StatusCode::FORBIDDEN)
             }
@@ -140,16 +140,16 @@ impl Authenticator {
                 })?;
             match authenticated {
                 Some(Authenticated { token, .. }) if &token == submitted_token => {
-                    let invite = Uuid::new_v4();
+                    let entry = AuthenticatorEntry {
+                            token,
+                            invite: Uuid::new_v4(),
+                            channel: watch::Sender::new(()),
+                        };
                     let _ = self.cache.insert(
                         id,
-                        AuthenticatorEntry {
-                            token,
-                            invite,
-                            channel: watch::Sender::new(()),
-                        },
+                        entry.clone()
                     );
-                    Ok(invite)
+                    Ok(entry)
                 }
                 _ => Err(StatusCode::FORBIDDEN),
             }
@@ -203,7 +203,7 @@ impl Authenticator {
         id: i32,
         submitted_token: &Uuid,
         sender: &mpsc::Sender<AuthenticationRequest>,
-    ) -> Result<Uuid, StatusCode> {
+    ) -> Result<AuthenticatorEntry, StatusCode> {
         let (tx, rx) = oneshot::channel();
         sender
             .send(AuthenticationRequest::Authenticate {
@@ -226,7 +226,7 @@ impl Authenticator {
         parent: i32,
         submitted_invite: &Uuid,
         sender: &mpsc::Sender<AuthenticationRequest>,
-    ) -> Result<(Authenticated, Uuid), StatusCode> {
+    ) -> Result<(i32, AuthenticatorEntry), StatusCode> {
         let (tx, rx) = oneshot::channel();
         sender
             .send(AuthenticationRequest::Register {
@@ -276,25 +276,25 @@ impl Authenticator {
         {
             let submitted_entry = serde_json::from_slice::<Authenticated>(session)
                 .map_err(|_| StatusCode::FORBIDDEN)?;
-            let invite = Self::request_authenticate(
+            let entry = Self::request_authenticate(
                 submitted_entry.id,
                 &submitted_entry.token,
                 &state.authenticator,
             )
             .await?;
-            request.extensions_mut().insert(submitted_entry);
-            request.extensions_mut().insert(UserInvite(invite));
+            request.extensions_mut().insert((submitted_entry.id, entry));
             Ok(next.run(request).await)
         } else {
-            let (new_entry, invite) =
+            let (id, new_entry) =
                 Self::request_register(invite.id, &invite.token, &state.authenticator).await?;
             let cookies = cookies.add(Cookie::new(
                 AUTHENTICATOR_COOKIE_NAME,
-                // TODO: remove this unwrap
-                serde_json::to_string(&new_entry).unwrap(),
+                serde_json::to_string(&Authenticated {
+                    id,
+                    token: new_entry.token
+                }).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
             ));
-            request.extensions_mut().insert(new_entry);
-            request.extensions_mut().insert(UserInvite(invite));
+            request.extensions_mut().insert((id, new_entry));
             Ok((cookies, next.run(request).await).into_response())
         }
     }
@@ -311,14 +311,13 @@ impl Authenticator {
             .ok_or(StatusCode::FORBIDDEN)?;
         let submitted_entry =
             serde_json::from_slice::<Authenticated>(session).map_err(|_| StatusCode::FORBIDDEN)?;
-        let invite = Self::request_authenticate(
+        let entry = Self::request_authenticate(
             submitted_entry.id,
             &submitted_entry.token,
             &state.authenticator,
         )
         .await?;
-        request.extensions_mut().insert(submitted_entry);
-        request.extensions_mut().insert(UserInvite(invite));
+        request.extensions_mut().insert((submitted_entry.id, entry));
         Ok(next.run(request).await)
     }
 
@@ -340,24 +339,24 @@ impl Authenticator {
     }
 }
 
-impl<S: Send + Sync + 'static> FromRequestParts<S> for Authenticated {
+impl<S: Send + Sync + 'static> FromRequestParts<S> for AuthenticatorEntry {
     type Rejection = StatusCode;
 
     async fn from_request_parts(
         parts: &mut axum::http::request::Parts,
         _state: &S,
     ) -> Result<Self, Self::Rejection> {
-        parts.extensions.get::<Self>().ok_or_else(|| {
+        parts.extensions.get::<(i32, Self)>().ok_or_else(|| {
             error!(target: "auth::from_request_parts", "did not get Authenticated in extension");
             StatusCode::INTERNAL_SERVER_ERROR
-        }).cloned()
+        }).map(|(_, b)| b.clone())
     }
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct UserInvite(pub Uuid);
+pub struct User(pub i32);
 
-impl<S: Send + Sync + 'static> FromRequestParts<S> for UserInvite {
+impl<S: Send + Sync + 'static> FromRequestParts<S> for User {
     type Rejection = StatusCode;
 
     async fn from_request_parts(
@@ -366,11 +365,31 @@ impl<S: Send + Sync + 'static> FromRequestParts<S> for UserInvite {
     ) -> Result<Self, Self::Rejection> {
         parts
             .extensions
-            .get::<Self>()
+            .get::<(i32, AuthenticatorEntry)>()
             .ok_or_else(|| {
                 error!(target: "auth::from_request_parts", "did not get UserInvite in extension");
                 StatusCode::INTERNAL_SERVER_ERROR
             })
-            .cloned()
+            .map(|(a, _)| User(*a))
     }
 }
+
+/*#[derive(Debug, Clone)]
+pub struct SchnickOutcomeReceiver(pub watch::Receiver<()>);
+
+impl FromRequestParts<State> for SchnickOutcomeReceiver {
+    type Rejection = StatusCode;
+
+    async fn from_request_parts(
+        parts: &mut axum::http::request::Parts,
+        state: &State,
+    ) -> Result<Self, Self::Rejection> {
+        let authenticated = parts
+            .extensions
+            .get::<Authenticated>()
+            .ok_or(StatusCode::FORBIDDEN)?;
+        let receiver =
+            Authenticator::req
+        Ok(Self(receiver))
+    }
+}*/

@@ -9,14 +9,14 @@ use axum::{
 use futures::{FutureExt};
 
 use crate::{
-    auth::Authenticated,
+    auth::User,
     schnicks::{Interaction, Outcome, SchnickOutcomeReceiver, Schnicker},
     state::State,
 };
 
 pub async fn schnick_submit(
     extract::State(state): extract::State<State>,
-    Authenticated { id, .. }: Authenticated,
+    User ( id ): User,
     Form(interaction): Form<Interaction>,
 ) -> Result<impl IntoResponse, StatusCode> {
     match Schnicker::request_handle_interaction(id, interaction, &state.schnicker).await? {
@@ -52,7 +52,7 @@ struct WaitingTemplate;
 
 pub async fn schnick(
     extract::State(state): extract::State<State>,
-    Authenticated { id, .. }: Authenticated,
+    User(id): User,
 ) -> Result<impl IntoResponse, StatusCode> {
     let active = Schnicker::request_in_schnick(id, &state.schnicker).await?;
     if active {
