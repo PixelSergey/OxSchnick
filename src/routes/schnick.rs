@@ -4,13 +4,13 @@ use askama::{Template};
 use axum::{
     Form, extract,
     http::StatusCode,
-    response::{Html, IntoResponse, Sse, sse::Event},
+    response::{Html, IntoResponse, Redirect, Sse, sse::Event},
 };
 use futures::{FutureExt};
 
 use crate::{
     auth::Authenticated,
-    schnicks::{Interaction, SchnickOutcomeReceiver, Schnicker},
+    schnicks::{Interaction, Outcome, SchnickOutcomeReceiver, Schnicker},
     state::State,
 };
 
@@ -19,8 +19,11 @@ pub async fn schnick_submit(
     Authenticated { id, .. }: Authenticated,
     Form(interaction): Form<Interaction>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    Schnicker::request_handle_interaction(id, interaction, &state.schnicker).await?;
-    Ok(StatusCode::OK)
+    match Schnicker::request_handle_interaction(id, interaction, &state.schnicker).await? {
+        Some(Outcome::Concluded) => Ok(Redirect::to("home").into_response()),
+        Some(Outcome::Retry) => Ok(Html(SchnickTemplate.render().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?).into_response()),
+        None => Ok(Html(WaitingTemplate.render().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?).into_response())
+    }
 }
 
 pub async fn schnick_sse(
@@ -28,7 +31,12 @@ pub async fn schnick_sse(
 ) -> impl IntoResponse {
     let stream = (async move {
         let _ = receiver.changed().await;
-        Ok::<Event, Infallible>(Event::default())
+        let outcome = *receiver.borrow();
+        let redirect = match outcome {
+            Outcome::Concluded => "home",
+            Outcome::Retry => "schnick"
+        };
+        Ok::<Event, Infallible>(Event::default().data(redirect))
     })
     .into_stream();
     Sse::new(stream)

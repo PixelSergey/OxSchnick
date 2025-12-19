@@ -49,7 +49,7 @@ impl Interaction {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Outcome {
     Concluded,
     Retry,
@@ -80,7 +80,7 @@ pub enum SchnickRequest {
     },
     InSchnick {
         id: i32,
-        callback: oneshot::Sender<bool>,
+        callback: oneshot::Sender<Result<bool, StatusCode>>,
     },
 }
 
@@ -251,15 +251,15 @@ impl Schnicker {
         }
     }
 
-    async fn in_schnick(&self, id: i32) -> bool {
+    async fn in_schnick(&self, id: i32) -> Result<bool, StatusCode> {
         if let Some(entry) = self.active.get(&id) {
             if let Some((old_id, _, _)) = *entry.borrow() {
-                id != old_id
+                Ok(id != old_id)
             } else {
-                true
+                Ok(true)
             }
         } else {
-            false
+            Err(StatusCode::NOT_FOUND)
         }
     }
 
@@ -345,7 +345,7 @@ impl Schnicker {
         rx.await.map_err(|e| {
             error!(target: "schnicks::request_in_schnick", "dead channel: {:?}", e);
             StatusCode::INTERNAL_SERVER_ERROR
-        })
+        })?
     }
 
     pub fn sender(&self) -> mpsc::Sender<SchnickRequest> {

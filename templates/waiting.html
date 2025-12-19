@@ -1,4 +1,12 @@
 {% extends "base.html" %}
+{% block head %}
+<script>
+    let sse = new EventSource("schnick/sse");
+    sse.onmessage = (e) => {
+        window.location.href = e.data;
+    };
+</script>
+{% endblock %}
 {% block main %}
 <div class="waiting-symbols">
     <img class="symbols" id="rock" src="../assets/rock.svg" alt="waiting for other user to finish">
