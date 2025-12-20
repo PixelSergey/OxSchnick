@@ -131,6 +131,7 @@ a {
 }
 
 table.home {
+    border-collapse: collapse;
     tr td:nth-child(2) {
         text-align: right;
     }
