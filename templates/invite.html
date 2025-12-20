@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block head %}
+<script>
+    let sse = new EventSource("sse");
+    sse.onmessage = (e) => {
+        window.location.href = "../" + e.data;
+    };
+</script>
+{% endblock %}
+{% block main %}
+{{ qrcode | safe }}
+{% endblock %}
+{% block footer %}
+    <nav>
+        <a class="button button-single button-active" id="abort" href=".."><img class="icon" src="../assets/arrow_back.svg" alt="back"></a>
+    </nav>
+{% endblock %}

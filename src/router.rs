@@ -8,7 +8,7 @@ use url::Url;
 
 use crate::{
     auth::Authenticator,
-    routes::{about, assets, graphs, home, home_sse, imprint, index, invite, metrics, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_submit},
+    routes::{about, assets, graphs, home, home_invite, home_sse, imprint, index, invite, metrics, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_submit},
     schnicks::Schnicker,
     state::State,
 };
@@ -40,6 +40,7 @@ pub async fn router(
     let authenticated = Router::new()
         .route("/home", get(home))
         .route("/home/sse", get(home_sse))
+        .route("/home/invite", get(home_invite))
         .route("/schnick", get(schnick))
         .route("/schnick", post(schnick_submit))
         .route("/schnick/sse", get(schnick_sse))
