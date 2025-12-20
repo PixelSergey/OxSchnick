@@ -29,6 +29,7 @@
             version = cargoToml.package.version;
             src = ./.;
             cargoLock.lockFile = ./Cargo.lock;
+            buildInputs = [ pkgs.postgresql ];
         };
       };
       apps = rec {
