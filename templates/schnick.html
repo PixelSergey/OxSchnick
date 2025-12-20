@@ -1,4 +1,5 @@
-<main>
+{% extends "base.html" %}
+{% block main %}
     <div id="overlay" hx-on:click='document.getElementById("overlay").remove()'>
         <h1>Schnick!</h1>
         <div class="rules">
@@ -17,7 +18,7 @@
             <img src="assets/rock.svg" alt="rock">
         </div>
     </div>
-<form id="schnick">
+<form action="schnick" method="post" id="schnick">
     <div class="outcome-selection">
         <input type="radio" id="won" name="won" value="true" required><label class="button button-left" for="won"><img class="weapon" src="assets/won.svg" alt="won"></label>
         <input type="radio" id="lost" name="won" value="false" required><label class="button button-right" for="lost"><img class="weapon" src="assets/lost.svg" alt="lost"></label>
@@ -27,11 +28,11 @@
         <input type="radio" id="paper" name="weapon" value="2" required><label class="button button-middle" for="paper"><img class="weapon" src="assets/paper.svg" alt="paper"></label>
         <input type="radio" id="scissors" name="weapon" value="1" required><label class="button button-right" for="scissors"><img class="weapon" src="assets/scissors.svg" alt="scissors"></label>
     </div>
-    <button class="button button-single" id="select" hx-post="select">select</button>
+    <button type="submit" class="button button-single" id="select">select</button>
 </form>
-</main>
-<footer>
+{% endblock %}
+{% block footer %}
     <nav>
-        <div class="button button-single button-active" id="abort" hx-post="abort"><img class="icon" src="assets/abort.svg" alt="abort"></div>
+        <a class="button button-single button-active" id="abort" href="schnick/abort"><img class="icon" src="assets/abort.svg" alt="abort"></a>
     </nav>
-</footer>
+{% endblock %}

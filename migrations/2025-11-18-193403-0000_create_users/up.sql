@@ -3,9 +3,9 @@ CREATE TABLE users (
     username varchar(32) NOT NULL DEFAULT 'Fan',
     dect char(4),
     parent integer references users(id) NOT NULL,
-    token char(36) NOT NULL,
-    created timestamptz NOT NULL,
-    active boolean NOT NULL
+    token uuid NOT NULL DEFAULT uuidv4(),
+    created timestamptz NOT NULL DEFAULT now(),
+    active boolean NOT NULL DEFAULT true
 );
 
 INSERT INTO users (username, dect, parent, token, created, active) VALUES ('root', '5000', lastval(), uuidv4(), now(), true);

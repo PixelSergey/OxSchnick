@@ -3,5 +3,5 @@ CREATE TABLE schnicks (
     winner integer references users(id) NOT NULL,
     loser integer references users(id) NOT NULL,
     weapon integer NOT NULL,
-    played_at timestamptz NOT NULL
+    played_at timestamptz NOT NULL DEFAULT now()
 );

@@ -34,8 +34,7 @@ diesel::table! {
         #[max_length = 4]
         dect -> Nullable<Bpchar>,
         parent -> Int4,
-        #[max_length = 36]
-        token -> Bpchar,
+        token -> Uuid,
         created -> Timestamptz,
         active -> Bool,
     }

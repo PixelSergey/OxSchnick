@@ -1,40 +1,24 @@
-use axum::{
-    Router,
-    extract::{Path, State},
-    http::{StatusCode, header::CONTENT_TYPE},
-    response::{Html, IntoResponse},
-    routing::{get, post},
-};
-use axum_extra::extract::CookieJar;
+use std::env;
+
+use anyhow::anyhow;
 use clap::Parser;
-use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
+use diesel_async::{
+    AsyncPgConnection,
+    pooled_connection::{AsyncDieselConnectionManager, bb8::Pool},
+};
 use dotenvy::dotenv;
-use log::{debug, info};
-use tokio::net::TcpListener;
+use tokio::{net::TcpListener, task::LocalSet};
 use url::Url;
 
-use crate::{
-    app::{App, Session},
-    events::events,
-    graphs::graphs,
-    home::home,
-    invite::{invite, qrcode},
-    metrics::metrics,
-    schnick::{schnick_abort, schnick_select},
-    settings::{settings, settings_about, settings_dect, settings_imprint, settings_username},
-};
+use crate::router::router;
 
-pub mod app;
-pub mod events;
-pub mod home;
-pub mod graphs;
-pub mod invite;
-pub mod metrics;
+pub mod auth;
+pub mod router;
+pub mod routes;
 pub mod schema;
-pub mod schnick;
-pub mod session;
-pub mod settings;
+pub mod schnicks;
+pub mod state;
+pub mod users;
 
 /// A server for tracking schnicks.
 #[derive(Debug, Clone, Parser)]
@@ -46,109 +30,32 @@ pub struct Config {
     bind: String,
 }
 
-/// The `/` route.
-pub async fn index(
-    State(app): State<App>,
-    cookies: CookieJar,
-) -> Result<impl IntoResponse, StatusCode> {
-    debug!(target: "home::home", "cookies={cookies:?}");
-    let _ = app.authenticate(&cookies).await?;
-    Ok(Html(include_str!("../templates/index.html")))
-}
-
-macro_rules! serve_static {
-    ( $name:expr, [ $( [ $path:literal, $file:expr, $type:literal ] ),* ]) => {
-        match $name {
-            $(
-                $path => Ok(([(CONTENT_TYPE, $type)], &include_bytes!($file)[..])),
-            )*
-            _ => Err(StatusCode::NOT_FOUND)
-        }
-    };
-}
-
 #[tokio::main]
-async fn main() {
-    use crate::schema::users;
+async fn main() -> anyhow::Result<()> {
     env_logger::init();
     dotenv().ok();
     let config = Config::parse();
-    let base = Url::parse(&config.base).expect("could not parse base url");
-    info!(target: "main", "creating app");
-    let app = App::new(base.clone()).await;
-    let root_token = users::table
-        .filter(users::id.eq(1))
-        .select(users::token)
-        .first::<String>(&mut app.connection().await.unwrap())
+    let base_url = Url::parse(&config.base)?;
+    let pool = {
+        let url = env::var("DATABASE_URL")?;
+        let config = AsyncDieselConnectionManager::<AsyncPgConnection>::new(url);
+        Pool::builder().build(config).await?
+    };
+    let listener = TcpListener::bind(config.bind).await?;
+    let (router, mut authenticator, schnicker) = router(base_url, pool).await?;
+    let invite = authenticator
+        .root_invite()
         .await
-        .unwrap();
-    app.authenticate_session(&Session {
-        id: 1,
-        token: root_token,
-    })
-    .await
-    .expect("could not authenticate root user");
-    println!(
-        "{:?}",
-        app.sessions
-            .get_invite(1)
-            .await
-            .expect("no root user exists")
-            .url(&base)
+        .ok_or(anyhow!("no root user"))?;
+    println!("{invite:?}");
+    let local_set = LocalSet::new();
+    let schnicker_handle = local_set.spawn_local(schnicker.worker());
+    let authenticator_handle = tokio::spawn(authenticator.worker());
+    let _ = tokio::join!(
+        local_set,
+        schnicker_handle,
+        authenticator_handle,
+        axum::serve(listener, router)
     );
-    let router = Router::new()
-        .route("/", get(index))
-        .route("/events", get(events))
-        .route("/qrcode", get(qrcode))
-        .route("/invite", get(invite))
-        .route("/select", post(schnick_select))
-        .route("/abort", post(schnick_abort))
-        .route("/home", get(home))
-        .route("/graphs", get(graphs))
-        .route("/metrics", get(metrics))
-        .route("/settings", get(settings))
-        .route("/settings/username", post(settings_username))
-        .route("/settings/dect", post(settings_dect))
-        .route("/settings/about", get(settings_about))
-        .route("/settings/imprint", get(settings_imprint))
-        .route(
-            "/assets/{file}",
-            get(async |Path(file): Path<String>| {
-                serve_static!(
-                    &file[..],
-                    [
-                        // metrics
-                        ["distance.svg", "../assets/metrics/distance.svg", "image/svg+xml"],
-                        ["num_invites.svg", "../assets/metrics/num_invites.svg", "image/svg+xml"],
-                        ["num_schnicks.svg", "../assets/metrics/num_schnicks.svg", "image/svg+xml"],
-                        ["score.svg", "../assets/metrics/score.svg", "image/svg+xml"],
-                        ["streak.svg", "../assets/metrics/streak.svg", "image/svg+xml"],
-                        // navigation bar
-                        ["graphs.svg", "../assets/nav_bar/graphs.svg", "image/svg+xml"],
-                        ["home.svg", "../assets/nav_bar/home.svg", "image/svg+xml"],
-                        ["metrics.svg", "../assets/nav_bar/metrics.svg", "image/svg+xml"],
-                        ["settings.svg", "../assets/nav_bar/settings.svg", "image/svg+xml"],
-                        // schnick
-                        ["abort.svg", "../assets/schnick/abort.svg", "image/svg+xml"],
-                        ["lost.svg", "../assets/schnick/lost.svg", "image/svg+xml"],
-                        ["paper.svg", "../assets/schnick/paper.svg", "image/svg+xml"],
-                        ["rock.svg", "../assets/schnick/rock.svg", "image/svg+xml"],
-                        ["scissors.svg", "../assets/schnick/scissors.svg", "image/svg+xml"],
-                        ["won.svg", "../assets/schnick/won.svg", "image/svg+xml"],
-                        // utils
-                        ["arrow_back.svg", "../assets/arrow_back.svg", "image/svg+xml"],
-                        ["arrow_right.svg", "../assets/arrow_right.svg", "image/svg+xml"],
-                        ["phone.svg", "../assets/phone.svg", "image/svg+xml"],
-                        ["style.css", "../assets/style.css", "text/css"]
-                    ]
-                )
-            }),
-        )
-        .with_state(app);
-    let listener = TcpListener::bind(config.bind)
-        .await
-        .expect("could not bind socket");
-    axum::serve(listener, router)
-        .await
-        .expect("could not serve router");
+    Ok(())
 }

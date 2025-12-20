@@ -12,8 +12,24 @@
     <meta name="application-name" content="fanschnick" lang="en">
     <title>fanschnick</title>
     <link rel="icon" href="assets/scissors.svg" sizes="any" type="image/svg+xml">
+    {% block head %}{% endblock %}
 </head>
-<body hx-ext="sse" sse-connect="/events" sse-swap="message">
-    
+<body>
+    {% block body %}
+    <main>
+        {% block main %}
+        {% endblock %}
+    </main>
+    <footer>
+        {% block footer %}
+        <nav>
+            <a href="home" class="button button-left {% block nav_home %}{% endblock %}"><img src="assets/adult.svg"></a>
+            <a href="graphs" class="button button-middle {% block nav_graphs %}{% endblock %}"><img src="assets/spider_web.svg"></a>
+            <a href="metrics" class="button button-middle {% block nav_metrics %}{% endblock %}"><img src="assets/hash_char.svg"></a>
+            <a href="settings" class="button button-right {% block nav_settings %}{% endblock %}"><img src="assets/wrench.svg"></a>
+        </nav>
+        {% endblock %}
+    </footer>
+    {% endblock %}
 </body>
 </html>
