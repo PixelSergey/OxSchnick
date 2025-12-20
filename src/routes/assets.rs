@@ -43,6 +43,7 @@ pub async fn assets(Path(file): Path<String>) -> Result<impl IntoResponse, Statu
                 "image/svg+xml"
             ],
             ["num_invites.svg", "../../assets/metrics/num_invites.svg", "image/svg+xml"],
+            ["num_schnicks.svg", "../../assets/metrics/num_schnicks.svg", "image/svg+xml"],
             ["distance.svg", "../../assets/metrics/distance.svg", "image/svg+xml"],
             ["score.svg", "../../assets/metrics/score.svg", "image/svg+xml"],
             ["streak.svg", "../../assets/metrics/streak.svg", "image/svg+xml"],
