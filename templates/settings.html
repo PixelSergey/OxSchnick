@@ -2,20 +2,24 @@
 {% block nav_settings %}button-active{% endblock %}
 {% block main %}
     <form class="settings" action="settings" method="post" hx-validate="true" novalidate>
-    <div class="settings-input">
-            <input type="text" name="username" id="username" value="{{ username }}" maxlength="32" required>
-            <button>Change</button>
+        <div class="settings-input">
+            <div class="input">
+                <input type="text" name="username" id="username" value="{{ username }}" maxlength="32" required>
+                <button>Change</button>
+            </div>
             <label for="username">Username<span class="error"> cannot be empty</span></label>
-    </div>
-    <div class="settings-input">
-            {% if let Some(dect) = dect %}
-                <input type="text" name="dect" id="dect" value="{{ dect }}" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
-            {% else %}
-                <input type="text" name="dect" id="dect" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
-            {% endif %}
-            <button>Change</button>
-        <label for="dect">Dect<span class="error"> must be 4 digits or empty</span></label>
-    </div>
+        </div>
+        <div class="settings-input">
+            <div class="input">
+                {% if let Some(dect) = dect %}
+                    <input type="text" name="dect" id="dect" value="{{ dect }}" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
+                {% else %}
+                    <input type="text" name="dect" id="dect" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
+                {% endif %}
+                <button>Change</button>
+            </div>
+            <label for="dect">Dect<span class="error"> must be 4 digits or empty</span></label>
+        </div>
     </form>
 <div class="settings-links">
     <a href="about">About Us</a>
