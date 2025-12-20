@@ -106,13 +106,20 @@ a {
     color: inherit;
 }
 
-h1 {
-    font-size: 2em;
-}
-
 /*************
  * home page *
  *************/
+
+#greeting {
+    display: flex;
+    font-size: 1.8em;
+    gap: 0.2em;
+    span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
 
 #invite {
     display: block;

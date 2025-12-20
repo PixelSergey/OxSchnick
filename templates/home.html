@@ -10,7 +10,7 @@
 {% block nav_home %}button-active{% endblock %}
 {% block main %}
 <header>
-    <h1><img class="weapon-inline" src="assets/home.svg"> Hi {{ user.username }}!</h1>
+    <h1 id="greeting"><img class="weapon-inline" src="assets/home.svg"><span>Hi {{ user.username }}!</span></h1>
 </header>
 <a href="home/invite" id="invite" class="button button-single">Let's schnick!</a>
 <a href="{{ invite }}">invite link</a>
