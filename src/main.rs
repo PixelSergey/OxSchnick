@@ -35,13 +35,13 @@ async fn main() -> anyhow::Result<()> {
     env_logger::init();
     dotenv().ok();
     let config = Config::parse();
-    let base_url = Url::parse(&config.base)?;
+    let base_url = Url::parse(&config.base).expect("invalid base_url");
     let pool = {
-        let url = env::var("DATABASE_URL")?;
+        let url = env::var("DATABASE_URL").expect("no DATABASE_URL in environment");
         let config = AsyncDieselConnectionManager::<AsyncPgConnection>::new(url);
         Pool::builder().build(config).await?
     };
-    let listener = TcpListener::bind(config.bind).await?;
+    let listener = TcpListener::bind(config.bind).await.expect("could not bind to listener");
     let (router, mut authenticator, schnicker) = router(base_url, pool).await?;
     let invite = authenticator
         .root_invite()
