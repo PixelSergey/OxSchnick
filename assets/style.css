@@ -260,7 +260,7 @@ form:valid #select {
     flex-grow: 1;
     font-size: 1em;
 
-    form {
+    .input {
         display: flex;
         gap: 0.2em;
     }
