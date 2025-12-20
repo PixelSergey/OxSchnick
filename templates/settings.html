@@ -1,24 +1,24 @@
-<div class="settings">
+{% extends "base.html" %}
+{% block nav_settings %}button-active{% endblock %}
+{% block main %}
+    <form class="settings" action="settings" method="post" hx-validate="true" novalidate>
     <div class="settings-input">
-        <form hx-post="settings/username" hx-target="main" hx-swap="innerHTML" hx-validate="true" novalidate>
             <input type="text" name="username" id="username" value="{{ username }}" maxlength="32" required>
             <button>Change</button>
-        </form>
             <label for="username">Username<span class="error"> cannot be empty</span></label>
     </div>
     <div class="settings-input">
-        <form hx-post="settings/dect" hx-target="main" hx-swap="innerHTML" hx-validate="true" novalidate>
             {% if let Some(dect) = dect %}
                 <input type="text" name="dect" id="dect" value="{{ dect }}" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
             {% else %}
                 <input type="text" name="dect" id="dect" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
             {% endif %}
             <button>Change</button>
-        </form>
         <label for="dect">Dect<span class="error"> must be 4 digits or empty</span></label>
     </div>
-</div>
+    </form>
 <div class="settings-links">
-    <a href="/about" hx-get="settings/about" hx-target="body" hx-swap="innerHTML">About Us</a>
-    <a href="/imprint" hx-get="settings/imprint" hx-target="body" hx-swap="innerHTML">Imprint</a>
+    <a href="about">About Us</a>
+    <a href="imprint">Imprint</a>
 </div>
+{% endblock %}

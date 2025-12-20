@@ -8,7 +8,7 @@ use url::Url;
 
 use crate::{
     auth::Authenticator,
-    routes::{assets, home, home_sse, invite, schnick, schnick_abort, schnick_sse, schnick_submit},
+    routes::{about, assets, home, home_sse, imprint, index, invite, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_submit},
     schnicks::Schnicker,
     state::State,
 };
@@ -32,6 +32,11 @@ pub async fn router(
             Authenticator::layer_with_registration,
         ))
         .with_state(state.clone());
+    let unauthenticated = Router::<()>::new()
+        .route("/", get(index))
+        .route("/about", get(about))
+        .route("/imprint", get(imprint))
+        .route("/assets/{file}", get(assets));
     let authenticated = Router::new()
         .route("/home", get(home))
         .route("/home/sse", get(home_sse))
@@ -39,11 +44,13 @@ pub async fn router(
         .route("/schnick", post(schnick_submit))
         .route("/schnick/sse", get(schnick_sse))
         .route("/schnick/abort", get(schnick_abort))
+        .route("/settings", get(settings))
+        .route("/settings", post(settings_submit))
         .route_layer(from_fn_with_state(state.clone(), Authenticator::layer))
         .with_state(state.clone());
     let router = Router::new()
-        .route("/assets/{file}", get(assets))
         .merge(authenticated_with_registration)
-        .merge(authenticated);
+        .merge(authenticated)
+        .merge(unauthenticated);
     Ok((router, authenticator, schnicker))
 }

@@ -16,7 +16,7 @@ use uuid::Uuid;
 
 use crate::state::State;
 
-const AUTHENTICATOR_COOKIE_NAME: &'static str = "session";
+pub const AUTHENTICATOR_COOKIE_NAME: &'static str = "session";
 const AUTHENTICATOR_CHANNEL_BUFFER: usize = 128usize;
 const AUTHENTICATOR_ROOT_ID: i32 = 1i32;
 

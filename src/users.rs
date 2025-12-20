@@ -4,10 +4,10 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use log::error;
 
-#[derive(Debug, Clone, Identifiable, HasQuery, QueryableByName)]
+#[derive(Debug, Clone, Identifiable, HasQuery, QueryableByName, AsChangeset)]
 #[diesel(table_name=crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct User {
+pub struct Settings {
     pub id: i32,
     pub username: String,
     pub dect: Option<String>,
@@ -60,7 +60,34 @@ impl Stats {
     }
 }
 
-impl FromRequestParts<State> for (User, Stats) {
+impl FromRequestParts<State> for Settings {
+    type Rejection = StatusCode;
+
+    async fn from_request_parts(
+        parts: &mut axum::http::request::Parts,
+        state: &State,
+    ) -> Result<Self, Self::Rejection> {
+        use crate::schema::users;
+        let (id, _) = parts
+            .extensions
+            .get::<(i32, AuthenticatorEntry)>()
+            .ok_or(StatusCode::FORBIDDEN)?;
+        users::table
+            .filter(users::id.eq(id))
+            .select(Settings::as_select())
+            .first::<Settings>(&mut state.pool.get().await.map_err(|e| {
+                error!(target: "users::from_request_parts", "{:?}", e);
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?)
+            .await
+            .map_err(|e| {
+                error!(target: "users::from_request_parts", "{:?}", e);
+                StatusCode::INTERNAL_SERVER_ERROR
+            })
+    }
+}
+
+impl FromRequestParts<State> for (Settings, Stats) {
     type Rejection = StatusCode;
 
     async fn from_request_parts(
@@ -76,8 +103,8 @@ impl FromRequestParts<State> for (User, Stats) {
         users::table
             .filter(users::id.eq(id))
             .inner_join(metrics::table)
-            .select((User::as_select(), Stats::as_select()))
-            .first::<(User, Stats)>(&mut state.pool.get().await.map_err(|e| {
+            .select((Settings::as_select(), Stats::as_select()))
+            .first::<(Settings, Stats)>(&mut state.pool.get().await.map_err(|e| {
                 error!(target: "users::from_request_parts", "{:?}", e);
                 StatusCode::INTERNAL_SERVER_ERROR
             })?)
