@@ -1,20 +1,136 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg width="100%" height="100%" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421;">
-<metadata>
-<rdf:RDF xmlns:cc="http://web.resource.org/cc/"
-         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:dc = "http://purl.org/dc/elements/1.1/"
-         >
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="100%"
+   height="100%"
+   viewBox="0 0 32 32"
+   version="1.1"
+   xml:space="preserve"
+   style="clip-rule:evenodd;fill-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421"
+   id="svg6"
+   sodipodi:docname="metrics.svg"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"><defs
+   id="defs6"><linearGradient
+     id="swatch2"
+     inkscape:swatch="solid"><stop
+       style="stop-color:#93a472;stop-opacity:1;"
+       offset="0"
+       id="stop2" /></linearGradient></defs><sodipodi:namedview
+   id="namedview6"
+   pagecolor="#ffffff"
+   bordercolor="#000000"
+   borderopacity="0.25"
+   inkscape:showpageshadow="2"
+   inkscape:pageopacity="0.0"
+   inkscape:pagecheckerboard="0"
+   inkscape:deskcolor="#d1d1d1"
+   inkscape:zoom="11.313709"
+   inkscape:cx="1.9003495"
+   inkscape:cy="11.976621"
+   inkscape:window-width="1920"
+   inkscape:window-height="991"
+   inkscape:window-x="-9"
+   inkscape:window-y="-9"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="svg6"
+   showgrid="false" />
+<metadata
+   id="metadata1">
+<rdf:RDF>
 
-     <rdf:Description rdf:about="">
+     <rdf:Description
+   rdf:about="">
        <dc:title>Mutant Standard emoji 2024.06</dc:title>
      </rdf:Description>
 
-    <cc:work rdf:about="">
-        <cc:license rdf:resource="http://creativecommons.org/licenses/by-nc-sa/4.0/"/>
+    <cc:work
+   rdf:about="">
+        <cc:license
+   rdf:resource="http://creativecommons.org/licenses/by-nc-sa/4.0/" />
         <cc:attributionName>Caius Nocturne</cc:attributionName>
         <cc:attributionURL>http://mutant.tech/</cc:attributionURL>
     </cc:work>
 
 </rdf:RDF>
 </metadata>
-<rect id="hash_char" x="0" y="0" width="32" height="32" style="fill:none;"/><clipPath id="_clip1"><rect x="0" y="0" width="32" height="32"/></clipPath><g clip-path="url(#_clip1)"><g id="outline"><path d="M23.005,9.235l3.659,0l0,5.466l-4.371,0l-0.273,2.145l3.589,0l0,5.467l-4.296,0l-1.017,7.687l-3.919,0l0,-2l0.752,-5.687l-3.955,0l-1.017,7.687l-3.882,0l0,-2l0.753,-5.687l-3.692,0l0,-5.467l4.409,0l0.292,-2.145l-3.646,0l0,-5.466l4.371,0l0.942,-7.235l3.882,0l0,2l-0.682,5.235l3.96,0l0.942,-7.235l3.881,0l0,2l-0.682,5.235Zm-4.866,5.466l-3.948,0l-0.292,2.145l3.947,0l0.293,-2.145Z" style="fill:none;stroke:#000;stroke-width:4px;"/><rect x="13" y="0" width="9" height="5"/><rect x="10" y="27" width="9" height="5"/></g><g id="emoji"><path d="M22.293,14.701l-0.528,4.145l3.844,1.467l0,2l-4.296,0l-1.017,7.687l-3.919,0l0,-2l1.017,-5.687l-4.22,0l-1.017,7.687l-3.882,0l0,-2l1.018,-5.687l-3.957,0l0,-2l4.409,-1.467l0.565,-4.145l-3.919,0l0,-2l4.371,-1.466l0.942,-7.235l3.882,-2l0,2l-0.943,7.235l4.221,0l0.942,-7.235l3.881,-2l0,2l-0.942,7.235l3.919,1.466l0,2l-4.371,0Zm-3.881,0l-4.221,0l-0.565,4.145l4.22,0l0.566,-4.145Z" style="fill:#878585;fill-rule:nonzero;"/><path d="M22.293,12.701l-0.528,4.145l3.844,0l0,3.467l-4.296,0l-1.017,7.687l-3.919,0l1.017,-7.687l-4.22,0l-1.017,7.687l-3.882,0l1.018,-7.687l-3.957,0l0,-3.467l4.409,0l0.565,-4.145l-3.919,0l0,-3.466l4.371,0l0.942,-7.235l3.882,0l-0.943,7.235l4.221,0l0.942,-7.235l3.881,0l-0.942,7.235l3.919,0l0,3.466l-4.371,0Zm-3.881,0l-4.221,0l-0.565,4.145l4.22,0l0.566,-4.145Z" style="fill:#faf5f5;fill-rule:nonzero;"/></g></g></svg>
+<clipPath
+   id="_clip1"><path
+     d="M 32,0 V 32 H 0 V 0 Z"
+     id="path1" /></clipPath><g
+   id="g7"
+   style="display:none"
+   transform="translate(-1,-6)" /><g
+   id="layer1"
+   inkscape:label="outline"
+   style="display:inline"
+   transform="matrix(0.95139081,0,0,0.95139081,0.02088101,-1.8187582)"><path
+     style="display:inline;fill:none;stroke:#000000;stroke-width:4px"
+     d="m 3,15.168 1,-1 h 7.859 V 9 l 1,-1 h 8.776 v 11.55 h 9.235 v 8.414584 L 29.577868,29.351 3,29.367 Z"
+     id="path7"
+     sodipodi:nodetypes="cccccccccccc"
+     inkscape:label="path1" /></g><g
+   id="layer2"
+   inkscape:label="inner"
+   style="display:inline"
+   transform="matrix(0.95139081,0,0,0.95139081,0.02088101,-1.8187582)"><path
+     style="fill:#faf5f5"
+     d="m 3,15.167818 8.859,3.55e-4 L 11.858991,9 h 8.77662 l -4.2e-4,11.549818 8.94142,-9e-6 3.68e-4,8.818191 -26.576973,-10e-4 z"
+     id="path7-9"
+     sodipodi:nodetypes="ccccccccc"
+     inkscape:label="path2" /></g><g
+   id="layer3"
+   inkscape:label="numbers"
+   style="display:inline"
+   transform="matrix(0.95139081,0,0,0.95139081,0.10497288,-2.1023649)"><text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:condensed;font-size:6.75046px;font-family:Arial;-inkscape-font-specification:'Arial, Bold Condensed';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#141414;stroke-width:0.562539"
+     x="14.736941"
+     y="15.183451"
+     id="text1"
+     inkscape:label="1"><tspan
+       sodipodi:role="line"
+       id="tspan1"
+       x="14.736941"
+       y="15.183451"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:condensed;font-size:6.75046px;font-family:Arial;-inkscape-font-specification:'Arial, Bold Condensed';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.562539">1</tspan></text><text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:condensed;font-size:6.96521px;font-family:Arial;-inkscape-font-specification:'Arial, Bold Condensed';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;clip-rule:evenodd;fill:#141414;fill-rule:evenodd;stroke-width:0.580434;stroke-linejoin:round;stroke-miterlimit:1.41421"
+     x="5.6516695"
+     y="21.52652"
+     id="text2"
+     inkscape:label="2"><tspan
+       sodipodi:role="line"
+       id="tspan2"
+       x="5.6516695"
+       y="21.52652"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:condensed;font-size:6.96521px;font-family:Arial;-inkscape-font-specification:'Arial, Bold Condensed';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.580434">2</tspan></text><text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:condensed;font-size:6.32035px;font-family:Arial;-inkscape-font-specification:'Arial, Bold Condensed';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;clip-rule:evenodd;fill:#141414;fill-rule:evenodd;stroke-width:0.526696;stroke-linejoin:round;stroke-miterlimit:1.41421"
+     x="24.161308"
+     y="26.569784"
+     id="text3"
+     inkscape:label="3"><tspan
+       sodipodi:role="line"
+       id="tspan3"
+       x="24.161308"
+       y="26.569784"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:condensed;font-size:6.32035px;font-family:Arial;-inkscape-font-specification:'Arial, Bold Condensed';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.526696">3</tspan></text></g><g
+   id="layer5"
+   inkscape:label="shadow"
+   style="display:inline"
+   transform="matrix(0.95139081,0,0,0.95139081,0.02088101,-1.8187582)"><path
+     style="clip-rule:evenodd;display:inline;fill:#878585;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.13119;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:1.51;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+     d="m 3,15.168 1,-1 h 7.859 v 1 z"
+     id="path3-5"
+     sodipodi:nodetypes="ccccc" /><path
+     id="path7-9-9"
+     style="clip-rule:evenodd;display:inline;fill:#878585;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.817645;stroke-linejoin:round;stroke-miterlimit:1.41421;stroke-opacity:1"
+     inkscape:label="path2"
+     d="m 12.859375,8 -1,1 h 8.777344 l -0.002,11.550781 h 8.941406 v 8.816407 l 1.292969,-1.408204 v -8.408203 h -9.234375 c -0.003,-3.850256 0.0075,-7.700529 0,-11.550781 z"
+     sodipodi:nodetypes="ccccccccccc" /></g></svg>
