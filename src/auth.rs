@@ -6,7 +6,7 @@ use axum::{
     middleware::Next,
     response::{IntoResponse, Response},
 };
-use axum_extra::extract::{CookieJar, cookie::Cookie};
+use axum_extra::extract::{CookieJar, cookie::{Cookie, SameSite}};
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use log::error;
@@ -288,13 +288,18 @@ impl Authenticator {
         } else {
             let (id, new_entry) =
                 Self::request_register(invite.id, &invite.token, &state.authenticator).await?;
-            let cookies = cookies.add(Cookie::new(
-                AUTHENTICATOR_COOKIE_NAME,
+            let mut cookie = Cookie::new(
+                AUTHENTICATOR_COOKIE_NAME, 
                 serde_json::to_string(&Authenticated {
                     id,
                     token: new_entry.token
-                }).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
-            ));
+                }).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+            );
+            cookie.make_permanent();
+            cookie.set_same_site(SameSite::Strict);
+            #[cfg(build="release")]
+            cookie.set_secure(Some(true));
+            let cookies = cookies.add(cookie);
             request.extensions_mut().insert((id, new_entry));
             Ok((cookies, next.run(request).await).into_response())
         }
