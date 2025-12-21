@@ -57,7 +57,13 @@ pub enum Outcome {
 
 pub struct Schnicker {
     connection: AsyncPgConnection,
-    active: HashMap<i32, (Rc<RefCell<Option<(i32, Interaction, watch::Sender<Outcome>)>>>, i32)>,
+    active: HashMap<
+        i32,
+        (
+            Rc<RefCell<Option<(i32, Interaction, watch::Sender<Outcome>)>>>,
+            i32,
+        ),
+    >,
     sender: mpsc::Sender<SchnickRequest>,
     receiver: mpsc::Receiver<SchnickRequest>,
 }
@@ -84,8 +90,8 @@ pub enum SchnickRequest {
     },
     AbortSchnick {
         id: i32,
-        callback: oneshot::Sender<Result<(), StatusCode>>
-    }
+        callback: oneshot::Sender<Result<(), StatusCode>>,
+    },
 }
 
 #[derive(Debug, Clone, Insertable)]
@@ -142,7 +148,7 @@ impl Schnicker {
                     if let Err(_) = callback.send(response) {
                         error!(target: "schnicks::worker", "dead receiver");
                     }
-                },
+                }
                 SchnickRequest::AbortSchnick { id, callback } => {
                     let response = self.abort_schnick(id).await;
                     if let Err(_) = callback.send(response) {
@@ -277,7 +283,10 @@ impl Schnicker {
 
     async fn abort_schnick(&mut self, id: i32) -> Result<(), StatusCode> {
         let (_, opponent) = self.active.remove(&id).ok_or(StatusCode::NOT_FOUND)?;
-        let (active, _) = self.active.remove(&opponent).ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
+        let (active, _) = self
+            .active
+            .remove(&opponent)
+            .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
         if let Some((_, _, sender)) = active.borrow().clone() {
             sender.send_replace(Outcome::Concluded);
         }
@@ -409,8 +418,7 @@ impl FromRequestParts<State> for SchnickOutcomeReceiver {
             .extensions
             .get::<(i32, AuthenticatorEntry)>()
             .ok_or(StatusCode::FORBIDDEN)?;
-        let receiver =
-            Schnicker::request_get_outcome_receiver(*id, &state.schnicker).await?;
+        let receiver = Schnicker::request_get_outcome_receiver(*id, &state.schnicker).await?;
         Ok(Self(receiver))
     }
 }

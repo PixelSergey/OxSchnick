@@ -5,9 +5,13 @@ use axum::{
 };
 
 #[derive(Template)]
-#[template(path="metrics.html")]
+#[template(path = "metrics.html")]
 struct MetricsTemplate;
 
 pub async fn metrics() -> Result<impl IntoResponse, StatusCode> {
-    Ok(Html(MetricsTemplate.render().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?))
+    Ok(Html(
+        MetricsTemplate
+            .render()
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+    ))
 }

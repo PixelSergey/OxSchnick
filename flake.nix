@@ -48,11 +48,11 @@
     fanschnick-server = { config, lib, pkgs, ... }:
       let cfg = config.services.fanschnick-server; in {
         options = with lib.types; {
-        services.fanschnick-server = {
-          enable = lib.mkEnableOption "Enable Fanschnick";
-          host = lib.mkOption { type = str; description = "Virtual Host to serve under"; };
-          port = lib.mkOption { type = port; default = 8080; description = "Local port to bind to"; };
-        };
+          services.fanschnick-server = {
+            enable = lib.mkEnableOption "Enable Fanschnick";
+            host = lib.mkOption { type = str; description = "Virtual Host to serve under"; };
+            port = lib.mkOption { type = port; default = 8080; description = "Local port to bind to"; };
+          };  
         };
         config.services.postgresql = lib.mkIf cfg.enable {
           enable = true;

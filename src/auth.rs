@@ -6,7 +6,10 @@ use axum::{
     middleware::Next,
     response::{IntoResponse, Response},
 };
-use axum_extra::extract::{CookieJar, cookie::{Cookie, SameSite}};
+use axum_extra::extract::{
+    CookieJar,
+    cookie::{Cookie, SameSite},
+};
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use log::error;
@@ -109,19 +112,20 @@ impl Authenticator {
             let new_entry = AuthenticatorEntry {
                 token: new_authenticated.token,
                 invite: Uuid::new_v4(),
-                channel: watch::Sender::new(())
+                channel: watch::Sender::new(()),
             };
-            self.cache.insert(
-                new_authenticated.id,
-                new_entry.clone()
-            );
+            self.cache.insert(new_authenticated.id, new_entry.clone());
             Ok((new_authenticated.id, new_entry))
         } else {
             Err(StatusCode::FORBIDDEN)
         }
     }
 
-    async fn authenticate(&mut self, id: i32, submitted_token: &Uuid) -> Result<AuthenticatorEntry, StatusCode> {
+    async fn authenticate(
+        &mut self,
+        id: i32,
+        submitted_token: &Uuid,
+    ) -> Result<AuthenticatorEntry, StatusCode> {
         if let Some(entry) = self.cache.get(&id) {
             if &entry.token == submitted_token {
                 Ok(entry.clone())
@@ -141,14 +145,11 @@ impl Authenticator {
             match authenticated {
                 Some(Authenticated { token, .. }) if &token == submitted_token => {
                     let entry = AuthenticatorEntry {
-                            token,
-                            invite: Uuid::new_v4(),
-                            channel: watch::Sender::new(()),
-                        };
-                    let _ = self.cache.insert(
-                        id,
-                        entry.clone()
-                    );
+                        token,
+                        invite: Uuid::new_v4(),
+                        channel: watch::Sender::new(()),
+                    };
+                    let _ = self.cache.insert(id, entry.clone());
                     Ok(entry)
                 }
                 _ => Err(StatusCode::FORBIDDEN),
@@ -289,15 +290,16 @@ impl Authenticator {
             let (id, new_entry) =
                 Self::request_register(invite.id, &invite.token, &state.authenticator).await?;
             let mut cookie = Cookie::new(
-                AUTHENTICATOR_COOKIE_NAME, 
+                AUTHENTICATOR_COOKIE_NAME,
                 serde_json::to_string(&Authenticated {
                     id,
-                    token: new_entry.token
-                }).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+                    token: new_entry.token,
+                })
+                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
             );
             cookie.make_permanent();
             cookie.set_same_site(SameSite::Strict);
-            #[cfg(build="release")]
+            #[cfg(build = "release")]
             cookie.set_secure(Some(true));
             let cookies = cookies.add(cookie);
             request.extensions_mut().insert((id, new_entry));

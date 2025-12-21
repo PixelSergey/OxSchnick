@@ -5,9 +5,13 @@ use axum::{
 };
 
 #[derive(Template)]
-#[template(path="graphs.html")]
+#[template(path = "graphs.html")]
 struct GraphsTemplate;
 
 pub async fn graphs() -> Result<impl IntoResponse, StatusCode> {
-    Ok(Html(GraphsTemplate.render().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?))
+    Ok(Html(
+        GraphsTemplate
+            .render()
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+    ))
 }

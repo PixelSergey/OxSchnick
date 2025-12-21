@@ -46,9 +46,13 @@ async fn main() -> anyhow::Result<()> {
         Pool::builder().build(config).await?
     };
     trace!("building listener");
-    let listener = TcpListener::bind(config.bind).await.expect("could not bind to listener");
+    let listener = TcpListener::bind(config.bind)
+        .await
+        .expect("could not bind to listener");
     trace!("building router");
-    let (router, mut authenticator, schnicker) = router(base_url, pool).await.expect("could not setup router");
+    let (router, mut authenticator, schnicker) = router(base_url, pool)
+        .await
+        .expect("could not setup router");
     trace!("getting root invite");
     let invite = authenticator
         .root_invite()

@@ -20,11 +20,7 @@ pub async fn assets(Path(file): Path<String>) -> Result<impl IntoResponse, Statu
         &file[..],
         [
             ["style.css", "../../assets/style.css", "text/css"],
-            [
-                "phone.svg",
-                "../../assets/phone.svg",
-                "image/svg+xml"
-            ],
+            ["phone.svg", "../../assets/phone.svg", "image/svg+xml"],
             ["rock.svg", "../../assets/rock.svg", "image/svg+xml"],
             ["paper.svg", "../../assets/paper.svg", "image/svg+xml"],
             ["scissors.svg", "../../assets/scissors.svg", "image/svg+xml"],
@@ -32,18 +28,18 @@ pub async fn assets(Path(file): Path<String>) -> Result<impl IntoResponse, Statu
             ["lost.svg", "../../assets/lost.svg", "image/svg+xml"],
             ["abort.svg", "../../assets/abort.svg", "image/svg+xml"],
             ["home.svg", "../../assets/home.svg", "image/svg+xml"],
+            ["metrics.svg", "../../assets/metrics.svg", "image/svg+xml"],
+            ["graphs.svg", "../../assets/graphs.svg", "image/svg+xml"],
             [
-                "metrics.svg",
-                "../../assets/metrics.svg",
+                "num_invites.svg",
+                "../../assets/num_invites.svg",
                 "image/svg+xml"
             ],
             [
-                "graphs.svg",
-                "../../assets/graphs.svg",
+                "num_schnicks.svg",
+                "../../assets/num_schnicks.svg",
                 "image/svg+xml"
             ],
-            ["num_invites.svg", "../../assets/num_invites.svg", "image/svg+xml"],
-            ["num_schnicks.svg", "../../assets/num_schnicks.svg", "image/svg+xml"],
             ["distance.svg", "../../assets/distance.svg", "image/svg+xml"],
             ["score.svg", "../../assets/score.svg", "image/svg+xml"],
             ["streak.svg", "../../assets/streak.svg", "image/svg+xml"],
