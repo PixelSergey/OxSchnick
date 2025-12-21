@@ -299,7 +299,7 @@ impl Authenticator {
             );
             cookie.make_permanent();
             cookie.set_same_site(SameSite::Strict);
-            #[cfg(build = "release")]
+            #[cfg(not(debug_assertions))]
             cookie.set_secure(Some(true));
             let cookies = cookies.add(cookie);
             request.extensions_mut().insert((id, new_entry));
