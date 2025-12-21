@@ -73,7 +73,7 @@
             forceSSL = true;
             enableACME = true;
             locations."/" = {
-              proxyPass = "http://127.0.0.1:${cfg.port}"; 
+              proxyPass = "http://127.0.0.1:${builtins.toString cfg.port}"; 
               recommendedProxySettings = true;
             };
             locations."/.well-known/".root = "/var/lib/acme/acme-challenge";
