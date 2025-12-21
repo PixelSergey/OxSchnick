@@ -31,6 +31,9 @@
             src = ./.;
             cargoLock.lockFile = ./Cargo.lock;
             nativeBuildInputs = [ pkgs.postgresql ];
+            postInstall = ''
+              cp -r assets/ $out/assets
+            '';
         };
       };
       apps = rec {
