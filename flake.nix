@@ -7,7 +7,8 @@
     rust-overlay.url = "github:oxalica/rust-overlay";
   };
 
-  outputs = { self, nixpkgs, flake-utils, rust-overlay }: flake-utils.lib.eachDefaultSystem (system: 
+  outputs = { self, nixpkgs, flake-utils, rust-overlay }: nixpkgs.lib.mkMerge [
+  flake-utils.lib.eachDefaultSystem (system: 
     let
       pkgs = import nixpkgs {
         system = system;
@@ -39,9 +40,9 @@
         };
       };
     }
-  );
+  )
 
-  nixosModules = rec {
+  {nixosModules = rec {
     default = fanschnick-server;
     fanschnick-server = self: { config, lib, pkgs, ... }:
       let cfg = config.services.fanschnick-server; in {
@@ -99,5 +100,6 @@
           };
         };
       };
-  };
+  };}
+  ];
 }
