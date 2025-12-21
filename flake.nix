@@ -40,10 +40,10 @@
       };
     }
   );
-  
+
   nixosModules = rec {
     default = fanschnick-server;
-    fanschnick-server = { config, lib, ... }:
+    fanschnick-server = { config, lib, pkgs, ... }:
       let cfg = config.services.fanschnick-server; in {
         options = with lib.types; {
         services.fanschnick-server = {
