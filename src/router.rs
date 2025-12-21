@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{
     Router,
     middleware::from_fn_with_state,
@@ -8,9 +10,11 @@ use url::Url;
 
 use crate::{
     auth::Authenticator,
+    graphs::Graph,
     routes::{
-        about, assets, graphs, home, home_invite, home_sse, imprint, index, invite, metrics,
-        schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_submit,
+        about, assets, graphs, graphs_graph, graphs_graph_sse, home, home_invite, home_sse,
+        imprint, index, invite, metrics, schnick, schnick_abort, schnick_sse, schnick_submit,
+        settings, settings_submit,
     },
     schnicks::Schnicker,
     state::State,
@@ -19,14 +23,18 @@ use crate::{
 pub async fn router(
     base_url: Url,
     pool: Pool<AsyncPgConnection>,
-) -> anyhow::Result<(Router, Authenticator, Schnicker)> {
+) -> anyhow::Result<(Router, Authenticator, Schnicker, Graph)> {
     let authenticator = Authenticator::with_connection(pool.dedicated_connection().await?);
-    let schnicker = Schnicker::with_connection(pool.dedicated_connection().await?);
+    let (graph, graph_update) = Graph::with_connection(&mut pool.get().await?).await?;
+    let schnicker =
+        Schnicker::with_connection_and_update(pool.dedicated_connection().await?, graph_update);
     let state = State {
         base_url,
         pool,
         authenticator: authenticator.sender(),
         schnicker: schnicker.sender(),
+        graph_cache: graph.graph_cache(),
+        graph_updates: Arc::new(graph.update_receiver()),
     };
     let authenticated_with_registration = Router::new()
         .route("/invite", get(invite))
@@ -51,6 +59,8 @@ pub async fn router(
         .route("/settings", get(settings))
         .route("/settings", post(settings_submit))
         .route("/graphs", get(graphs))
+        .route("/graphs/graph", get(graphs_graph))
+        .route("/graphs/graph/sse", get(graphs_graph_sse))
         .route("/metrics", get(metrics))
         .route_layer(from_fn_with_state(state.clone(), Authenticator::layer))
         .with_state(state.clone());
@@ -58,5 +68,5 @@ pub async fn router(
         .merge(authenticated_with_registration)
         .merge(authenticated)
         .merge(unauthenticated);
-    Ok((router, authenticator, schnicker))
+    Ok((router, authenticator, schnicker, graph))
 }

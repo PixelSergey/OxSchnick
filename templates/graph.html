@@ -1,0 +1,78 @@
+{% extends "graphs.html" %}
+{% block tab_graph %}tab-active{% endblock %}
+{% block head %}
+<script src="//cdn.jsdelivr.net/npm/force-graph"></script>
+{% endblock %}
+{% block graph_container %}
+<script type="module">
+    function preprocess(raw) {
+        let nodes = new Set([]);
+        let links = [];
+        raw.forEach(element => {
+            nodes.add(element[0]);
+            nodes.add(element[1]);
+            links.push({"source": element[0], "target": element[1]});
+        });
+        nodes = Array.from(nodes).map((x) => {return {"id": x, "name": x.toString()}; });
+        const nodesById = Object.fromEntries(
+            nodes.map(n => [n.id, n])
+        );
+        
+        // fix for when graph is not connected, should not
+        // be necessary in real graph
+        nodes.forEach(n => { {
+            n.neighbors = [];
+        } });
+
+        // calculate neighbors
+        links.forEach(link => { {
+            const a = nodesById[link.source];
+            const b = nodesById[link.target];
+            !a.neighbors && (a.neighbors = []);
+            !b.neighbors && (b.neighbors = []);
+            a.neighbors.push(b);
+            b.neighbors.push(a);
+            
+            !a.links && (a.links = []);
+            !b.links && (b.links = []);
+            a.links.push(link);
+            b.links.push(link);
+        } });
+        return { "nodes": nodes, "links": links };
+    }
+    const defaultColor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--foreground-color');
+    const highlightedColor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--highlight-green');
+    const neighborColor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--highlight-purple');
+    const backgroundColor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--background-color');
+    const elem = document.getElementById('graph');
+
+    const userId = {{id}};
+    let raw_links = {{cache}};
+    const gData = preprocess(raw_links);
+
+    const Graph = ForceGraph()(elem)
+        .backgroundColor(backgroundColor)
+        .width(elem.clientWidth)
+        .height(elem.clientHeight - 210)
+        .graphData(gData)
+        .d3AlphaDecay(0.05)
+        .d3VelocityDecay(0.5)
+        .cooldownTime(60000)
+        .nodeColor(node => { {
+            if (node.id === userId) return highlightedColor;
+            if (node.neighbors.some(neighbor => neighbor.id === userId)) return neighborColor;
+            return defaultColor;
+        } })
+        .linkColor(link => link.target.id === userId || link.source.id === userId ? neighborColor : defaultColor);
+
+    let events = new EventSource("graph/sse");
+    events.onmessage = (e) => {
+        raw_links = raw_links.concat(JSON.parse(e.data));
+        Graph.graphData(preprocess(raw_links));
+    };
+</script>
+{% endblock %}

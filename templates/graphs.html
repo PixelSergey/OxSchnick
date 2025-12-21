@@ -1,10 +1,13 @@
 {% extends "base.html" %}
 {% block nav_graphs %}button-active{% endblock %}
 {% block main %}
-<div id="tabs" hx-on:htmx-after-on-load="htmx.removeClass(htmx.find('.tab-active'), 'tab-active'); htmx.addClass(event.target, 'tab-active')">
+<div id="tabs">
     <!-- hard gecoded, sollte mit user_id ersetzt werden -->
-    <div class="tab tab-active" hx-get="graph/1" hx-target="#graph" hx-swap="innerHTML" hx-trigger="load, click">Graph</div>
-    <div class="tab" hx-get="tree/1" hx-target="#graph" hx-swap="innerHTML">Tree</div>
+    <div class="tab {% block tab_graph %}{% endblock %}">Graph</div>
+    <div class="tab {% block tab_tree %}{% endblock %}">Tree</div>
 </div>
-<div id="graph"></div>
+<div id="graph">
+    {% block graph_container %}
+    {% endblock %}
+</div>
 {% endblock %}

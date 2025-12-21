@@ -66,6 +66,7 @@ pub struct Schnicker {
     >,
     sender: mpsc::Sender<SchnickRequest>,
     receiver: mpsc::Receiver<SchnickRequest>,
+    update: mpsc::Sender<(i32, i32)>,
 }
 
 #[derive(Debug)]
@@ -94,23 +95,27 @@ pub enum SchnickRequest {
     },
 }
 
-#[derive(Debug, Clone, Insertable)]
+#[derive(Debug, Clone, Insertable, HasQuery)]
 #[diesel(table_name=crate::schema::schnicks)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-struct SavedSchnick {
+pub struct SavedSchnick {
     pub winner: i32,
     pub loser: i32,
     pub weapon: i32,
 }
 
 impl Schnicker {
-    pub fn with_connection(connection: AsyncPgConnection) -> Self {
+    pub fn with_connection_and_update(
+        connection: AsyncPgConnection,
+        update: mpsc::Sender<(i32, i32)>,
+    ) -> Self {
         let (tx, rx) = mpsc::channel(SCHNICKS_CHANNEL_BUFFER);
         Self {
             connection,
             active: Default::default(),
             sender: tx,
             receiver: rx,
+            update,
         }
     }
 
@@ -243,6 +248,10 @@ impl Schnicker {
                         StatusCode::INTERNAL_SERVER_ERROR
                     })?;
                 sender.send_replace(Outcome::Concluded);
+                self.update
+                    .send((old_id, id))
+                    .await
+                    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
                 self.active.remove(&id);
                 self.active.remove(&old_id);
                 Ok(Some(Outcome::Concluded))

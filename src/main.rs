@@ -14,6 +14,7 @@ use url::Url;
 use crate::router::router;
 
 pub mod auth;
+pub mod graphs;
 pub mod router;
 pub mod routes;
 pub mod schema;
@@ -50,7 +51,7 @@ async fn main() -> anyhow::Result<()> {
         .await
         .expect("could not bind to listener");
     trace!("building router");
-    let (router, mut authenticator, schnicker) = router(base_url, pool)
+    let (router, mut authenticator, schnicker, graph) = router(base_url, pool)
         .await
         .expect("could not setup router");
     trace!("getting root invite");
@@ -63,11 +64,13 @@ async fn main() -> anyhow::Result<()> {
     let local_set = LocalSet::new();
     let schnicker_handle = local_set.spawn_local(schnicker.worker());
     let authenticator_handle = tokio::spawn(authenticator.worker());
+    let graph_handle = tokio::spawn(graph.worker());
     trace!("calling tokio::join");
     let _ = tokio::join!(
         local_set,
         schnicker_handle,
         authenticator_handle,
+        graph_handle,
         axum::serve(listener, router)
     );
     Ok(())

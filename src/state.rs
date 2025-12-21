@@ -1,5 +1,8 @@
+use std::sync::Arc;
+
+use axum::response::sse::Event;
 use diesel_async::{AsyncPgConnection, pooled_connection::bb8::Pool};
-use tokio::sync::mpsc::Sender;
+use tokio::sync::{RwLock, broadcast, mpsc::Sender};
 use url::Url;
 
 use crate::{auth::AuthenticationRequest, schnicks::SchnickRequest};
@@ -10,4 +13,6 @@ pub struct State {
     pub pool: Pool<AsyncPgConnection>,
     pub authenticator: Sender<AuthenticationRequest>,
     pub schnicker: Sender<SchnickRequest>,
+    pub graph_cache: Arc<RwLock<String>>,
+    pub graph_updates: Arc<broadcast::Receiver<Arc<Event>>>,
 }
