@@ -1,5 +1,6 @@
 use askama::Template;
 use axum::{Form, extract, http::StatusCode, response::{Html, IntoResponse, Redirect}};
+use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
 use serde::Deserialize;
 
@@ -30,7 +31,7 @@ pub async fn settings_submit(
         username,
         dect
     };
-    diesel::update(users::table).set(&new).execute(&mut state.pool.get().await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?).await.map_err(|_| StatusCode::BAD_REQUEST)?;
+    diesel::update(users::table.find(id)).set(&new).execute(&mut state.pool.get().await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?).await.map_err(|_| StatusCode::BAD_REQUEST)?;
     Ok(Redirect::to("settings"))
 }
 
