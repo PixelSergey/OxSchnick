@@ -94,7 +94,7 @@
           serviceConfig = {
             User = "fanschnick";
             Group = "fanschnick";
-            ExecStart = "${self.packages.x86_64.fanschnick-server}/bin/fanschnick-server https://${cfg.host} 127.0.0.1:${cfg.port}";
+            ExecStart = "${self.packages.x86_64-linux.fanschnick-server}/bin/fanschnick-server https://${cfg.host} 127.0.0.1:${cfg.port}";
           };
         };
       };
