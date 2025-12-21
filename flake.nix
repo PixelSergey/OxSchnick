@@ -79,6 +79,14 @@
               proxyPass = "http://127.0.0.1:${builtins.toString cfg.port}"; 
               recommendedProxySettings = true;
             };
+            locations."/assets/" = {
+              alias = "${self.packages.x86_64-linux.fanschnick-server}/assets/";
+              extraConfig = ''
+                sendfile   on;
+                sendfile_max_chunk 1m;
+                tcp_nopush on;
+              '';
+            };
             locations."/.well-known/".root = "/var/lib/acme/acme-challenge";
           };
         };
