@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use axum::{
     extract::{self, FromRequestParts, Query, Request},
-    http::StatusCode,
     middleware::Next,
     response::{IntoResponse, Response},
 };
@@ -17,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::{mpsc, oneshot, watch};
 use uuid::Uuid;
 
-use crate::state::State;
+use crate::{error::{Error, Result}, state::State};
 
 pub const AUTHENTICATOR_COOKIE_NAME: &'static str = "session";
 const AUTHENTICATOR_CHANNEL_BUFFER: usize = 128usize;
@@ -28,16 +27,16 @@ pub enum AuthenticationRequest {
     Authenticate {
         id: i32,
         token: Uuid,
-        callback: oneshot::Sender<Result<AuthenticatorEntry, StatusCode>>,
+        callback: oneshot::Sender<Result<AuthenticatorEntry>>,
     },
     Register {
         parent: i32,
         invite: Uuid,
-        callback: oneshot::Sender<Result<(i32, AuthenticatorEntry), StatusCode>>,
+        callback: oneshot::Sender<Result<(i32, AuthenticatorEntry)>>,
     },
     RenewInvite {
         id: i32,
-        callback: oneshot::Sender<Result<(), StatusCode>>,
+        callback: oneshot::Sender<Result<()>>,
     },
 }
 
@@ -91,12 +90,12 @@ impl Authenticator {
         &mut self,
         parent: i32,
         submitted_invite: &Uuid,
-    ) -> Result<(i32, AuthenticatorEntry), StatusCode> {
+    ) -> Result<(i32, AuthenticatorEntry)> {
         use crate::schema::users;
         let entry = self
             .cache
             .get(&parent)
-            .ok_or(StatusCode::FORBIDDEN)?
+            .ok_or(Error::InvalidInvite)?
             .clone();
         if &entry.invite == submitted_invite {
             let new_user = NewUser { parent: parent };
@@ -107,7 +106,7 @@ impl Authenticator {
                 .await
                 .map_err(|e| {
                     error!(target: "auth::register", "{:?}", e);
-                    StatusCode::INTERNAL_SERVER_ERROR
+                    Error::InternalServerError
                 })?;
             let new_entry = AuthenticatorEntry {
                 token: new_authenticated.token,
@@ -117,7 +116,7 @@ impl Authenticator {
             self.cache.insert(new_authenticated.id, new_entry.clone());
             Ok((new_authenticated.id, new_entry))
         } else {
-            Err(StatusCode::FORBIDDEN)
+            Err(Error::InvalidInvite)
         }
     }
 
@@ -125,12 +124,12 @@ impl Authenticator {
         &mut self,
         id: i32,
         submitted_token: &Uuid,
-    ) -> Result<AuthenticatorEntry, StatusCode> {
+    ) -> Result<AuthenticatorEntry> {
         if let Some(entry) = self.cache.get(&id) {
             if &entry.token == submitted_token {
                 Ok(entry.clone())
             } else {
-                Err(StatusCode::FORBIDDEN)
+                Err(Error::InvalidLogin)
             }
         } else {
             let authenticated = Authenticated::query()
@@ -140,7 +139,7 @@ impl Authenticator {
                 .optional()
                 .map_err(|e| {
                     error!(target: "auth::authenticate", "{:?}", e);
-                    StatusCode::INTERNAL_SERVER_ERROR
+                    Error::InternalServerError
                 })?;
             match authenticated {
                 Some(Authenticated { token, .. }) if &token == submitted_token => {
@@ -152,13 +151,13 @@ impl Authenticator {
                     let _ = self.cache.insert(id, entry.clone());
                     Ok(entry)
                 }
-                _ => Err(StatusCode::FORBIDDEN),
+                _ => Err(Error::InvalidLogin),
             }
         }
     }
 
-    async fn renew_invite(&mut self, id: i32) -> Result<(), StatusCode> {
-        let entry = self.cache.get_mut(&id).ok_or(StatusCode::NOT_FOUND)?;
+    async fn renew_invite(&mut self, id: i32) -> Result<()> {
+        let entry = self.cache.get_mut(&id).ok_or(Error::InvalidInvite)?;
         entry.invite = Uuid::new_v4();
         entry.channel.send_replace(());
         Ok(())
@@ -205,7 +204,7 @@ impl Authenticator {
         id: i32,
         submitted_token: &Uuid,
         sender: &mpsc::Sender<AuthenticationRequest>,
-    ) -> Result<AuthenticatorEntry, StatusCode> {
+    ) -> Result<AuthenticatorEntry> {
         let (tx, rx) = oneshot::channel();
         sender
             .send(AuthenticationRequest::Authenticate {
@@ -216,11 +215,11 @@ impl Authenticator {
             .await
             .map_err(|e| {
                 error!(target: "auth::request", "dead channel: {:?}", e);
-                StatusCode::INTERNAL_SERVER_ERROR
+                Error::InternalServerError
             })?;
         rx.await.map_err(|e| {
             error!(target: "auth::request", "dead channel: {:?}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
+            Error::InternalServerError
         })?
     }
 
@@ -228,7 +227,7 @@ impl Authenticator {
         parent: i32,
         submitted_invite: &Uuid,
         sender: &mpsc::Sender<AuthenticationRequest>,
-    ) -> Result<(i32, AuthenticatorEntry), StatusCode> {
+    ) -> Result<(i32, AuthenticatorEntry)> {
         let (tx, rx) = oneshot::channel();
         sender
             .send(AuthenticationRequest::Register {
@@ -239,29 +238,29 @@ impl Authenticator {
             .await
             .map_err(|e| {
                 error!(target: "auth::request", "dead channel: {:?}", e);
-                StatusCode::INTERNAL_SERVER_ERROR
+                Error::InternalServerError
             })?;
         rx.await.map_err(|e| {
             error!(target: "auth::request", "dead channel: {:?}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
+            Error::InternalServerError
         })?
     }
 
     pub async fn request_renew_invite(
         id: i32,
         sender: &mpsc::Sender<AuthenticationRequest>,
-    ) -> Result<(), StatusCode> {
+    ) -> Result<()> {
         let (tx, rx) = oneshot::channel();
         sender
             .send(AuthenticationRequest::RenewInvite { id, callback: tx })
             .await
             .map_err(|e| {
                 error!(target: "auth::request", "dead channel: {:?}", e);
-                StatusCode::INTERNAL_SERVER_ERROR
+                Error::InternalServerError
             })?;
         rx.await.map_err(|e| {
             error!(target: "auth::request", "dead channel: {:?}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
+            Error::InternalServerError
         })?
     }
 
@@ -271,13 +270,13 @@ impl Authenticator {
         invite: Query<Invite>,
         mut request: Request,
         next: Next,
-    ) -> Result<Response, StatusCode> {
+    ) -> Result<Response> {
         if let Some(session) = cookies
             .get(AUTHENTICATOR_COOKIE_NAME)
             .map(|cookie| cookie.value().as_bytes())
         {
             let submitted_entry = serde_json::from_slice::<Authenticated>(session)
-                .map_err(|_| StatusCode::FORBIDDEN)?;
+                .map_err(|_| Error::InvalidLogin)?;
             let entry = Self::request_authenticate(
                 submitted_entry.id,
                 &submitted_entry.token,
@@ -295,7 +294,7 @@ impl Authenticator {
                     id,
                     token: new_entry.token,
                 })
-                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+                .map_err(|_| Error::InternalServerError)?,
             );
             cookie.make_permanent();
             cookie.set_same_site(SameSite::Strict);
@@ -312,13 +311,13 @@ impl Authenticator {
         cookies: CookieJar,
         mut request: Request,
         next: Next,
-    ) -> Result<Response, StatusCode> {
+    ) -> Result<Response> {
         let session = cookies
             .get(AUTHENTICATOR_COOKIE_NAME)
             .map(|cookie| cookie.value().as_bytes())
-            .ok_or(StatusCode::FORBIDDEN)?;
+            .ok_or(Error::NoLogin)?;
         let submitted_entry =
-            serde_json::from_slice::<Authenticated>(session).map_err(|_| StatusCode::FORBIDDEN)?;
+            serde_json::from_slice::<Authenticated>(session).map_err(|_| Error::InvalidLogin)?;
         let entry = Self::request_authenticate(
             submitted_entry.id,
             &submitted_entry.token,
@@ -348,15 +347,15 @@ impl Authenticator {
 }
 
 impl<S: Send + Sync + 'static> FromRequestParts<S> for AuthenticatorEntry {
-    type Rejection = StatusCode;
+    type Rejection = Error;
 
     async fn from_request_parts(
         parts: &mut axum::http::request::Parts,
         _state: &S,
-    ) -> Result<Self, Self::Rejection> {
+    ) -> Result<Self> {
         parts.extensions.get::<(i32, Self)>().ok_or_else(|| {
             error!(target: "auth::from_request_parts", "did not get Authenticated in extension");
-            StatusCode::INTERNAL_SERVER_ERROR
+            Error::InternalServerError
         }).map(|(_, b)| b.clone())
     }
 }
@@ -365,18 +364,18 @@ impl<S: Send + Sync + 'static> FromRequestParts<S> for AuthenticatorEntry {
 pub struct User(pub i32);
 
 impl<S: Send + Sync + 'static> FromRequestParts<S> for User {
-    type Rejection = StatusCode;
+    type Rejection = Error;
 
     async fn from_request_parts(
         parts: &mut axum::http::request::Parts,
         _state: &S,
-    ) -> Result<Self, Self::Rejection> {
+    ) -> Result<Self> {
         parts
             .extensions
             .get::<(i32, AuthenticatorEntry)>()
             .ok_or_else(|| {
                 error!(target: "auth::from_request_parts", "did not get UserInvite in extension");
-                StatusCode::INTERNAL_SERVER_ERROR
+                Error::InternalServerError
             })
             .map(|(a, _)| User(*a))
     }

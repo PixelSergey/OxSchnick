@@ -1,14 +1,13 @@
 use askama::Template;
 use axum::{
     Form, extract,
-    http::StatusCode,
     response::{Html, IntoResponse, Redirect},
 };
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
 use serde::Deserialize;
 
-use crate::{auth, state::State, users::Settings};
+use crate::{auth, error::{Error, Result}, state::State, users::Settings};
 
 #[derive(Template)]
 #[template(path = "settings.html")]
@@ -27,7 +26,7 @@ pub async fn settings_submit(
     extract::State(state): extract::State<State>,
     auth::User(id): auth::User,
     Form(SettingsForm { username, mut dect }): Form<SettingsForm>,
-) -> Result<impl IntoResponse, StatusCode> {
+) -> Result<impl IntoResponse> {
     use crate::schema::users;
     dect.take_if(|inner| inner.is_empty());
     let new = Settings { id, username, dect };
@@ -38,22 +37,22 @@ pub async fn settings_submit(
                 .pool
                 .get()
                 .await
-                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+                .map_err(|_| Error::InternalServerError)?,
         )
         .await
-        .map_err(|_| StatusCode::BAD_REQUEST)?;
+        .map_err(|_| Error::InvalidSettings)?;
     Ok(Redirect::to("settings"))
 }
 
 pub async fn settings(
     Settings { username, dect, .. }: Settings,
-) -> Result<impl IntoResponse, StatusCode> {
+) -> Result<impl IntoResponse> {
     Ok(Html(
         SettingsTemplate {
             username: &username,
             dect: dect.as_deref(),
         }
         .render()
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+        .map_err(|_| Error::InternalServerError)?,
     ))
 }

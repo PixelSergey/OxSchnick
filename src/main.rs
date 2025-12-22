@@ -14,6 +14,7 @@ use url::Url;
 use crate::router::router;
 
 pub mod auth;
+pub mod error;
 pub mod graphs;
 pub mod router;
 pub mod routes;

@@ -9,15 +9,11 @@ use diesel_async::{AsyncPgConnection, pooled_connection::bb8::Pool};
 use url::Url;
 
 use crate::{
-    auth::Authenticator,
-    graphs::Graph,
-    routes::{
+    auth::Authenticator, error::Error, graphs::Graph, routes::{
         about, assets, graphs, graphs_graph, graphs_graph_sse, home, home_invite, home_sse,
         imprint, index, invite, metrics, schnick, schnick_abort, schnick_sse, schnick_submit,
         settings, settings_submit,
-    },
-    schnicks::Schnicker,
-    state::State,
+    }, schnicks::Schnicker, state::State
 };
 
 pub async fn router(
@@ -67,6 +63,7 @@ pub async fn router(
     let router = Router::new()
         .merge(authenticated_with_registration)
         .merge(authenticated)
-        .merge(unauthenticated);
+        .merge(unauthenticated)
+        .fallback(get(async || Error::NotFound));
     Ok((router, authenticator, schnicker, graph))
 }

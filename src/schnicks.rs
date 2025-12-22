@@ -1,6 +1,6 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use axum::{extract::FromRequestParts, http::StatusCode};
+use axum::extract::FromRequestParts;
 use diesel::{
     dsl::{exists, select},
     prelude::*,
@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use tokio::sync::{mpsc, oneshot, watch};
 
-use crate::{auth::AuthenticatorEntry, state::State};
+use crate::{auth::AuthenticatorEntry, error::{Error, Result}, state::State};
 
 const SCHNICKS_CHANNEL_BUFFER: usize = 128usize;
 
@@ -74,24 +74,24 @@ pub enum SchnickRequest {
     StartSchnick {
         id: i32,
         opponent: i32,
-        callback: oneshot::Sender<Result<(), StatusCode>>,
+        callback: oneshot::Sender<Result<()>>,
     },
     GetOutcomeReceiver {
         id: i32,
-        callback: oneshot::Sender<Result<watch::Receiver<Outcome>, StatusCode>>,
+        callback: oneshot::Sender<Result<watch::Receiver<Outcome>>>,
     },
     HandleInteraction {
         id: i32,
         interaction: Interaction,
-        callback: oneshot::Sender<Result<Option<Outcome>, StatusCode>>,
+        callback: oneshot::Sender<Result<Option<Outcome>>>,
     },
     InSchnick {
         id: i32,
-        callback: oneshot::Sender<Result<bool, StatusCode>>,
+        callback: oneshot::Sender<Result<bool>>,
     },
     AbortSchnick {
         id: i32,
-        callback: oneshot::Sender<Result<(), StatusCode>>,
+        callback: oneshot::Sender<Result<()>>,
     },
 }
 
@@ -186,10 +186,10 @@ impl Schnicker {
         }
     }
 
-    async fn start_schnick(&mut self, id: i32, opponent: i32) -> Result<(), StatusCode> {
+    async fn start_schnick(&mut self, id: i32, opponent: i32) -> Result<()> {
         use crate::schema::schnicks;
         if id == opponent {
-            return Err(StatusCode::CONFLICT);
+            return Err(Error::CannotSchnickOneself);
         }
         let already_schnicked: bool = select(exists(
             schnicks::table.filter(
@@ -201,13 +201,13 @@ impl Schnicker {
         .await
         .map_err(|e| {
             error!(target: "schnicks::start_schnick", "{:?}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
+            Error::InternalServerError
         })?;
         if already_schnicked {
-            return Err(StatusCode::CONFLICT);
+            return Err(Error::CannotSchnickTwice);
         }
         if self.active.contains_key(&id) || self.active.contains_key(&opponent) {
-            return Err(StatusCode::CONFLICT);
+            return Err(Error::AlreadySchnicking);
         }
         let new = Default::default();
         self.active.insert(id, (Rc::clone(&new), opponent));
@@ -215,13 +215,13 @@ impl Schnicker {
         Ok(())
     }
 
-    async fn get_outcome_receiver(&self, id: i32) -> Result<watch::Receiver<Outcome>, StatusCode> {
-        let (entry, _) = self.active.get(&id).ok_or(StatusCode::NOT_FOUND)?;
-        let (old_id, _, sender) = entry.borrow().clone().ok_or(StatusCode::NOT_FOUND)?;
+    async fn get_outcome_receiver(&self, id: i32) -> Result<watch::Receiver<Outcome>> {
+        let (entry, _) = self.active.get(&id).ok_or(Error::NotInSchnick)?;
+        let (old_id, _, sender) = entry.borrow().clone().ok_or(Error::NotFound)?;
         if old_id == id {
             Ok(sender.subscribe())
         } else {
-            Err(StatusCode::NOT_FOUND)
+            Err(Error::NotFound)
         }
     }
 
@@ -229,14 +229,14 @@ impl Schnicker {
         &mut self,
         id: i32,
         interaction: &Interaction,
-    ) -> Result<Option<Outcome>, StatusCode> {
+    ) -> Result<Option<Outcome>> {
         use crate::schema::schnicks;
-        let active = Rc::clone(&self.active.get(&id).ok_or(StatusCode::NOT_FOUND)?.0)
+        let active = Rc::clone(&self.active.get(&id).ok_or(Error::NotInSchnick)?.0)
             .borrow()
             .clone();
         if let Some((old_id, old_interaction, sender)) = active {
             if id == old_id {
-                return Err(StatusCode::CONFLICT);
+                return Err(Error::AlreadySubmitted);
             }
             if let Some(saved) = Self::saved_schnick(old_id, &old_interaction, id, interaction) {
                 saved
@@ -245,13 +245,13 @@ impl Schnicker {
                     .await
                     .map_err(|e| {
                         error!(target: "schnicks::handle_interaction", "{:?}", e);
-                        StatusCode::INTERNAL_SERVER_ERROR
+                        Error::InternalServerError
                     })?;
                 sender.send_replace(Outcome::Concluded);
                 self.update
                     .send((old_id, id))
                     .await
-                    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+                    .map_err(|_| Error::InternalServerError)?;
                 self.active.remove(&id);
                 self.active.remove(&old_id);
                 Ok(Some(Outcome::Concluded))
@@ -259,7 +259,7 @@ impl Schnicker {
                 let _ = self
                     .active
                     .get(&id)
-                    .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?
+                    .ok_or(Error::InternalServerError)?
                     .0
                     .borrow_mut()
                     .take();
@@ -270,7 +270,7 @@ impl Schnicker {
             let (tx, _) = watch::channel(Outcome::Retry);
             self.active
                 .get(&id)
-                .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?
+                .ok_or(Error::InternalServerError)?
                 .0
                 .borrow_mut()
                 .replace((id, interaction.clone(), tx));
@@ -278,7 +278,7 @@ impl Schnicker {
         }
     }
 
-    async fn in_schnick(&self, id: i32) -> Result<bool, StatusCode> {
+    async fn in_schnick(&self, id: i32) -> Result<bool> {
         if let Some((entry, _)) = self.active.get(&id) {
             if let Some((old_id, _, _)) = *entry.borrow() {
                 Ok(id != old_id)
@@ -286,16 +286,16 @@ impl Schnicker {
                 Ok(true)
             }
         } else {
-            Err(StatusCode::NOT_FOUND)
+            Err(Error::NotInSchnick)
         }
     }
 
-    async fn abort_schnick(&mut self, id: i32) -> Result<(), StatusCode> {
-        let (_, opponent) = self.active.remove(&id).ok_or(StatusCode::NOT_FOUND)?;
+    async fn abort_schnick(&mut self, id: i32) -> Result<()> {
+        let (_, opponent) = self.active.remove(&id).ok_or(Error::NotInSchnick)?;
         let (active, _) = self
             .active
             .remove(&opponent)
-            .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
+            .ok_or(Error::InternalServerError)?;
         if let Some((_, _, sender)) = active.borrow().clone() {
             sender.send_replace(Outcome::Concluded);
         }
@@ -306,7 +306,7 @@ impl Schnicker {
         id: i32,
         opponent: i32,
         sender: &mpsc::Sender<SchnickRequest>,
-    ) -> Result<(), StatusCode> {
+    ) -> Result<()> {
         let (tx, rx) = oneshot::channel();
         sender
             .send(SchnickRequest::StartSchnick {
@@ -317,29 +317,29 @@ impl Schnicker {
             .await
             .map_err(|e| {
                 error!(target: "schnicks::start_schnick", "dead channel: {:?}", e);
-                StatusCode::INTERNAL_SERVER_ERROR
+                Error::InternalServerError
             })?;
         rx.await.map_err(|e| {
             error!(target: "schnicks::start_schnick", "dead channel: {:?}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
+            Error::InternalServerError
         })?
     }
 
     pub async fn request_get_outcome_receiver(
         id: i32,
         sender: &mpsc::Sender<SchnickRequest>,
-    ) -> Result<watch::Receiver<Outcome>, StatusCode> {
+    ) -> Result<watch::Receiver<Outcome>> {
         let (tx, rx) = oneshot::channel();
         sender
             .send(SchnickRequest::GetOutcomeReceiver { id, callback: tx })
             .await
             .map_err(|e| {
                 error!(target: "schnicks::get_outcome_receiver", "dead channel: {:?}", e);
-                StatusCode::INTERNAL_SERVER_ERROR
+                Error::InternalServerError
             })?;
         rx.await.map_err(|e| {
             error!(target: "schnicks::get_outcome_receiver", "dead channel: {:?}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
+            Error::InternalServerError
         })?
     }
 
@@ -347,7 +347,7 @@ impl Schnicker {
         id: i32,
         interaction: Interaction,
         sender: &mpsc::Sender<SchnickRequest>,
-    ) -> Result<Option<Outcome>, StatusCode> {
+    ) -> Result<Option<Outcome>> {
         let (tx, rx) = oneshot::channel();
         sender
             .send(SchnickRequest::HandleInteraction {
@@ -358,18 +358,18 @@ impl Schnicker {
             .await
             .map_err(|e| {
                 error!(target: "schnicks::handle_interaction", "dead channel: {:?}", e);
-                StatusCode::INTERNAL_SERVER_ERROR
+                Error::InternalServerError
             })?;
         rx.await.map_err(|e| {
             error!(target: "schnicks::handle_interaction", "dead channel: {:?}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
+            Error::InternalServerError
         })?
     }
 
     pub async fn request_in_schnick(
         id: i32,
         sender: &mpsc::Sender<SchnickRequest>,
-    ) -> Result<bool, StatusCode> {
+    ) -> Result<bool> {
         let (tx, rx) = oneshot::channel();
         sender
             .send(SchnickRequest::InSchnick {
@@ -379,18 +379,18 @@ impl Schnicker {
             .await
             .map_err(|e| {
                 error!(target: "schnicks::request_in_schnick", "dead channel: {:?}", e);
-                StatusCode::INTERNAL_SERVER_ERROR
+                Error::InternalServerError
             })?;
         rx.await.map_err(|e| {
             error!(target: "schnicks::request_in_schnick", "dead channel: {:?}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
+            Error::InternalServerError
         })?
     }
 
     pub async fn request_abort_schnick(
         id: i32,
         sender: &mpsc::Sender<SchnickRequest>,
-    ) -> Result<(), StatusCode> {
+    ) -> Result<()> {
         let (tx, rx) = oneshot::channel();
         sender
             .send(SchnickRequest::AbortSchnick {
@@ -400,11 +400,11 @@ impl Schnicker {
             .await
             .map_err(|e| {
                 error!(target: "schnicks::request_in_schnick", "dead channel: {:?}", e);
-                StatusCode::INTERNAL_SERVER_ERROR
+                Error::InternalServerError
             })?;
         rx.await.map_err(|e| {
             error!(target: "schnicks::request_in_schnick", "dead channel: {:?}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
+            Error::InternalServerError
         })?
     }
 
@@ -417,16 +417,16 @@ impl Schnicker {
 pub struct SchnickOutcomeReceiver(pub watch::Receiver<Outcome>);
 
 impl FromRequestParts<State> for SchnickOutcomeReceiver {
-    type Rejection = StatusCode;
+    type Rejection = Error;
 
     async fn from_request_parts(
         parts: &mut axum::http::request::Parts,
         state: &State,
-    ) -> Result<Self, Self::Rejection> {
+    ) -> Result<Self> {
         let (id, _) = parts
             .extensions
             .get::<(i32, AuthenticatorEntry)>()
-            .ok_or(StatusCode::FORBIDDEN)?;
+            .ok_or(Error::NoLogin)?;
         let receiver = Schnicker::request_get_outcome_receiver(*id, &state.schnicker).await?;
         Ok(Self(receiver))
     }

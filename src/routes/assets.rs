@@ -1,8 +1,9 @@
 use axum::{
     extract::Path,
-    http::{StatusCode, header::CONTENT_TYPE},
+    http::header::CONTENT_TYPE,
     response::IntoResponse,
 };
+use crate::error::{Error, Result};
 
 macro_rules! serve_static {
     ( $name:expr, [ $( [ $path:literal, $file:expr, $type:literal ] ),* ]) => {
@@ -10,12 +11,12 @@ macro_rules! serve_static {
             $(
                 $path => Ok(([(CONTENT_TYPE, $type)], &include_bytes!($file)[..])),
             )*
-            _ => Err(StatusCode::NOT_FOUND)
+            _ => Err(Error::NotFound)
         }
     };
 }
 
-pub async fn assets(Path(file): Path<String>) -> Result<impl IntoResponse, StatusCode> {
+pub async fn assets(Path(file): Path<String>) -> Result<impl IntoResponse> {
     serve_static!(
         &file[..],
         [

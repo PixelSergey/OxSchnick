@@ -3,7 +3,6 @@ use std::convert::Infallible;
 use askama::Template;
 use axum::{
     extract,
-    http::StatusCode,
     response::{Html, IntoResponse, Sse, sse::Event},
 };
 use futures::FutureExt;
@@ -12,10 +11,7 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::{
-    auth::{AuthenticatorEntry, User},
-    schnicks::Weapon,
-    state::State,
-    users::{Settings, Stats},
+    auth::{AuthenticatorEntry, User}, error::{Error, Result}, schnicks::Weapon, state::State, users::{Settings, Stats}
 };
 
 pub async fn home_sse(AuthenticatorEntry { channel, .. }: AuthenticatorEntry) -> impl IntoResponse {
@@ -44,15 +40,15 @@ pub async fn home_invite(
     extract::State(state): extract::State<State>,
     User(id): User,
     AuthenticatorEntry { invite, .. }: AuthenticatorEntry,
-) -> Result<impl IntoResponse, StatusCode> {
+) -> Result<impl IntoResponse> {
     let invite_url =
-        invite_url(&state.base_url, id, &invite).ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
-    let qrcode = QrCode::new(invite_url.as_str()).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        invite_url(&state.base_url, id, &invite).ok_or(Error::InternalServerError)?;
+    let qrcode = QrCode::new(invite_url.as_str()).map_err(|_| Error::InternalServerError)?;
     let svg = qrcode.render::<svg::Color>().build();
     Ok(Html(
         HomeInviteTemplate { qrcode: &svg }
             .render()
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+            .map_err(|_| Error::InternalServerError)?,
     ))
 }
 
@@ -68,16 +64,16 @@ pub async fn home(
     extract::State(state): extract::State<State>,
     (user, stats): (Settings, Stats),
     AuthenticatorEntry { invite, .. }: AuthenticatorEntry,
-) -> Result<impl IntoResponse, StatusCode> {
+) -> Result<impl IntoResponse> {
     Ok(Html(
         HomeTemplate {
             user: &user,
             stats: &stats,
             invite: invite_url(&state.base_url, user.id, &invite)
-                .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?
+                .ok_or(Error::InternalServerError)?
                 .as_str(),
         }
         .render()
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+        .map_err(|_| Error::InternalServerError)?,
     ))
 }

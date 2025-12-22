@@ -3,21 +3,18 @@ use std::convert::Infallible;
 use askama::Template;
 use axum::{
     Form, extract,
-    http::StatusCode,
     response::{Html, IntoResponse, Redirect, Sse, sse::Event},
 };
 use futures::FutureExt;
 
 use crate::{
-    auth::User,
-    schnicks::{Interaction, Outcome, SchnickOutcomeReceiver, Schnicker},
-    state::State,
+    auth::User, error::{Error, Result}, schnicks::{Interaction, Outcome, SchnickOutcomeReceiver, Schnicker}, state::State
 };
 
 pub async fn schnick_abort(
     extract::State(state): extract::State<State>,
     User(id): User,
-) -> Result<impl IntoResponse, StatusCode> {
+) -> Result<impl IntoResponse> {
     Schnicker::request_abort_schnick(id, &state.schnicker).await?;
     Ok(Redirect::to("../home"))
 }
@@ -26,19 +23,19 @@ pub async fn schnick_submit(
     extract::State(state): extract::State<State>,
     User(id): User,
     Form(interaction): Form<Interaction>,
-) -> Result<impl IntoResponse, StatusCode> {
+) -> Result<impl IntoResponse> {
     match Schnicker::request_handle_interaction(id, interaction, &state.schnicker).await? {
         Some(Outcome::Concluded) => Ok(Redirect::to("home").into_response()),
         Some(Outcome::Retry) => Ok(Html(
             SchnickTemplate
                 .render()
-                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+                .map_err(|_| Error::InternalServerError)?,
         )
         .into_response()),
         None => Ok(Html(
             WaitingTemplate
                 .render()
-                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+                .map_err(|_| Error::InternalServerError)?,
         )
         .into_response()),
     }
@@ -71,19 +68,19 @@ struct WaitingTemplate;
 pub async fn schnick(
     extract::State(state): extract::State<State>,
     User(id): User,
-) -> Result<impl IntoResponse, StatusCode> {
+) -> Result<impl IntoResponse> {
     let active = Schnicker::request_in_schnick(id, &state.schnicker).await?;
     if active {
         Ok(Html(
             SchnickTemplate
                 .render()
-                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+                .map_err(|_| Error::InternalServerError)?,
         ))
     } else {
         Ok(Html(
             WaitingTemplate
                 .render()
-                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+                .map_err(|_| Error::InternalServerError)?,
         ))
     }
 }
