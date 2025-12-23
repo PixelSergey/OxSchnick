@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   width="100%"
-   height="100%"
-   viewBox="0 0 32 32"
+   width="39"
+   height="32"
+   viewBox="0 0 39 32"
    version="1.1"
    xml:space="preserve"
    style="clip-rule:evenodd;fill-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421"
@@ -30,9 +30,9 @@
    inkscape:pageopacity="0.0"
    inkscape:pagecheckerboard="0"
    inkscape:deskcolor="#d1d1d1"
-   inkscape:zoom="22.627417"
-   inkscape:cx="18.716233"
-   inkscape:cy="16.373941"
+   inkscape:zoom="11.313709"
+   inkscape:cx="14.981824"
+   inkscape:cy="14.097941"
    inkscape:window-width="1920"
    inkscape:window-height="991"
    inkscape:window-x="-9"
@@ -80,7 +80,7 @@
    id="layer1"
    inkscape:label="outline"
    style="display:inline"
-   transform="matrix(0.91540047,0,0,0.70705062,0.10624523,3.014501)"><path
+   transform="matrix(1.0993906,0,0,0.9075519,0.41169367,-0.66785084)"><path
      style="display:inline;fill:none;stroke:#000000;stroke-width:4px"
      d="M 2.0802423,15.57589 4.2650784,12.747414 H 11.540073 V 6.1160547 l 2.369964,-2.8290668 h 9.27463 V 15.585966 h 9.46034 v 15.030041 l -2.185265,2.82846 H 2.0802423 Z"
      id="path7"
@@ -89,7 +89,7 @@
    id="layer2"
    inkscape:label="inner"
    style="display:inline"
-   transform="matrix(0.91540047,0,0,0.70705062,0.10624523,3.014501)"><path
+   transform="matrix(1.0993906,0,0,0.9075519,0.41169367,-0.66785084)"><path
      style="fill:#faf5f5;stroke-width:1.12592"
      d="M 2.0802377,15.57589 H 11.540073 V 6.1160547 h 9.459834 V 18.414949 h 9.459835 V 33.444467 H 2.0802377 Z"
      id="path7-9"
@@ -98,7 +98,7 @@
    id="layer3"
    inkscape:label="numbers"
    style="display:inline"
-   transform="matrix(0.91540047,0,0,0.70705062,-0.04557423,3.7248887)"><text
+   transform="matrix(1.0993906,0,0,0.9075519,0.22935945,0.24398416)"><text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:condensed;font-size:6.85732px;font-family:Arial;-inkscape-font-specification:'Arial, Bold Condensed';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#141414;stroke-width:0.571444"
      x="15.124013"
@@ -145,7 +145,7 @@
    id="layer5"
    inkscape:label="shadow"
    style="display:inline"
-   transform="matrix(0.91540047,0,0,0.70705062,0.2265166,3.6183314)"><path
+   transform="matrix(1.0993906,0,0,0.9075519,0.55613907,0.10720996)"><path
      style="clip-rule:evenodd;display:inline;fill:#878585;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.13119;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:1.51;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
      d="m 1.948851,14.721877 2.1848408,-2.828476 h 7.2749942 v 2.828652 z"
      id="path3-5"

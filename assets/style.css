@@ -26,12 +26,7 @@ body {
 }
 
 footer {
-    flex-grow: 0;
     padding: 0 2em 2em;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: stretch;
 }
 
 .icon {
@@ -46,7 +41,7 @@ footer {
 }
 
 nav .button {
-    flex-grow: 1;
+    flex: 1;
 }
 
 .button-single {
@@ -74,15 +69,11 @@ nav .button {
 
 nav {
     display: flex;
-    justify-content: space-around;
 
     div, a {
         display: flex;
         justify-content: center;
-        align-items: center;
         img {
-            color: inherit;
-            width: 2em;
             height: 2em;
         }
     }
@@ -240,12 +231,6 @@ table.home {
 
 form:valid #select {
     background-color: var(--highlight-purple);
-}
-
-#abort {
-    align-self: center;
-    appearance: none;
-    margin: 0;
 }
 
 

@@ -31,7 +31,7 @@
    inkscape:pagecheckerboard="0"
    inkscape:deskcolor="#d1d1d1"
    inkscape:zoom="22.627417"
-   inkscape:cx="16.042485"
+   inkscape:cx="16.020388"
    inkscape:cy="15.932"
    inkscape:window-width="1920"
    inkscape:window-height="991"
@@ -80,7 +80,7 @@
    id="layer1"
    inkscape:label="outline"
    style="display:inline;stroke:#000000;stroke-opacity:1"
-   transform="matrix(0.95139081,0,0,0.95139081,-0.47915585,-3.3187603)"><path
+   transform="matrix(0.98669229,0,0,1.0297132,-1.0906171,-4.9091598)"><path
      style="display:inline;fill:none;stroke:#000000;stroke-width:4px;stroke-opacity:1"
      d="M 8.9123407,21.882446 H 4.7079696 L 3.6568768,20.831353 16.26999,7.1671474 h 2.102186 L 30.985289,19.780261 v 1.051092 l -1.051093,1.051093 h -4.204371 v 9.459839 l -2.102186,2.102182 -14.7152983,4e-6 z"
      id="path7"
@@ -89,7 +89,7 @@
    id="layer2"
    inkscape:label="inner"
    style="display:inline"
-   transform="matrix(0.95139081,0,0,0.95139081,-0.47915585,-3.3187603)"><path
+   transform="matrix(0.98669229,0,0,1.0297132,-1.0906171,-4.9091598)"><path
      style="fill:#faf5f5;stroke-width:1.06429"
      d="M 8.9123407,20.831354 H 3.6568768 L 16.26999,7.1671474 29.934196,20.831354 l -6.306557,-1e-6 v 12.613114 l -14.7152983,4e-6 z"
      id="path7-9"
@@ -98,7 +98,7 @@
    id="layer5"
    inkscape:label="shadow"
    style="display:inline"
-   transform="matrix(0.95139081,0,0,0.81972512,-1.5032044,1.8289785)"><path
+   transform="matrix(0.98669229,0,0,0.88720827,-2.152663,0.66236223)"><path
      id="path7-9-9"
      style="clip-rule:evenodd;display:inline;fill:#878585;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.817645;stroke-linejoin:round;stroke-miterlimit:1.41421;stroke-opacity:1"
      inkscape:label="path2"
@@ -127,7 +127,7 @@
      transform="matrix(1.0510928,0,0,1.2199211,1.5799685,-4.0610938)" /></g><g
    id="rect8"
    style="opacity:1"
-   transform="matrix(1.0266897,0,0,0.8475102,-0.23879498,3.0398441)"><path
+   transform="matrix(1.0647851,0,0,0.91728073,-0.8413376,1.9729112)"><path
      style="baseline-shift:baseline;clip-rule:nonzero;display:inline;overflow:visible;vector-effect:none;fill:#878585;fill-rule:nonzero;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:1.51;enable-background:accumulate;stop-color:#000000;stop-opacity:1"
      d="m 12.767453,21.217516 h 4.248026 l -0.0055,8.823602 h -4.248026 z"
      id="path11"
