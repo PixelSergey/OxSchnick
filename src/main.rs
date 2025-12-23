@@ -16,6 +16,7 @@ use crate::router::router;
 pub mod auth;
 pub mod error;
 pub mod graphs;
+pub mod metrics;
 pub mod router;
 pub mod routes;
 pub mod schema;

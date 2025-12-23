@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
 use axum::{
-    extract::{self, FromRequestParts, Query, Request}, middleware::Next, response::{IntoResponse, Response}
+    extract::{self, FromRequestParts, Query, Request},
+    middleware::Next,
+    response::{IntoResponse, Response},
 };
 use axum_extra::extract::{
     CookieJar,
@@ -14,7 +16,11 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::{mpsc, oneshot, watch};
 use uuid::Uuid;
 
-use crate::{error::{Error, Result}, graphs::GraphUpdate, state::State};
+use crate::{
+    error::{Error, Result},
+    graphs::GraphUpdate,
+    state::State,
+};
 
 pub const AUTHENTICATOR_COOKIE_NAME: &'static str = "session";
 const AUTHENTICATOR_CHANNEL_BUFFER: usize = 128usize;
@@ -50,7 +56,7 @@ pub struct Authenticator {
     connection: AsyncPgConnection,
     sender: mpsc::Sender<AuthenticationRequest>,
     receiver: mpsc::Receiver<AuthenticationRequest>,
-    update: mpsc::Sender<GraphUpdate>
+    update: mpsc::Sender<GraphUpdate>,
 }
 
 #[derive(Debug, Clone, HasQuery, QueryableByName, Identifiable, Serialize, Deserialize)]
@@ -75,14 +81,17 @@ pub struct NewUser {
 }
 
 impl Authenticator {
-    pub fn with_connection_and_update(connection: AsyncPgConnection, update: mpsc::Sender<GraphUpdate>) -> Self {
+    pub fn with_connection_and_update(
+        connection: AsyncPgConnection,
+        update: mpsc::Sender<GraphUpdate>,
+    ) -> Self {
         let (sender, receiver) = mpsc::channel(AUTHENTICATOR_CHANNEL_BUFFER);
         Self {
             cache: Default::default(),
             connection,
             sender,
             receiver,
-            update
+            update,
         }
     }
 
@@ -92,11 +101,7 @@ impl Authenticator {
         submitted_invite: &Uuid,
     ) -> Result<(i32, AuthenticatorEntry)> {
         use crate::schema::users;
-        let entry = self
-            .cache
-            .get(&parent)
-            .ok_or(Error::InvalidInvite)?
-            .clone();
+        let entry = self.cache.get(&parent).ok_or(Error::InvalidInvite)?.clone();
         if &entry.invite == submitted_invite {
             let new_user = NewUser { parent: parent };
             let (new_id, new_token, new_username) = new_user
@@ -114,7 +119,10 @@ impl Authenticator {
                 channel: watch::Sender::new(()),
             };
             self.cache.insert(new_id, new_entry.clone());
-            self.update.send(GraphUpdate::User((new_id, parent, new_username))).await.map_err(|_| Error::InternalServerError)?;
+            self.update
+                .send(GraphUpdate::User((new_id, parent, new_username)))
+                .await
+                .map_err(|_| Error::InternalServerError)?;
             Ok((new_id, new_entry))
         } else {
             Err(Error::InvalidInvite)

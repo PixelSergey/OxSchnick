@@ -9,9 +9,16 @@ use diesel_async::{AsyncPgConnection, pooled_connection::bb8::Pool};
 use url::Url;
 
 use crate::{
-    auth::Authenticator, error::Error, graphs::Graph, routes::{
-        about, assets, graphs, graphs_cache, graphs_global, graphs_graph, graphs_sse, graphs_tree, home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_dect, settings_username
-    }, schnicks::Schnicker, state::State
+    auth::Authenticator,
+    error::Error,
+    graphs::Graph,
+    routes::{
+        about, assets, graphs, graphs_cache, graphs_global, graphs_graph, graphs_sse, graphs_tree,
+        home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, schnick,
+        schnick_abort, schnick_sse, schnick_submit, settings, settings_dect, settings_username,
+    },
+    schnicks::Schnicker,
+    state::State,
 };
 
 pub async fn router(
@@ -19,7 +26,10 @@ pub async fn router(
     pool: Pool<AsyncPgConnection>,
 ) -> anyhow::Result<(Router, Authenticator, Schnicker, Graph)> {
     let (graph, graph_update) = Graph::with_connection(&mut pool.get().await?).await?;
-    let authenticator = Authenticator::with_connection_and_update(pool.dedicated_connection().await?, graph_update.clone());
+    let authenticator = Authenticator::with_connection_and_update(
+        pool.dedicated_connection().await?,
+        graph_update.clone(),
+    );
     let schnicker =
         Schnicker::with_connection_and_update(pool.dedicated_connection().await?, graph_update);
     let state = State {

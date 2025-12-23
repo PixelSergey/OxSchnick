@@ -8,20 +8,19 @@ use log::{error, trace};
 use serde::Serialize;
 use tokio::sync::{RwLock, broadcast, mpsc};
 
-
 const GRAPHS_CHANNEL_BUFFER: usize = 128usize;
 const GRAPHS_UPDATE_INTERVAL: i64 = 10i64;
 
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct GraphData {
     pub vertices: Vec<(i32, i32, String)>,
-    pub edges: Vec<(i32, i32)>
+    pub edges: Vec<(i32, i32)>,
 }
 
 #[derive(Debug, Clone)]
 pub enum GraphUpdate {
     Schnick((i32, i32)),
-    User((i32, i32, String))
+    User((i32, i32, String)),
 }
 
 impl GraphData {
@@ -63,9 +62,9 @@ impl Graph {
             .select((schnicks::winner, schnicks::loser))
             .load::<(i32, i32)>(connection)
             .await?;
-        let persistent_cache = GraphData { 
+        let persistent_cache = GraphData {
             vertices: persistent_vertices,
-            edges: persistent_edges 
+            edges: persistent_edges,
         };
         let (tx, rx) = mpsc::channel(GRAPHS_CHANNEL_BUFFER);
         let graph_cache = Arc::new(RwLock::new(serde_json::to_string(&persistent_cache)?));

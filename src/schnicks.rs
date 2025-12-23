@@ -11,7 +11,12 @@ use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use tokio::sync::{mpsc, oneshot, watch};
 
-use crate::{auth::AuthenticatorEntry, error::{Error, Result}, graphs::GraphUpdate, state::State};
+use crate::{
+    auth::AuthenticatorEntry,
+    error::{Error, Result},
+    graphs::GraphUpdate,
+    state::State,
+};
 
 const SCHNICKS_CHANNEL_BUFFER: usize = 128usize;
 
