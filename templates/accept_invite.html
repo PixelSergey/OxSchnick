@@ -1,4 +1,24 @@
 {% extends "base.html" %}
+{% block head %}
+    <meta name="description" content="You've been invited to schnick.">
+    <meta property="og:site_name" content="fanschnick">
+    <meta property="og:title" content="invite">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ base_url | safe }}/invite?id={{ id }}&token={{ token }}">
+    <meta property="og:description" content="You've been invited to schnick.">
+    <meta property="og:image" content="/assets/scissors.svg">
+    <script type="application/ld+json">
+        {
+            "@context": "http://schema.org",
+            "@type": "website",
+            "name": "fanschnick",
+            "headline": "invite",
+            "url": "{{ base_url | safe }}/invite?id={{ id }}&token={{ token }}",
+            "description": "You've been invited to schnick.",
+            "image": "/assets/scissors.svg"
+        }
+    </script>
+{% endblock %}
 {% block main %}
 You've been invited to schnick.
 <a class="button button-single" href="invite/accept?id={{ id }}&token={{ token }}">Accept invite</a>

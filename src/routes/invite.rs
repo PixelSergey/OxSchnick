@@ -3,6 +3,7 @@ use axum::{
     response::{Html, IntoResponse, Redirect},
 };
 use askama::Template;
+use url::Url;
 use uuid::Uuid;
 
 use crate::{
@@ -12,14 +13,17 @@ use crate::{
 #[derive(Debug, Template)]
 #[template(path="accept_invite.html")]
 struct InviteTemplate<'a> {
+    base_url: &'a Url,
     id: i32,
     token: &'a Uuid
 }
 
 pub async fn invite(
+    extract::State(state): extract::State<State>,
     Query(invite): Query<Invite>
 ) -> Result<impl IntoResponse> {
     Ok(Html(InviteTemplate {
+        base_url: &state.base_url,
         id: invite.id,
         token: &invite.token
     }.render().map_err(|_| Error::InternalServerError)))

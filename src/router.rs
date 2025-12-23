@@ -37,12 +37,13 @@ pub async fn router(
             Authenticator::layer_with_registration,
         ))
         .with_state(state.clone());
-    let unauthenticated = Router::<()>::new()
+    let unauthenticated = Router::new()
         .route("/", get(index))
         .route("/about", get(about))
         .route("/imprint", get(imprint))
         .route("/invite", get(invite))
-        .route("/assets/{file}", get(assets));
+        .route("/assets/{file}", get(assets))
+        .with_state(state.clone());
     let authenticated = Router::new()
         .route("/home", get(home))
         .route("/home/sse", get(home_sse))
