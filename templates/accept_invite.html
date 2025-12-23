@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block main %}
+You've been invited to schnick.
+<a class="button button-single" href="invite/accept?id={{ id }}&token={{ token }}">Accept invite</a>
+{% endblock %}
+{% block footer %}
+    <nav>
+        <a class="button button-single button-active" href="/"><img class="icon" src="assets/arrow_back.svg" alt="abort">  go back</a>
+    </nav>
+{% endblock %}

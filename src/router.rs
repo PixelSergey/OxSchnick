@@ -10,9 +10,7 @@ use url::Url;
 
 use crate::{
     auth::Authenticator, error::Error, graphs::Graph, routes::{
-        about, assets, graphs, graphs_graph, graphs_graph_sse, home, home_invite, home_sse,
-        imprint, index, invite, metrics, schnick, schnick_abort, schnick_sse, schnick_submit,
-        settings, settings_submit,
+        about, assets, graphs, graphs_graph, graphs_graph_sse, home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_submit
     }, schnicks::Schnicker, state::State
 };
 
@@ -33,7 +31,7 @@ pub async fn router(
         graph_updates: Arc::new(graph.update_receiver()),
     };
     let authenticated_with_registration = Router::new()
-        .route("/invite", get(invite))
+        .route("/invite/accept", get(invite_accept))
         .route_layer(from_fn_with_state(
             state.clone(),
             Authenticator::layer_with_registration,
@@ -43,6 +41,7 @@ pub async fn router(
         .route("/", get(index))
         .route("/about", get(about))
         .route("/imprint", get(imprint))
+        .route("/invite", get(invite))
         .route("/assets/{file}", get(assets));
     let authenticated = Router::new()
         .route("/home", get(home))

@@ -13,7 +13,7 @@ pub use assets::assets;
 pub use graphs::{graphs, graphs_graph, graphs_graph_sse};
 pub use home::{home, home_invite, home_sse};
 pub use index::index;
-pub use invite::invite;
+pub use invite::{invite, invite_accept};
 pub use metrics::metrics;
 pub use schnick::{schnick, schnick_abort, schnick_sse, schnick_submit};
 pub use settings::{settings, settings_submit};

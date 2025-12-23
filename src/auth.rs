@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 
 use axum::{
-    extract::{self, FromRequestParts, Query, Request},
-    middleware::Next,
-    response::{IntoResponse, Response},
+    extract::{self, FromRequestParts, Query, Request}, middleware::Next, response::{IntoResponse, Response}
 };
 use axum_extra::extract::{
     CookieJar,
@@ -298,6 +296,7 @@ impl Authenticator {
             );
             cookie.make_permanent();
             cookie.set_same_site(SameSite::Strict);
+            cookie.set_path("/");
             #[cfg(not(debug_assertions))]
             cookie.set_secure(Some(true));
             let cookies = cookies.add(cookie);
