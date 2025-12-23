@@ -1,0 +1,88 @@
+{% extends "graphs.html" %}
+{% block tab_tree %}tab-active{% endblock %}
+{% block head %}
+<script src="//cdn.jsdelivr.net/npm/force-graph"></script>
+{% endblock %}
+{% block graph_container %}
+        <script type="module">
+            import {stratify, tree} from "https://cdn.skypack.dev/d3-hierarchy@3";
+
+            const defaultColor = getComputedStyle(document.documentElement)
+                .getPropertyValue('--foreground-color');
+            const highlightedColor = getComputedStyle(document.documentElement)
+                .getPropertyValue('--highlight-green');
+            const backgroundColor = getComputedStyle(document.documentElement)
+                .getPropertyValue('--background-color');
+            const nodeSpacing = 10;
+            const cutOff = 200; // cut off from small to large graph
+
+            const elem = document.getElementById('graph');
+
+            const cache = {{cache | safe}};
+            const data = cache.vertices.map(
+                (x) => { return {
+                    id: x[0],
+                    parent_id: x[0] === x[1] ? null : x[1],
+                    name: x[2]
+                };}
+            );
+            console.log(data);
+            const userId = {{id}};
+
+            // read data into hierarchical structure
+            const root = stratify()
+                .id(d => d.id)
+                .parentId(d => d.parent_id)
+                (data);
+            tree().nodeSize([nodeSpacing, nodeSpacing * 2])(root); // horizontal and vertical spacing
+
+            // map into format for force graph
+            const nodes = root.descendants().map(d => ({
+                id: d.data.id,
+                fx: Math.round(d.x),
+                fy: Math.round(d.y), 
+                name: d.data.name
+            }))
+            const links = root.links().map(l => ({
+                source: l.source.data.id,
+                target: l.target.data.id
+            }));
+
+            // get node of user
+            const userNode = nodes.find(n => n.id === userId);
+
+            // create graph
+            const Graph = ForceGraph()(elem)
+                // initialize graph
+                .graphData({ nodes, links })
+                .width(elem.clientWidth)
+                .height(elem.clientHeight - 210)
+                // set colors
+                .backgroundColor(backgroundColor)
+                .linkColor(() => defaultColor)
+                .nodeColor(node => { {
+                    if (node.id === userId) return highlightedColor;
+                    return defaultColor;
+                } })
+                // set node size
+                .nodeRelSize(nodeSpacing / 2 - 0.5)
+                // stop animation immediately
+                .cooldownTicks(0)
+                // set center to user node
+                .centerAt(userNode.fx, userNode.fy, 0)
+                // start zoomed in on small graph and zoomed out on large graph
+                .zoom(nodes.length <= cutOff ? 4 : 0);
+
+            if (nodes.length <= cutOff) {
+                // zoom out from user node on small graph
+                Graph.onEngineStop(() => {
+                    Graph.zoomToFit(1000); // in 1000ms
+                });
+            } else {
+                // zoom in to user node on large graph
+                Graph.onEngineStop(() => {
+                    Graph.zoom(2, 1000); // in 1000ms
+                });
+            }
+        </script>
+{% endblock %}

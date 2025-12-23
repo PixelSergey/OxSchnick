@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use tokio::sync::{mpsc, oneshot, watch};
 
-use crate::{auth::AuthenticatorEntry, error::{Error, Result}, state::State};
+use crate::{auth::AuthenticatorEntry, error::{Error, Result}, graphs::GraphUpdate, state::State};
 
 const SCHNICKS_CHANNEL_BUFFER: usize = 128usize;
 
@@ -66,7 +66,7 @@ pub struct Schnicker {
     >,
     sender: mpsc::Sender<SchnickRequest>,
     receiver: mpsc::Receiver<SchnickRequest>,
-    update: mpsc::Sender<(i32, i32)>,
+    update: mpsc::Sender<GraphUpdate>,
 }
 
 #[derive(Debug)]
@@ -107,7 +107,7 @@ pub struct SavedSchnick {
 impl Schnicker {
     pub fn with_connection_and_update(
         connection: AsyncPgConnection,
-        update: mpsc::Sender<(i32, i32)>,
+        update: mpsc::Sender<GraphUpdate>,
     ) -> Self {
         let (tx, rx) = mpsc::channel(SCHNICKS_CHANNEL_BUFFER);
         Self {
@@ -249,7 +249,7 @@ impl Schnicker {
                     })?;
                 sender.send_replace(Outcome::Concluded);
                 self.update
-                    .send((old_id, id))
+                    .send(GraphUpdate::Schnick((old_id, id)))
                     .await
                     .map_err(|_| Error::InternalServerError)?;
                 self.active.remove(&id);

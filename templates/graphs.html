@@ -3,8 +3,8 @@
 {% block main %}
 <div id="tabs">
     <!-- hard gecoded, sollte mit user_id ersetzt werden -->
-    <div class="tab {% block tab_graph %}{% endblock %}">Graph</div>
-    <div class="tab {% block tab_tree %}{% endblock %}">Tree</div>
+    <a href="graph" class="tab {% block tab_graph %}{% endblock %}">Graph</a>
+    <a href="tree" class="tab {% block tab_tree %}{% endblock %}">Tree</a>
 </div>
 <div id="graph">
     {% block graph_container %}

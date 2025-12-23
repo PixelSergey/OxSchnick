@@ -8,7 +8,7 @@
     function preprocess(raw) {
         let nodes = new Set([]);
         let links = [];
-        raw.forEach(element => {
+        raw.edges.forEach(element => {
             nodes.add(element[0]);
             nodes.add(element[1]);
             links.push({"source": element[0], "target": element[1]});
@@ -51,7 +51,7 @@
     const elem = document.getElementById('graph');
 
     const userId = {{id}};
-    let raw_links = {{cache}};
+    let raw_links = {{cache | safe}}
     const gData = preprocess(raw_links);
 
     const Graph = ForceGraph()(elem)
@@ -69,7 +69,7 @@
         } })
         .linkColor(link => link.target.id === userId || link.source.id === userId ? neighborColor : defaultColor);
 
-    let events = new EventSource("graph/sse");
+    let events = new EventSource("sse");
     events.onmessage = (e) => {
         raw_links = raw_links.concat(JSON.parse(e.data));
         Graph.graphData(preprocess(raw_links));

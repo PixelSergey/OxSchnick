@@ -10,7 +10,7 @@ mod settings;
 
 pub use about::{about, imprint};
 pub use assets::assets;
-pub use graphs::{graphs, graphs_graph, graphs_graph_sse};
+pub use graphs::{graphs, graphs_graph, graphs_tree, graphs_cache, graphs_sse};
 pub use home::{home, home_invite, home_sse};
 pub use index::index;
 pub use invite::{invite, invite_accept};

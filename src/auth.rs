@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::{mpsc, oneshot, watch};
 use uuid::Uuid;
 
-use crate::{error::{Error, Result}, state::State};
+use crate::{error::{Error, Result}, graphs::GraphUpdate, state::State};
 
 pub const AUTHENTICATOR_COOKIE_NAME: &'static str = "session";
 const AUTHENTICATOR_CHANNEL_BUFFER: usize = 128usize;
@@ -50,6 +50,7 @@ pub struct Authenticator {
     connection: AsyncPgConnection,
     sender: mpsc::Sender<AuthenticationRequest>,
     receiver: mpsc::Receiver<AuthenticationRequest>,
+    update: mpsc::Sender<GraphUpdate>
 }
 
 #[derive(Debug, Clone, HasQuery, QueryableByName, Identifiable, Serialize, Deserialize)]
@@ -74,13 +75,14 @@ pub struct NewUser {
 }
 
 impl Authenticator {
-    pub fn with_connection(connection: AsyncPgConnection) -> Self {
+    pub fn with_connection_and_update(connection: AsyncPgConnection, update: mpsc::Sender<GraphUpdate>) -> Self {
         let (sender, receiver) = mpsc::channel(AUTHENTICATOR_CHANNEL_BUFFER);
         Self {
             cache: Default::default(),
             connection,
             sender,
             receiver,
+            update
         }
     }
 
@@ -97,22 +99,23 @@ impl Authenticator {
             .clone();
         if &entry.invite == submitted_invite {
             let new_user = NewUser { parent: parent };
-            let new_authenticated = new_user
+            let (new_id, new_token, new_username) = new_user
                 .insert_into(users::table)
-                .returning((users::id, users::token))
-                .get_result::<Authenticated>(&mut self.connection)
+                .returning((users::id, users::token, users::username))
+                .get_result::<(i32, Uuid, String)>(&mut self.connection)
                 .await
                 .map_err(|e| {
                     error!(target: "auth::register", "{:?}", e);
                     Error::InternalServerError
                 })?;
             let new_entry = AuthenticatorEntry {
-                token: new_authenticated.token,
+                token: new_token,
                 invite: Uuid::new_v4(),
                 channel: watch::Sender::new(()),
             };
-            self.cache.insert(new_authenticated.id, new_entry.clone());
-            Ok((new_authenticated.id, new_entry))
+            self.cache.insert(new_id, new_entry.clone());
+            self.update.send(GraphUpdate::User((new_id, parent, new_username))).await.map_err(|_| Error::InternalServerError)?;
+            Ok((new_id, new_entry))
         } else {
             Err(Error::InvalidInvite)
         }

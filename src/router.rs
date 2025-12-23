@@ -10,7 +10,7 @@ use url::Url;
 
 use crate::{
     auth::Authenticator, error::Error, graphs::Graph, routes::{
-        about, assets, graphs, graphs_graph, graphs_graph_sse, home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_submit
+        about, assets, graphs, graphs_cache, graphs_graph, graphs_sse, graphs_tree, home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_submit
     }, schnicks::Schnicker, state::State
 };
 
@@ -18,8 +18,8 @@ pub async fn router(
     base_url: Url,
     pool: Pool<AsyncPgConnection>,
 ) -> anyhow::Result<(Router, Authenticator, Schnicker, Graph)> {
-    let authenticator = Authenticator::with_connection(pool.dedicated_connection().await?);
     let (graph, graph_update) = Graph::with_connection(&mut pool.get().await?).await?;
+    let authenticator = Authenticator::with_connection_and_update(pool.dedicated_connection().await?, graph_update.clone());
     let schnicker =
         Schnicker::with_connection_and_update(pool.dedicated_connection().await?, graph_update);
     let state = State {
@@ -56,7 +56,8 @@ pub async fn router(
         .route("/settings", post(settings_submit))
         .route("/graphs", get(graphs))
         .route("/graphs/graph", get(graphs_graph))
-        .route("/graphs/graph/sse", get(graphs_graph_sse))
+        .route("/graphs/tree", get(graphs_tree))
+        .route("/graphs/sse", get(graphs_sse))
         .route("/metrics", get(metrics))
         .route_layer(from_fn_with_state(state.clone(), Authenticator::layer))
         .with_state(state.clone());
