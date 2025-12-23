@@ -73,3 +73,11 @@ pub async fn graphs_graph(
 pub async fn graphs() -> impl IntoResponse {
     Redirect::to("graphs/graph")
 }
+
+#[derive(Template)]
+#[template(path="global.html")]
+struct GlobalTemplate;
+
+pub async fn graphs_global() -> Result<impl IntoResponse> {
+    Ok(Html(GlobalTemplate.render().map_err(|_| Error::InternalServerError)?))
+}
