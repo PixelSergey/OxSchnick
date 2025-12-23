@@ -6,7 +6,7 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ base_url | safe }}/invite?id={{ id }}&token={{ token }}">
     <meta property="og:description" content="You've been invited to schnick.">
-    <meta property="og:image" content="/assets/scissors.svg">
+    <meta property="og:image" content="{{ base_url | safe }}/assets/scissors.svg">
     <script type="application/ld+json">
         {
             "@context": "http://schema.org",
@@ -15,7 +15,7 @@
             "headline": "invite",
             "url": "{{ base_url | safe }}/invite?id={{ id }}&token={{ token }}",
             "description": "You've been invited to schnick.",
-            "image": "/assets/scissors.svg"
+            "image": "{{ base_url | safe }}/assets/scissors.svg"
         }
     </script>
 {% endblock %}
