@@ -29,6 +29,11 @@ pub async fn settings_dect(
     use crate::schema::users;
     use crate::schema::users::dect;
     dect_value.take_if(|inner| inner.is_empty());
+    if let Some(ref d) = dect_value {
+        if d.len() != 4 || !d.chars().all(|c| c.is_ascii_digit()) {
+            return Err(Error::InvalidSettings);
+        }
+    }
     diesel::update(users::table.find(id))
         .set(dect.eq(dect_value))
         .execute(
