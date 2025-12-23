@@ -10,7 +10,7 @@ use url::Url;
 
 use crate::{
     auth::Authenticator, error::Error, graphs::Graph, routes::{
-        about, assets, graphs, graphs_cache, graphs_graph, graphs_sse, graphs_tree, home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_submit
+        about, assets, graphs, graphs_cache, graphs_graph, graphs_sse, graphs_tree, home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_dect, settings_username
     }, schnicks::Schnicker, state::State
 };
 
@@ -53,7 +53,8 @@ pub async fn router(
         .route("/schnick/sse", get(schnick_sse))
         .route("/schnick/abort", get(schnick_abort))
         .route("/settings", get(settings))
-        .route("/settings", post(settings_submit))
+        .route("/settings/dect", post(settings_dect))
+        .route("/settings/username", post(settings_username))
         .route("/graphs", get(graphs))
         .route("/graphs/graph", get(graphs_graph))
         .route("/graphs/tree", get(graphs_tree))

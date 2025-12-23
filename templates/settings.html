@@ -1,28 +1,32 @@
 {% extends "base.html" %}
 {% block nav_settings %}button-active{% endblock %}
 {% block main %}
-    <form class="settings" action="settings" method="post" hx-validate="true" novalidate>
-        <div class="settings-input">
-            <div class="input">
-                <input type="text" name="username" id="username" value="{{ username }}" maxlength="32" required>
-                <button>Change</button>
+    <div class="settings">
+        <form action="settings/username" method="post" onsubmit="return this.checkValidity()" novalidate>
+            <div class="settings-input">
+                <div class="input">
+                    <input type="text" name="username_value" id="username" value="{{ username_value }}" maxlength="32" required>
+                    <button>Change</button>
+                </div>
+                <label for="username">Username<span class="error"> cannot be empty</span></label>
             </div>
-            <label for="username">Username<span class="error"> cannot be empty</span></label>
-        </div>
-        <div class="settings-input">
-            <div class="input">
-                {% if let Some(dect) = dect %}
-                    <input type="text" name="dect" id="dect" value="{{ dect }}" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
-                {% else %}
-                    <input type="text" name="dect" id="dect" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
-                {% endif %}
-                <button>Change</button>
+        </form>
+        <form action="settings/dect" method="post" onsubmit="return this.checkValidity()" novalidate>
+            <div class="settings-input">
+                <div class="input">
+                    {% if let Some(dect_value) = dect_value %}
+                        <input type="text" name="dect_value" id="dect" value="{{ dect_value }}" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
+                    {% else %}
+                        <input type="text" name="dect_value" id="dect" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
+                    {% endif %}
+                    <button>Change</button>
+                </div>
+                <label for="dect">Dect<span class="error"> must be 4 digits or empty</span></label>
             </div>
-            <label for="dect">Dect<span class="error"> must be 4 digits or empty</span></label>
-        </div>
-    </form>
-<div class="settings-links">
-    <a href="about">About Us</a>
-    <a href="imprint">Imprint</a>
-</div>
+        </form>
+    </div>
+    <div class="settings-links">
+        <a href="about">About Us</a>
+        <a href="imprint">Imprint</a>
+    </div>
 {% endblock %}

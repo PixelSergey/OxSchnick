@@ -16,4 +16,4 @@ pub use index::index;
 pub use invite::{invite, invite_accept};
 pub use metrics::metrics;
 pub use schnick::{schnick, schnick_abort, schnick_sse, schnick_submit};
-pub use settings::{settings, settings_submit};
+pub use settings::{settings, settings_dect, settings_username};

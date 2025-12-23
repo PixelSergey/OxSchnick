@@ -3,7 +3,7 @@ use axum::{
     Form, extract,
     response::{Html, IntoResponse, Redirect},
 };
-use diesel::QueryDsl;
+use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde::Deserialize;
 
@@ -12,26 +12,25 @@ use crate::{auth, error::{Error, Result}, state::State, users::Settings};
 #[derive(Template)]
 #[template(path = "settings.html")]
 pub struct SettingsTemplate<'a> {
-    username: &'a str,
-    dect: Option<&'a str>,
+    username_value: &'a str,
+    dect_value: Option<&'a str>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct SettingsForm {
-    username: String,
-    dect: Option<String>,
+pub struct DectForm {
+    dect_value: Option<String>,
 }
 
-pub async fn settings_submit(
+pub async fn settings_dect(
     extract::State(state): extract::State<State>,
     auth::User(id): auth::User,
-    Form(SettingsForm { username, mut dect }): Form<SettingsForm>,
+    Form(DectForm { mut dect_value }): Form<DectForm>,
 ) -> Result<impl IntoResponse> {
     use crate::schema::users;
-    dect.take_if(|inner| inner.is_empty());
-    let new = Settings { id, username, dect };
+    use crate::schema::users::dect;
+    dect_value.take_if(|inner| inner.is_empty());
     diesel::update(users::table.find(id))
-        .set(&new)
+        .set(dect.eq(dect_value))
         .execute(
             &mut state
                 .pool
@@ -41,7 +40,33 @@ pub async fn settings_submit(
         )
         .await
         .map_err(|_| Error::InvalidSettings)?;
-    Ok(Redirect::to("settings"))
+    Ok(Redirect::to("/settings"))
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct UsernameForm {
+    username_value: String,
+}
+
+pub async fn settings_username(
+    extract::State(state): extract::State<State>,
+    auth::User(id): auth::User,
+    Form(UsernameForm { username_value }): Form<UsernameForm>,
+) -> Result<impl IntoResponse> {
+    use crate::schema::users;
+    use crate::schema::users::username;
+    diesel::update(users::table.find(id))
+        .set(username.eq(username_value))
+        .execute(
+            &mut state
+                .pool
+                .get()
+                .await
+                .map_err(|_| Error::InternalServerError)?,
+        )
+        .await
+        .map_err(|_| Error::InvalidSettings)?;
+    Ok(Redirect::to("/settings"))
 }
 
 pub async fn settings(
@@ -49,8 +74,8 @@ pub async fn settings(
 ) -> Result<impl IntoResponse> {
     Ok(Html(
         SettingsTemplate {
-            username: &username,
-            dect: dect.as_deref(),
+            username_value: &username,
+            dect_value: dect.as_deref(),
         }
         .render()
         .map_err(|_| Error::InternalServerError)?,
