@@ -1,15 +1,21 @@
 {% extends "metrics.html" %}
 {% block tab_num_schnicks %}tab-active{% endblock %}
 {% block metrics %}
-<h2>Most Schnicks</h2>
-<table class="metrics"></table>
-<tbody>
-{% for (n, (user, score)) in data.iter().enumerate() %}
-    <tr>
-        <td>{{ n + 1 }}.</td>
-        <td>{{ user.username }}</td>
-        <td>{{ score}}</td>
-    </tr>
-{% endfor %}
-</tbody>
+    <h2>Number of Schnicks</h2>
+    <table class="metrics">
+        <thead>
+            <th>Rank</th>
+            <th>User</th>
+            <th>#Schnicks</th>
+        </thead>
+        <tbody>
+        {% for (n, (user, score)) in data.iter().enumerate() %}
+            <tr>
+                <td>{{ n + 1 }}.</td>
+                <td>{{ user.username }}</td>
+                <td>{{ score}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}
