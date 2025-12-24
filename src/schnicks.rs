@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::Arc};
 
 use axum::extract::FromRequestParts;
 use diesel::{
@@ -9,13 +9,10 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use log::error;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use tokio::sync::{mpsc, oneshot, watch};
+use tokio::sync::{RwLock, mpsc, oneshot, watch};
 
 use crate::{
-    auth::AuthenticatorEntry,
-    error::{Error, Result},
-    graphs::GraphUpdate,
-    state::State,
+    auth::AuthenticatorEntry, error::{Error, Result}, graphs::GraphUpdate, metrics::Metrics, state::State
 };
 
 const SCHNICKS_CHANNEL_BUFFER: usize = 128usize;
@@ -72,6 +69,7 @@ pub struct Schnicker {
     sender: mpsc::Sender<SchnickRequest>,
     receiver: mpsc::Receiver<SchnickRequest>,
     update: mpsc::Sender<GraphUpdate>,
+    metrics: Arc<RwLock<Metrics>>
 }
 
 #[derive(Debug)]
@@ -113,6 +111,7 @@ impl Schnicker {
     pub fn with_connection_and_update(
         connection: AsyncPgConnection,
         update: mpsc::Sender<GraphUpdate>,
+        metrics: Arc<RwLock<Metrics>>
     ) -> Self {
         let (tx, rx) = mpsc::channel(SCHNICKS_CHANNEL_BUFFER);
         Self {
@@ -121,6 +120,7 @@ impl Schnicker {
             sender: tx,
             receiver: rx,
             update,
+            metrics
         }
     }
 
@@ -257,6 +257,7 @@ impl Schnicker {
                     .send(GraphUpdate::Schnick((old_id, id)))
                     .await
                     .map_err(|_| Error::InternalServerError)?;
+                self.metrics.write().await.update().await?;
                 self.active.remove(&id);
                 self.active.remove(&old_id);
                 Ok(Some(Outcome::Concluded))

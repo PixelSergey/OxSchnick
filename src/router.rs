@@ -6,19 +6,15 @@ use axum::{
     routing::{get, post},
 };
 use diesel_async::{AsyncPgConnection, pooled_connection::bb8::Pool};
+use tokio::sync::RwLock;
 use url::Url;
 
 use crate::{
-    auth::Authenticator,
-    error::Error,
-    graphs::Graph,
-    routes::{
+    auth::Authenticator, error::Error, graphs::Graph, metrics::Metrics, routes::{
         about, assets, graphs, graphs_cache, graphs_global, graphs_graph, graphs_sse, graphs_tree,
         home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, schnick,
         schnick_abort, schnick_sse, schnick_submit, settings, settings_dect, settings_username,
-    },
-    schnicks::Schnicker,
-    state::State,
+    }, schnicks::Schnicker, state::State
 };
 
 pub async fn router(
@@ -30,8 +26,9 @@ pub async fn router(
         pool.dedicated_connection().await?,
         graph_update.clone(),
     );
+    let metrics_o = Arc::new(RwLock::new(Metrics::with_connection(pool.dedicated_connection().await?).await?));
     let schnicker =
-        Schnicker::with_connection_and_update(pool.dedicated_connection().await?, graph_update);
+        Schnicker::with_connection_and_update(pool.dedicated_connection().await?, graph_update, Arc::clone(&metrics_o));
     let state = State {
         base_url,
         pool,
@@ -39,6 +36,7 @@ pub async fn router(
         schnicker: schnicker.sender(),
         graph_cache: graph.graph_cache(),
         graph_updates: Arc::new(graph.update_receiver()),
+        metrics: metrics_o
     };
     let authenticated_with_registration = Router::new()
         .route("/invite/accept", get(invite_accept))
