@@ -34,6 +34,24 @@ pub async fn metrics_num_schnicks(
 }
 
 #[derive(Template)]
+#[template(path = "metrics_streak.html")]
+struct MetricsStreakTemplate<'a> {
+    winning_streaks: &'a Vec<(MetricsUser, i32)>,
+    losing_streaks: &'a Vec<(MetricsUser, i32)>
+}
+
+pub async fn metrics_streak(
+    extract::State(state): extract::State<State>
+) -> Result<impl IntoResponse> {
+    let winning_streaks = state.metrics.read().await.winning_streaks.clone();
+    let losing_streaks = state.metrics.read().await.losing_streaks.clone();
+    Ok(Html(MetricsStreakTemplate {
+        winning_streaks: &winning_streaks,
+        losing_streaks: &losing_streaks
+    }.render().map_err(|_| Error::InternalServerError)?))
+}
+
+#[derive(Template)]
 #[template(path = "metrics_num_invites.html")]
 struct MetricsNumInvitesTemplate<'a> {
     data: &'a Vec<(MetricsUser, i32)>

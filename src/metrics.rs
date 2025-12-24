@@ -22,6 +22,8 @@ pub struct MetricsUser {
 pub struct Metrics {
     pub score: Vec<(MetricsUser, i32, i32, i32)>,
     pub num_schnicks: Vec<(MetricsUser, i32)>,
+    pub winning_streaks: Vec<(MetricsUser, i32)>,
+    pub losing_streaks: Vec<(MetricsUser, i32)>,
     pub num_children: Vec<(MetricsUser, i32)>,
 }
 
@@ -30,6 +32,8 @@ impl Metrics {
         let mut metrics = Self {
             score: vec![],
             num_schnicks: vec![],
+            winning_streaks: vec![],
+            losing_streaks: vec![],
             num_children: vec![] 
         };
         metrics.update(conn).await.map_err(|_| anyhow!("could not get initial metrics"))?;
@@ -62,6 +66,30 @@ impl Metrics {
             .map_err(|_| Error::InternalServerError)?)
     }
 
+    async fn get_winning_streaks(conn: &mut AsyncPgConnection) -> Result<Vec<(MetricsUser, i32)>> {
+        Ok(metrics::table
+            .filter(metrics::longest_winning_streak.gt(0))
+            .order(metrics::longest_winning_streak.desc())
+            .limit(METRICS_LEADERBOARD_LENGTH)
+            .inner_join(users::table)
+            .select(((users::id, users::username), metrics::longest_winning_streak))
+            .get_results::<(MetricsUser, i32)>(conn)
+            .await
+            .map_err(|_| Error::InternalServerError)?)
+    }
+
+    async fn get_losing_streaks(conn: &mut AsyncPgConnection) -> Result<Vec<(MetricsUser, i32)>> {
+        Ok(metrics::table
+            .filter(metrics::longest_losing_streak.gt(0))
+            .order(metrics::longest_losing_streak.desc())
+            .limit(METRICS_LEADERBOARD_LENGTH)
+            .inner_join(users::table)
+            .select(((users::id, users::username), metrics::longest_losing_streak))
+            .get_results::<(MetricsUser, i32)>(conn)
+            .await
+            .map_err(|_| Error::InternalServerError)?)
+    }
+
     async fn get_num_children(conn: &mut AsyncPgConnection) -> Result<Vec<(MetricsUser, i32)>> {
         Ok(metrics::table
             .filter(metrics::num_children.gt(0))
@@ -77,6 +105,8 @@ impl Metrics {
     pub async fn update(&mut self, conn: &mut AsyncPgConnection) -> Result<()> {
         self.score = Self::get_score(conn).await?;
         self.num_schnicks = Self::get_num_schnicks(conn).await?;
+        self.winning_streaks = Self::get_winning_streaks(conn).await?;
+        self.losing_streaks = Self::get_losing_streaks(conn).await?;
         self.num_children = Self::get_num_children(conn).await?;
         Ok(())
     }

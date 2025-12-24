@@ -1,0 +1,42 @@
+{% extends "metrics.html" %}
+{% block tab_streak %}tab-active{% endblock %}
+{% block metrics %}
+    <div>
+        <h2>Longest winning streaks</h2>
+        <table class="metrics">
+            <thead>
+                <th>Rank</th>
+                <th>User</th>
+                <th>Streak</th>
+            </thead>
+            <tbody>
+            {% for (n, (user, score)) in winning_streaks.iter().enumerate() %}
+                <tr>
+                    <td>{{ n + 1 }}.</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ score}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div>
+        <h2 id="losing">Longest losing streaks</h2>
+        <table class="metrics">
+            <thead>
+                <th>Rank</th>
+                <th>User</th>
+                <th>Streak</th>
+            </thead>
+            <tbody>
+            {% for (n, (user, score)) in losing_streaks.iter().enumerate() %}
+                <tr>
+                    <td>{{ n + 1 }}.</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ score}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
