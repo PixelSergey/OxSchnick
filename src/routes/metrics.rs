@@ -4,6 +4,21 @@ use axum::{extract, response::{Html, IntoResponse, Redirect}};
 use crate::{error::{Error, Result}, metrics::MetricsUser, state::State};
 
 #[derive(Template)]
+#[template(path = "metrics_score.html")]
+struct MetricsScoreTemplate<'a> {
+    data: &'a Vec<(MetricsUser, i32, i32, i32)>
+}
+
+pub async fn metrics_score(
+    extract::State(state): extract::State<State>
+) -> Result<impl IntoResponse> {
+    let data = state.metrics.read().await.score.clone();
+    Ok(Html(MetricsScoreTemplate {
+        data: &data
+    }.render().map_err(|_| Error::InternalServerError)?))
+}
+
+#[derive(Template)]
 #[template(path = "metrics_num_schnicks.html")]
 struct MetricsNumSchnicksTemplate<'a> {
     data: &'a Vec<(MetricsUser, i32)>

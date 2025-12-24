@@ -1,0 +1,23 @@
+{% extends "metrics.html" %}
+{% block tab_score %}tab-active{% endblock %}
+{% block metrics %}
+    <h2>Best Schnickers</h2>
+    <table class="metrics" id="four-cols">
+        <thead>
+            <th>Rank</th>
+            <th>User</th>
+            <th>#Wins/#Games</th>
+            <th>#Score</th>
+        </thead>
+        <tbody>
+        {% for (n, (user, wins, games, score)) in data.iter().enumerate() %}
+            <tr>
+                <td>{{ n + 1 }}.</td>
+                <td>{{ user.username }}</td>
+                <td>{{ wins }}/{{ games }}</td>
+                <td>{{ score}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
