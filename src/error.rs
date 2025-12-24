@@ -17,6 +17,8 @@ pub enum Error {
     NotInSchnick,
     AlreadySubmitted,
     InvalidSettings,
+    InvalidDect,
+    DuplicateUsername,
 }
 
 #[derive(Template)]
@@ -82,6 +84,16 @@ impl IntoResponse for Error {
             Self::InvalidSettings => (
                 StatusCode::BAD_REQUEST,
                 "The settings you tried to submit are not valid. Try again.",
+                "/settings",
+            ),
+            Self::InvalidDect => (
+                StatusCode::BAD_REQUEST,
+                "The dect you tried to submit is not valid. It needs to either be empty or a number of length 4.",
+                "/settings",
+            ),
+            Self::DuplicateUsername => (
+                StatusCode::BAD_REQUEST,
+                "The username you tried to set is already taken, sorry! You can try another one.",
                 "/settings",
             ),
         };

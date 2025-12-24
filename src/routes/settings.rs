@@ -36,7 +36,7 @@ pub async fn settings_dect(
     dect_value.take_if(|inner| inner.is_empty());
     if let Some(ref d) = dect_value {
         if d.len() != 4 || !d.chars().all(|c| c.is_ascii_digit()) {
-            return Err(Error::InvalidSettings);
+            return Err(Error::InvalidDect);
         }
     }
     diesel::update(users::table.find(id))
@@ -49,7 +49,7 @@ pub async fn settings_dect(
                 .map_err(|_| Error::InternalServerError)?,
         )
         .await
-        .map_err(|_| Error::InvalidSettings)?;
+        .map_err(|_| Error::InvalidDect)?;
     Ok(Redirect::to("/settings"))
 }
 
@@ -75,7 +75,7 @@ pub async fn settings_username(
                 .map_err(|_| Error::InternalServerError)?,
         )
         .await
-        .map_err(|_| Error::InvalidSettings)?;
+        .map_err(|_| Error::DuplicateUsername)?;
     Ok(Redirect::to("/settings"))
 }
 
