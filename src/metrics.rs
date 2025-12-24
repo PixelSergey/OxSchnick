@@ -18,7 +18,7 @@ pub struct MetricsUser {
 }
 
 pub struct Metrics {
-    num_children: Vec<(MetricsUser, i32)>,
+    pub num_children: Vec<(MetricsUser, i32)>,
 }
 
 impl Metrics {

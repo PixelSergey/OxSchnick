@@ -11,9 +11,7 @@ use url::Url;
 
 use crate::{
     auth::Authenticator, error::Error, graphs::Graph, metrics::Metrics, routes::{
-        about, assets, graphs, graphs_cache, graphs_global, graphs_graph, graphs_sse, graphs_tree,
-        home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, schnick,
-        schnick_abort, schnick_sse, schnick_submit, settings, settings_dect, settings_username,
+        about, assets, graphs, graphs_cache, graphs_global, graphs_graph, graphs_sse, graphs_tree, home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, metrics_num_invites, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_dect, settings_username
     }, schnicks::Schnicker, state::State
 };
 
@@ -71,6 +69,7 @@ pub async fn router(
         .route("/graphs/graph", get(graphs_graph))
         .route("/graphs/tree", get(graphs_tree))
         .route("/metrics", get(metrics))
+        .route("/metrics/num_invites", get(metrics_num_invites))
         .route_layer(from_fn_with_state(state.clone(), Authenticator::layer))
         .with_state(state.clone());
     let router = Router::new()
