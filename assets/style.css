@@ -420,6 +420,7 @@ form:valid #select {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    height: 100%;
     overflow: auto;
     h2 {
         font-size: 1.2em;
