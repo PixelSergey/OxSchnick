@@ -67,5 +67,5 @@ pub async fn metrics_num_invites(
 }
 
 pub async fn metrics() -> impl IntoResponse {
-    Redirect::to("metrics/num_invites")
+    Redirect::to("metrics/score")
 }
