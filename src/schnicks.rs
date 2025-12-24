@@ -257,7 +257,7 @@ impl Schnicker {
                     .send(GraphUpdate::Schnick((old_id, id)))
                     .await
                     .map_err(|_| Error::InternalServerError)?;
-                self.metrics.write().await.update().await?;
+                self.metrics.write().await.update(&mut self.connection).await?;
                 self.active.remove(&id);
                 self.active.remove(&old_id);
                 Ok(Some(Outcome::Concluded))

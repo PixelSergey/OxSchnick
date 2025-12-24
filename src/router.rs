@@ -26,9 +26,10 @@ pub async fn router(
         pool.dedicated_connection().await?,
         graph_update.clone(),
     );
-    let metrics_o = Arc::new(RwLock::new(Metrics::with_connection(pool.dedicated_connection().await?).await?));
+    let mut connection = pool.dedicated_connection().await?;
+    let metrics_o = Arc::new(RwLock::new(Metrics::new(&mut connection).await?));
     let schnicker =
-        Schnicker::with_connection_and_update(pool.dedicated_connection().await?, graph_update, Arc::clone(&metrics_o));
+        Schnicker::with_connection_and_update(connection, graph_update, Arc::clone(&metrics_o));
     let state = State {
         base_url,
         pool,
