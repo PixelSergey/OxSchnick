@@ -23,6 +23,7 @@ pub mod schema;
 pub mod schnicks;
 pub mod state;
 pub mod users;
+pub mod username;
 
 /// A server for tracking schnicks.
 #[derive(Debug, Clone, Parser)]

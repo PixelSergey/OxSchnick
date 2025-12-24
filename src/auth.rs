@@ -20,6 +20,7 @@ use crate::{
     error::{Error, Result},
     graphs::GraphUpdate,
     state::State,
+    username::generate_username
 };
 
 pub const AUTHENTICATOR_COOKIE_NAME: &'static str = "session";
@@ -76,8 +77,9 @@ pub struct Invite {
 #[derive(Debug, Clone, Insertable)]
 #[diesel(table_name=crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct NewUser {
+pub struct NewUser<'a> {
     pub parent: i32,
+    pub username: &'a str,
 }
 
 impl Authenticator {
@@ -102,8 +104,12 @@ impl Authenticator {
     ) -> Result<(i32, AuthenticatorEntry)> {
         use crate::schema::users;
         let entry = self.cache.get(&parent).ok_or(Error::InvalidInvite)?.clone();
-        if &entry.invite == submitted_invite {
-            let new_user = NewUser { parent: parent };
+        if &entry.invite != submitted_invite {
+            return Err(Error::InvalidInvite)
+        }
+        for _ in 0..10 {
+            let username = generate_username();
+            let new_user = NewUser { parent: parent, username: &username };
             let (new_id, new_token, new_username) = new_user
                 .insert_into(users::table)
                 .returning((users::id, users::token, users::username))
@@ -123,10 +129,9 @@ impl Authenticator {
                 .send(GraphUpdate::User((new_id, parent, new_username)))
                 .await
                 .map_err(|_| Error::InternalServerError)?;
-            Ok((new_id, new_entry))
-        } else {
-            Err(Error::InvalidInvite)
+            return Ok((new_id, new_entry))
         }
+        Err(Error::InternalServerError)
     }
 
     async fn authenticate(
