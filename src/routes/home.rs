@@ -11,7 +11,11 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::{
-    auth::{AuthenticatorEntry, User}, error::{Error, Result}, schnicks::Weapon, state::State, users::{Settings, Stats}
+    auth::{AuthenticatorEntry, User},
+    error::{Error, Result},
+    schnicks::Weapon,
+    state::State,
+    users::{Settings, Stats},
 };
 
 pub async fn home_sse(AuthenticatorEntry { channel, .. }: AuthenticatorEntry) -> impl IntoResponse {
@@ -41,8 +45,7 @@ pub async fn home_invite(
     User(id): User,
     AuthenticatorEntry { invite, .. }: AuthenticatorEntry,
 ) -> Result<impl IntoResponse> {
-    let invite_url =
-        invite_url(&state.base_url, id, &invite).ok_or(Error::InternalServerError)?;
+    let invite_url = invite_url(&state.base_url, id, &invite).ok_or(Error::InternalServerError)?;
     let qrcode = QrCode::new(invite_url.as_str()).map_err(|_| Error::InternalServerError)?;
     let svg = qrcode.render::<svg::Color>().build();
     Ok(Html(

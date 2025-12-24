@@ -2,12 +2,17 @@ use std::convert::Infallible;
 
 use askama::Template;
 use axum::{
-    Json, extract, response::{Html, IntoResponse, Redirect, Sse, sse::Event}
+    Json, extract,
+    response::{Html, IntoResponse, Redirect, Sse, sse::Event},
 };
 use futures::StreamExt;
 use tokio_stream::wrappers::BroadcastStream;
 
-use crate::{auth::User, error::{Error, Result}, state::State};
+use crate::{
+    auth::User,
+    error::{Error, Result},
+    state::State,
+};
 
 pub async fn graphs_cache(extract::State(state): extract::State<State>) -> impl IntoResponse {
     Json(state.graph_cache.read().await.clone())
@@ -29,7 +34,7 @@ pub async fn graphs_sse(extract::State(state): extract::State<State>) -> impl In
 #[template(path = "tree.html")]
 struct TreeTemplate<'a> {
     pub id: i32,
-    pub cache: &'a str
+    pub cache: &'a str,
 }
 
 pub async fn graphs_tree(
@@ -47,12 +52,11 @@ pub async fn graphs_tree(
     ))
 }
 
-
 #[derive(Template)]
 #[template(path = "graph.html")]
 struct GraphTemplate<'a> {
     pub id: i32,
-    pub cache: &'a str
+    pub cache: &'a str,
 }
 
 pub async fn graphs_graph(
@@ -75,9 +79,13 @@ pub async fn graphs() -> impl IntoResponse {
 }
 
 #[derive(Template)]
-#[template(path="global.html")]
+#[template(path = "global.html")]
 struct GlobalTemplate;
 
 pub async fn graphs_global() -> Result<impl IntoResponse> {
-    Ok(Html(GlobalTemplate.render().map_err(|_| Error::InternalServerError)?))
+    Ok(Html(
+        GlobalTemplate
+            .render()
+            .map_err(|_| Error::InternalServerError)?,
+    ))
 }

@@ -8,7 +8,10 @@ use axum::{
 use futures::FutureExt;
 
 use crate::{
-    auth::User, error::{Error, Result}, schnicks::{Interaction, Outcome, SchnickOutcomeReceiver, Schnicker}, state::State
+    auth::User,
+    error::{Error, Result},
+    schnicks::{Interaction, Outcome, SchnickOutcomeReceiver, Schnicker},
+    state::State,
 };
 
 pub async fn schnick_abort(

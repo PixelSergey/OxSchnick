@@ -7,7 +7,12 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde::Deserialize;
 
-use crate::{auth, error::{Error, Result}, state::State, users::Settings};
+use crate::{
+    auth,
+    error::{Error, Result},
+    state::State,
+    users::Settings,
+};
 
 #[derive(Template)]
 #[template(path = "settings.html")]
@@ -74,9 +79,7 @@ pub async fn settings_username(
     Ok(Redirect::to("/settings"))
 }
 
-pub async fn settings(
-    Settings { username, dect, .. }: Settings,
-) -> Result<impl IntoResponse> {
+pub async fn settings(Settings { username, dect, .. }: Settings) -> Result<impl IntoResponse> {
     Ok(Html(
         SettingsTemplate {
             username_value: &username,

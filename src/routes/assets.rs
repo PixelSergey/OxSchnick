@@ -1,9 +1,5 @@
-use axum::{
-    extract::Path,
-    http::header::CONTENT_TYPE,
-    response::IntoResponse,
-};
 use crate::error::{Error, Result};
+use axum::{extract::Path, http::header::CONTENT_TYPE, response::IntoResponse};
 
 macro_rules! serve_static {
     ( $name:expr, [ $( [ $path:literal, $file:expr, $type:literal ] ),* ]) => {
