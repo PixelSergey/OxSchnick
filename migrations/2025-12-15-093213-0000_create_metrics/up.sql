@@ -22,7 +22,7 @@ AS $$
 BEGIN
     UPDATE metrics
         SET num_schnicks = num_schnicks + 1
-    WHERE id = NEW.winner OR id = NEW.loser;
+    WHERE (id = NEW.winner AND NEW.loser <> 1) OR (id = NEW.loser AND NEW.winner <> 1);
     UPDATE metrics
         SET num_won = num_won + 1
     WHERE id = NEW.winner;
@@ -76,13 +76,13 @@ BEGIN
         current_winning_streak = current_winning_streak + 1,
         longest_winning_streak = GREATEST(longest_winning_streak, current_winning_streak + 1),
         current_losing_streak = 0
-    WHERE id = NEW.winner;
+    WHERE id = NEW.winner AND NEW.loser <> 1;
     UPDATE metrics
     SET
         current_losing_streak = current_losing_streak + 1,
         longest_losing_streak = GREATEST(longest_losing_streak, current_losing_streak + 1),
         current_winning_streak = 0
-    WHERE id = NEW.loser;
+    WHERE id = NEW.loser AND NEW.winner <> 1;
     RETURN NEW;
 END;
 $$;
@@ -103,29 +103,29 @@ BEGIN
     IF NEW.weapon = 0 THEN
         UPDATE metrics
             SET num_rock = num_rock + 1
-        WHERE id = NEW.winner;
+        WHERE id = NEW.winner AND NEW.loser <> 1;
 
         UPDATE metrics
             SET num_scissors = num_scissors + 1
-        WHERE id = NEW.loser;
+        WHERE id = NEW.loser AND NEW.winner <> 1;
 
     ELSIF NEW.weapon = 1 THEN
         UPDATE metrics
             SET num_scissors = num_scissors + 1
-        WHERE id = NEW.winner;
+        WHERE id = NEW.winner AND NEW.loser <> 1;
 
         UPDATE metrics
             SET num_paper = num_paper + 1
-        WHERE id = NEW.loser;
+        WHERE id = NEW.loser AND NEW.winner <> 1;
 
     ELSIF NEW.weapon = 2 THEN
         UPDATE metrics
             SET num_paper = num_paper + 1
-        WHERE id = NEW.winner;
+        WHERE id = NEW.winner AND NEW.loser <> 1;
 
         UPDATE metrics
             SET num_rock = num_rock + 1
-        WHERE id = NEW.loser;
+        WHERE id = NEW.loser AND NEW.winner <> 1;
     END IF;
 
     RETURN NEW;
