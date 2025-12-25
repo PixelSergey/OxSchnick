@@ -71,7 +71,9 @@
                 // set center to user node
                 .centerAt(userNode.fx, userNode.fy, 0)
                 // start zoomed in on small graph and zoomed out on large graph
-                .zoom(nodes.length <= cutOff ? 4 : 0);
+                .zoom(nodes.length <= cutOff ? 4 : 0)
+                //disable node dragging
+                .enableNodeDrag(false);
 
             if (nodes.length <= cutOff) {
                 // zoom out from user node on small graph
