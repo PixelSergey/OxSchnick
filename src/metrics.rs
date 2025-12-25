@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use anyhow::anyhow;
+use diesel::expression::SqlLiteral;
 use diesel::dsl::sql;
 use diesel::prelude::*;
 use diesel::sql_types::Integer;
@@ -10,6 +11,12 @@ use crate::error::{Error, Result};
 use crate::schema::{metrics, users};
 
 pub const METRICS_LEADERBOARD_LENGTH: i64 = 10;
+
+fn score_function() -> SqlLiteral<Integer> {
+    sql::<Integer>(
+        "CAST((erf(((num_won - num_schnicks * 0.5) / sqrt(num_schnicks * 0.25)) / sqrt(2)) * 10) ^ 3 AS INTEGER)"
+    )
+}
 
 #[derive(Debug, Clone, HasQuery, Identifiable, QueryableByName)]
 #[diesel(table_name=crate::schema::users)]
@@ -41,14 +48,13 @@ impl Metrics {
     }
 
     async fn get_score(conn: &mut AsyncPgConnection) -> Result<Vec<(MetricsUser, i32, i32, i32)>> {
-        let score = sql::<Integer>(
-            "CAST((erf(((num_won - num_schnicks * 0.5) / sqrt(num_schnicks * 0.25)) / sqrt(2)) * 10) ^ 3 AS INTEGER)"
-        );
+        let score = score_function();
         Ok(metrics::table
             .filter(metrics::num_schnicks.gt(0))
             .limit(METRICS_LEADERBOARD_LENGTH)
             .inner_join(users::table)
-            .select(((users::id, users::username), metrics::num_won, metrics::num_schnicks, score))
+            .select(((users::id, users::username), metrics::num_won, metrics::num_schnicks, score.clone()))
+            .order_by(score.desc())
             .get_results::<(MetricsUser, i32, i32, i32)>(conn)
             .await
             .map_err(|_| Error::InternalServerError)?)
