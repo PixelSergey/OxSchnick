@@ -28,13 +28,8 @@ pub async fn schnick_submit(
     Form(interaction): Form<Interaction>,
 ) -> Result<impl IntoResponse> {
     match Schnicker::request_handle_interaction(id, interaction, &state.schnicker).await? {
-        Some(Outcome::Concluded) => Ok(Redirect::to("home").into_response()),
-        Some(Outcome::Retry) => Ok(Html(
-            SchnickTemplate
-                .render()
-                .map_err(|_| Error::InternalServerError)?,
-        )
-        .into_response()),
+        Some(Outcome::Concluded) => Ok(Redirect::to("home?banner=concluded").into_response()),
+        Some(Outcome::Retry) => Ok(Redirect::to("schnick?banner=retry").into_response()),
         None => Ok(Html(
             WaitingTemplate
                 .render()

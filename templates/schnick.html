@@ -21,6 +21,22 @@
         </div>
         <div id="overlay-bottom">(click anywhere to continue)</div>
     </div>
+    <div id="banner-retry" class="banner banner-red">
+        <img src="/assets/lost.svg" alt=""> You and your opponents inputs didn't match. Please try again
+    </div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const banner = urlParams.get('banner');
+        if (banner === "retry") {
+            let overlay = document.getElementById("overlay");
+            overlay.style.display = "none";
+            let elem = document.getElementById("banner-retry");
+            elem.style.display = "flex";
+            setTimeout(() => {
+                elem.style.display = "none";
+            }, 5000);
+        }
+    </script>
     <h1>Enter result:</h1>
     <form action="schnick" method="post" id="schnick">
         <div class="outcome-selection">
