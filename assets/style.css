@@ -455,3 +455,27 @@ table.metrics td {
     overflow-x: auto;
     text-align: center;
 }
+
+/***********
+ * banners *
+ ***********/
+.banner {
+    display: none;
+    font-size: 2em;
+    font-weight: bold;
+    padding: 1em;
+    color: var(--background-color);
+}
+
+.banner img {
+    width: 1lh;
+    height: 1lh;
+}
+
+.banner-green {
+    background-color: var(--highlight-green);
+}
+
+.banner-red {
+    background-color: var(--highlight-red);
+}

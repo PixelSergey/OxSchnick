@@ -9,6 +9,20 @@
 {% endblock %}
 {% block nav_home %}button-active{% endblock %}
 {% block main %}
+<div id="banner-concluded" class="banner banner-green">
+    <img src="/assets/won.svg" alt=""> Your schnick was successful.
+</div>
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const banner = urlParams.get('banner');
+    if (banner === "concluded") {
+        let elem = document.getElementById("banner-concluded");
+        elem.style.display = "flex";
+        setTimeout(() => {
+            elem.style.display = "none";
+        }, 5000);
+    }
+</script>
 <header>
     <h1 id="greeting"><img class="weapon-inline" src="assets/home.svg"><span>Hi {{ user.username }}!</span></h1>
 </header>

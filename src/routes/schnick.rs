@@ -51,8 +51,8 @@ pub async fn schnick_sse(
         let _ = receiver.changed().await;
         let outcome = *receiver.borrow();
         let redirect = match outcome {
-            Outcome::Concluded => "home",
-            Outcome::Retry => "schnick",
+            Outcome::Concluded => "home?banner=concluded",
+            Outcome::Retry => "schnick?banner=retry",
         };
         Ok::<Event, Infallible>(Event::default().data(redirect))
     })
