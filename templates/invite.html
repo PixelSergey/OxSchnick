@@ -9,6 +9,7 @@
 {% endblock %}
 {% block main %}
 {{ qrcode | safe }}
+<p>or copy <a href="{{ invite_url | safe }}">this link.</a></p>
 {% endblock %}
 {% block footer %}
     <nav>

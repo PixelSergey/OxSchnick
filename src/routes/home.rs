@@ -38,6 +38,7 @@ fn invite_url(base: &Url, id: i32, token: &Uuid) -> Option<Url> {
 #[template(path = "invite.html")]
 struct HomeInviteTemplate<'a> {
     qrcode: &'a str,
+    invite_url: &'a str
 }
 
 pub async fn home_invite(
@@ -49,7 +50,7 @@ pub async fn home_invite(
     let qrcode = QrCode::new(invite_url.as_str()).map_err(|_| Error::InternalServerError)?;
     let svg = qrcode.render::<svg::Color>().build();
     Ok(Html(
-        HomeInviteTemplate { qrcode: &svg }
+        HomeInviteTemplate { qrcode: &svg, invite_url: invite_url.as_str() }
             .render()
             .map_err(|_| Error::InternalServerError)?,
     ))

@@ -35,7 +35,6 @@
 {% match invite %}
 {% when Some with (invite_url) %}
 <a href="home/invite" id="invite" class="button button-single">Let's schnick!</a>
-<a href="{{ invite_url }}">invite link</a>
 {% when None %}
 <p>Finish a schnick with another user first to invite other people to schnick.</p>
 {% endmatch %}
