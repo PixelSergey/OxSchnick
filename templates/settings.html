@@ -11,13 +11,16 @@
         </form>
         <form action="settings/dect" method="post" onsubmit="return this.checkValidity()" novalidate>
             <div class="input">
-                <div class="input" id="dect_form">
+                <div class="input" id="dect-form">
                     {% if let Some(dect_value) = dect_value %}
                         <input class="input" type="text" name="dect_value" id="dect" value="{{ dect_value }}" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
                     {% else %}
                         <input class="input" type="text" name="dect_value" id="dect" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
                     {% endif %}
-                    <button type="button" class="info-btn" onclick="showInfo()">ⓘ</button>
+                    <button type="button" id="info-button" onclick="toggleInfo()">ⓘ</button>
+                    <div id="dect-info">
+                        This allows other schnick fans to find you with the match making service on our hotline (#5000). You can also find DECT numbers by clicking on the nodes in the graphs.
+                    </div>
                 </div>
                 <button>Change</button>
             </div>
@@ -28,4 +31,20 @@
         <a href="about">About Us</a>
         <a href="imprint">Imprint</a>
     </div>
+
+    <script>
+        function toggleInfo() {
+            var element = document.getElementById("dect-info");
+            element.classList.toggle("visible");
+        }
+        document.addEventListener('click', function () {
+            document.getElementById('dect-info').classList.remove('visible');
+        });
+        document.getElementById('info-button').addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+        document.getElementById('dect-info').addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+    </script>
 {% endblock %}

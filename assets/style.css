@@ -276,16 +276,41 @@ form:valid #select {
     font-family: inherit;
 }
 
-#dect_form {
+#dect-form {
     position: relative;
 }
 
-#dect_form button {
+#info-button {
     position: absolute;
     right: 0;
     border: none;
     background-color: transparent;
     cursor: pointer;
+}
+
+#dect-info {
+    position: absolute;
+    top: calc(100% + 1.5em);
+    right: 0;
+    background-color: var(--shadow-gray);
+    border-radius: 0.5em;
+    text-align: center;
+    opacity: 0;
+}
+
+#dect-info::before {
+    content: "";
+    position: absolute;
+    top: -19px;
+    right: 5px;
+    transform: translateX(-50%);
+    border-width: 10px; 
+    border-style: solid;
+    border-color: transparent transparent var(--shadow-gray) transparent;
+}
+
+#dect-info.visible {
+    opacity: 100%;
 }
 
 .settings .error {
