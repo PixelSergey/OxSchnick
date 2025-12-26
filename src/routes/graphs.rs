@@ -5,47 +5,45 @@ use axum::{
     Json, extract,
     response::{Html, IntoResponse, Redirect, Sse, sse::Event},
 };
-use futures::StreamExt;
+use futures::{StreamExt, stream};
 use tokio_stream::wrappers::BroadcastStream;
 
 use crate::{
-    auth::User,
-    error::{Error, Result},
-    state::State,
+    auth::User, error::{Error, Result}, graphs::Graphs, state::State
 };
 
-pub async fn graphs_cache(extract::State(state): extract::State<State>) -> impl IntoResponse {
-    Json(state.graph_cache.read().await.clone())
+pub async fn graphs_cache(extract::State(state): extract::State<State>) -> Result<impl IntoResponse> {
+    let cache = Graphs::request_cache(&state.graphs).await?;
+    Ok(Json(cache.to_string()))
 }
 
-pub async fn graphs_sse(extract::State(state): extract::State<State>) -> impl IntoResponse {
-    let receiver = state.graph_updates.resubscribe();
+pub async fn graphs_sse(extract::State(state): extract::State<State>) -> Result<impl IntoResponse> {
+    let (cache, receiver) = Graphs::request_events(&state.graphs).await?;
+    let initial = stream::once(async move {
+        Ok::<Event, Infallible>(Event::default().data(cache.to_string()))
+    });
     let stream = BroadcastStream::new(receiver).map(|update| {
         if let Ok(update) = update {
-            Ok::<Event, Infallible>(Event::clone(&update))
+            Ok::<Event, Infallible>(Event::default().data(update.to_string()))
         } else {
             Ok::<Event, Infallible>(Event::default())
         }
     });
-    Sse::new(stream)
+    Ok(Sse::new(initial.chain(stream)))
 }
 
 #[derive(Template)]
 #[template(path = "tree.html")]
-struct TreeTemplate<'a> {
-    pub id: i32,
-    pub cache: &'a str,
+struct TreeTemplate {
+    pub id: i32
 }
 
 pub async fn graphs_tree(
     User(id): User,
-    extract::State(state): extract::State<State>,
 ) -> Result<impl IntoResponse> {
-    let cache = state.graph_cache.read().await;
     Ok(Html(
         TreeTemplate {
             id,
-            cache: cache.as_str(),
         }
         .render()
         .map_err(|_| Error::InternalServerError)?,
@@ -54,20 +52,16 @@ pub async fn graphs_tree(
 
 #[derive(Template)]
 #[template(path = "graph.html")]
-struct GraphTemplate<'a> {
+struct GraphTemplate {
     pub id: i32,
-    pub cache: &'a str,
 }
 
 pub async fn graphs_graph(
     User(id): User,
-    extract::State(state): extract::State<State>,
 ) -> Result<impl IntoResponse> {
-    let cache = state.graph_cache.read().await;
     Ok(Html(
         GraphTemplate {
             id,
-            cache: cache.as_str(),
         }
         .render()
         .map_err(|_| Error::InternalServerError)?,

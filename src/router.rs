@@ -8,7 +8,7 @@ use tokio::sync::RwLock;
 use url::Url;
 
 use crate::{
-    auth::{Authenticator, User}, error::Error, graphs::Graph, metrics::Metrics, routes::{
+    auth::{Authenticator, User}, error::Error, graphs::Graphs, metrics::Metrics, routes::{
         about, assets, graphs, graphs_cache, graphs_global, graphs_graph, graphs_sse, graphs_tree, home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, metrics_num_invites, metrics_num_schnicks, metrics_score, metrics_streak, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_dect, settings_username
     }, schnicks::Schnicker, state::State
 };
@@ -29,23 +29,22 @@ pub async fn redirect_if_in_schnick(
 pub async fn router(
     base_url: Url,
     pool: Pool<AsyncPgConnection>,
-) -> anyhow::Result<(Router, Authenticator, Schnicker, Graph)> {
-    let (graph, graph_update) = Graph::with_connection(&mut pool.get().await?).await?;
-    let authenticator = Authenticator::with_connection_and_update(
+) -> anyhow::Result<(Router, Authenticator, Schnicker, Graphs)> {
+    let graphs_o = Graphs::with_connection(&mut pool.get().await?).await?;
+    let authenticator = Authenticator::with_connection_and_graphs(
         pool.dedicated_connection().await?,
-        graph_update.clone(),
+        graphs_o.sender(),
     );
     let mut connection = pool.dedicated_connection().await?;
     let metrics_o = Arc::new(RwLock::new(Metrics::new(&mut connection).await?));
     let schnicker =
-        Schnicker::with_connection_and_update(connection, graph_update, Arc::clone(&metrics_o));
+        Schnicker::with_connection_graphs_and_metrics(connection, graphs_o.sender(), Arc::clone(&metrics_o));
     let state = State {
         base_url,
         pool,
         authenticator: authenticator.sender(),
         schnicker: schnicker.sender(),
-        graph_cache: graph.graph_cache(),
-        graph_updates: Arc::new(graph.update_receiver()),
+        graphs: graphs_o.sender(),
         metrics: metrics_o
     };
     let authenticated_with_registration = Router::new()
@@ -92,5 +91,5 @@ pub async fn router(
         .merge(authenticated)
         .merge(unauthenticated)
         .fallback(get(async || Error::NotFound));
-    Ok((router, authenticator, schnicker, graph))
+    Ok((router, authenticator, schnicker, graphs_o))
 }

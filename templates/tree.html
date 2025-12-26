@@ -17,74 +17,107 @@
             const cutOff = 200; // cut off from small to large graph
 
             const elem = document.getElementById('graph');
+            const userId = {{id}};
 
-            const cache = {{cache | safe}};
-            const data = cache.vertices.map(
-                (x) => { return {
+            function preprocess(raw) {
+                console.log("=== BEGIN RAW");
+                console.log(raw);
+                console.log("=== END RAW");
+                const m = raw.users.map(
+                (x) => { 
+                    return {
                     id: x[0],
                     parent_id: x[0] === x[1] ? null : x[1],
                     name: x[2]
-                };}
-            );
-            console.log(data);
-            const userId = {{id}};
-
-            // read data into hierarchical structure
-            const root = stratify()
-                .id(d => d.id)
-                .parentId(d => d.parent_id)
-                (data);
-            tree().nodeSize([nodeSpacing, nodeSpacing * 2])(root); // horizontal and vertical spacing
-
-            // map into format for force graph
-            const nodes = root.descendants().map(d => ({
-                id: d.data.id,
-                fx: Math.round(d.x),
-                fy: Math.round(d.y), 
-                name: d.data.name
-            }))
-            const links = root.links().map(l => ({
-                source: l.source.data.id,
-                target: l.target.data.id
-            }));
-
-            // get node of user
-            const userNode = nodes.find(n => n.id === userId);
-
-            // create graph
-            const Graph = ForceGraph()(elem)
-                // initialize graph
-                .graphData({ nodes, links })
-                .width(elem.clientWidth)
-                .height(elem.clientHeight - 210)
-                // set colors
-                .backgroundColor(backgroundColor)
-                .linkColor(() => defaultColor)
-                .nodeColor(node => { {
-                    if (node.id === userId) return highlightedColor;
-                    return defaultColor;
-                } })
-                // set node size
-                .nodeRelSize(nodeSpacing / 2 - 0.5)
-                // stop animation immediately
-                .cooldownTicks(0)
-                // set center to user node
-                .centerAt(userNode.fx, userNode.fy, 0)
-                // start zoomed in on small graph and zoomed out on large graph
-                .zoom(nodes.length <= cutOff ? 4 : 0)
-                //disable node dragging
-                .enableNodeDrag(false);
-
-            if (nodes.length <= cutOff) {
-                // zoom out from user node on small graph
-                Graph.onEngineStop(() => {
-                    Graph.zoomToFit(1000); // in 1000ms
+                    }
                 });
-            } else {
-                // zoom in to user node on large graph
-                Graph.onEngineStop(() => {
-                    Graph.zoom(2, 1000); // in 1000ms
-                });
+                console.log(m);
+
+                // read data into hierarchical structure
+                const root = stratify()
+                    .id(d => d.id)
+                    .parentId(d => d.parent_id)
+                    (m);
+                tree().nodeSize([nodeSpacing, nodeSpacing * 2])(root); // horizontal and vertical spacing
+
+                // map into format for force graph
+                const nodes = root.descendants().map(d => ({
+                    id: d.data.id,
+                    fx: Math.round(d.x),
+                    fy: Math.round(d.y), 
+                    name: d.data.name
+                }))
+                const links = root.links().map(l => ({
+                    source: l.source.data.id,
+                    target: l.target.data.id
+                }));
+
+
+                return {nodes, links};
             }
+
+            fetch('cache').then((res) => res.json()).then((rd) => {
+                let data = JSON.parse(rd);
+                let preprocessed = preprocess(data);
+                const userNode = preprocessed.nodes.find(n => n.id === userId);
+                const Graph = ForceGraph()(elem)
+                    // initialize graph
+                    .graphData(preprocessed)
+                    .width(elem.clientWidth)
+                    .height(elem.clientHeight - 210)
+                    // set colors
+                    .backgroundColor(backgroundColor)
+                    .linkColor(() => defaultColor)
+                    .nodeColor(node => { {
+                        if (node.id === userId) return highlightedColor;
+                        return defaultColor;
+                    } })
+                    // set node size
+                    .nodeRelSize(nodeSpacing / 2 - 0.5)
+                    // stop animation immediately
+                    .cooldownTicks(0)
+                    // set center to user node
+                    .centerAt(userNode.fx, userNode.fy, 0)
+                    // start zoomed in on small graph and zoomed out on large graph
+                    .zoom(preprocessed.nodes.length <= cutOff ? 4 : 0)
+                    //disable node dragging
+                    .enableNodeDrag(false);
+                if (preprocessed.nodes.length <= cutOff) {
+                    // zoom out from user node on small graph
+                    Graph.onEngineStop(() => {
+                        Graph.zoomToFit(1000); // in 1000ms
+                    });
+                } else {
+                    // zoom in to user node on large graph
+                    Graph.onEngineStop(() => {
+                        Graph.zoom(2, 1000); // in 1000ms
+                    });
+                }
+                let events = new EventSource("sse");
+                events.onmessage = (e) => {
+                    let new_data = JSON.parse(e.data);
+                    let rerender = false;
+                    new_data.forEach((update) => {
+                        console.log(update);
+                        if (update.type === "Schnick") {
+                            data.schnicks.push([update.a, update.b])
+                        } else if (update.type === "UserCreated") {
+                            rerender = true;
+                            data.users.push([update.id, update.parent, update.name])
+                        } else if (update.type === "UserRenamed") {
+                            rerender = true;
+                            data.users.forEach(user => {
+                                if (user[0] === update.id) {
+                                    user[2] = update.name;
+                                }
+                            });
+                            console.log(data.users);
+                        }
+                    });
+                    if (rerender) {
+                        Graph.graphData(preprocess(data));
+                    }
+            }});
+        
         </script>
 {% endblock %}

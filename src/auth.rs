@@ -18,7 +18,7 @@ use uuid::Uuid;
 
 use crate::{
     error::{Error, Result},
-    graphs::GraphUpdate,
+    graphs::{GraphRequest, GraphUpdate, Graphs},
     state::State,
     username::generate_username
 };
@@ -57,7 +57,7 @@ pub struct Authenticator {
     connection: AsyncPgConnection,
     sender: mpsc::Sender<AuthenticationRequest>,
     receiver: mpsc::Receiver<AuthenticationRequest>,
-    update: mpsc::Sender<GraphUpdate>,
+    graphs: mpsc::Sender<GraphRequest>,
 }
 
 #[derive(Debug, Clone, HasQuery, QueryableByName, Identifiable, Serialize, Deserialize)]
@@ -83,9 +83,9 @@ pub struct NewUser<'a> {
 }
 
 impl Authenticator {
-    pub fn with_connection_and_update(
+    pub fn with_connection_and_graphs(
         connection: AsyncPgConnection,
-        update: mpsc::Sender<GraphUpdate>,
+        graphs: mpsc::Sender<GraphRequest>,
     ) -> Self {
         let (sender, receiver) = mpsc::channel(AUTHENTICATOR_CHANNEL_BUFFER);
         Self {
@@ -93,7 +93,7 @@ impl Authenticator {
             connection,
             sender,
             receiver,
-            update,
+            graphs,
         }
     }
 
@@ -107,31 +107,25 @@ impl Authenticator {
         if &entry.invite != submitted_invite {
             return Err(Error::InvalidInvite)
         }
-        for _ in 0..10 {
-            let username = generate_username();
-            let new_user = NewUser { parent: parent, username: &username };
-            let (new_id, new_token, new_username) = new_user
-                .insert_into(users::table)
-                .returning((users::id, users::token, users::username))
-                .get_result::<(i32, Uuid, String)>(&mut self.connection)
-                .await
-                .map_err(|e| {
-                    error!(target: "auth::register", "{:?}", e);
-                    Error::InternalServerError
-                })?;
-            let new_entry = AuthenticatorEntry {
-                token: new_token,
-                invite: Uuid::new_v4(),
-                channel: watch::Sender::new(()),
-            };
-            self.cache.insert(new_id, new_entry.clone());
-            self.update
-                .send(GraphUpdate::User((new_id, parent, new_username)))
-                .await
-                .map_err(|_| Error::InternalServerError)?;
-            return Ok((new_id, new_entry))
-        }
-        Err(Error::InternalServerError)
+        let username = generate_username();
+        let new_user = NewUser { parent: parent, username: &username };
+        let (new_id, new_token, new_username) = new_user
+            .insert_into(users::table)
+            .returning((users::id, users::token, users::username))
+            .get_result::<(i32, Uuid, String)>(&mut self.connection)
+            .await
+            .map_err(|e| {
+                error!(target: "auth::register", "{:?}", e);
+                Error::InternalServerError
+            })?;
+        let new_entry = AuthenticatorEntry {
+            token: new_token,
+            invite: Uuid::new_v4(),
+            channel: watch::Sender::new(()),
+        };
+        self.cache.insert(new_id, new_entry.clone());
+        Graphs::send_update(GraphUpdate::UserCreated { id: new_id, parent, name: new_username }, &self.graphs).await;
+        return Ok((new_id, new_entry))
     }
 
     async fn authenticate(

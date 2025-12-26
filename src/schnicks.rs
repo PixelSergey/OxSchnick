@@ -12,7 +12,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use tokio::sync::{RwLock, mpsc, oneshot, watch};
 
 use crate::{
-    auth::AuthenticatorEntry, error::{Error, Result}, graphs::GraphUpdate, metrics::Metrics, state::State
+    auth::AuthenticatorEntry, error::{Error, Result}, graphs::{Graphs, GraphRequest, GraphUpdate}, metrics::Metrics, state::State
 };
 
 const SCHNICKS_CHANNEL_BUFFER: usize = 128usize;
@@ -68,7 +68,7 @@ pub struct Schnicker {
     >,
     sender: mpsc::Sender<SchnickRequest>,
     receiver: mpsc::Receiver<SchnickRequest>,
-    update: mpsc::Sender<GraphUpdate>,
+    graphs: mpsc::Sender<GraphRequest>,
     metrics: Arc<RwLock<Metrics>>
 }
 
@@ -108,9 +108,9 @@ pub struct SavedSchnick {
 }
 
 impl Schnicker {
-    pub fn with_connection_and_update(
+    pub fn with_connection_graphs_and_metrics(
         connection: AsyncPgConnection,
-        update: mpsc::Sender<GraphUpdate>,
+        graphs: mpsc::Sender<GraphRequest>,
         metrics: Arc<RwLock<Metrics>>
     ) -> Self {
         let (tx, rx) = mpsc::channel(SCHNICKS_CHANNEL_BUFFER);
@@ -119,7 +119,7 @@ impl Schnicker {
             active: Default::default(),
             sender: tx,
             receiver: rx,
-            update,
+            graphs,
             metrics
         }
     }
@@ -253,10 +253,7 @@ impl Schnicker {
                         Error::InternalServerError
                     })?;
                 sender.send_replace(Outcome::Concluded);
-                self.update
-                    .send(GraphUpdate::Schnick((old_id, id)))
-                    .await
-                    .map_err(|_| Error::InternalServerError)?;
+                Graphs::send_update(GraphUpdate::Schnick { a: old_id, b: id }, &self.graphs).await;
                 self.metrics.write().await.update(&mut self.connection).await?;
                 self.active.remove(&id);
                 self.active.remove(&old_id);

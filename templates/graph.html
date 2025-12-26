@@ -6,9 +6,10 @@
 {% block graph_container %}
 <script type="module">
     function preprocess(raw) {
+        console.log(raw);
         let nodes = new Set([]);
         let links = [];
-        raw.edges.forEach(element => {
+        raw.schnicks.forEach(element => {
             nodes.add(element[0]);
             nodes.add(element[1]);
             links.push({"source": element[0], "target": element[1]});
@@ -51,28 +52,49 @@
     const elem = document.getElementById('graph');
 
     const userId = {{id}};
-    let raw_links = {{cache | safe}}
-    const gData = preprocess(raw_links);
+    fetch('cache').then((res) => res.json()).then((rd) => {
+        let data = JSON.parse(rd);
+        const Graph = ForceGraph()(elem)
+            .backgroundColor(backgroundColor)
+            .width(elem.clientWidth)
+            .height(elem.clientHeight - 210)
+            .graphData(preprocess(data))
+            .d3AlphaDecay(0.05)
+            .d3VelocityDecay(0.5)
+            .cooldownTime(60000)
+            .nodeColor(node => { {
+                if (node.id === userId) return highlightedColor;
+                if (node.neighbors.some(neighbor => neighbor.id === userId)) return neighborColor;
+                return defaultColor;
+            } })
+            .linkColor(link => link.target.id === userId || link.source.id === userId ? neighborColor : defaultColor);
 
-    const Graph = ForceGraph()(elem)
-        .backgroundColor(backgroundColor)
-        .width(elem.clientWidth)
-        .height(elem.clientHeight - 210)
-        .graphData(gData)
-        .d3AlphaDecay(0.05)
-        .d3VelocityDecay(0.5)
-        .cooldownTime(60000)
-        .nodeColor(node => { {
-            if (node.id === userId) return highlightedColor;
-            if (node.neighbors.some(neighbor => neighbor.id === userId)) return neighborColor;
-            return defaultColor;
-        } })
-        .linkColor(link => link.target.id === userId || link.source.id === userId ? neighborColor : defaultColor);
-
-    let events = new EventSource("sse");
-    events.onmessage = (e) => {
-        raw_links = raw_links.concat(JSON.parse(e.data));
-        Graph.graphData(preprocess(raw_links));
-    };
+        let events = new EventSource("sse");
+        events.onmessage = (e) => {
+            let new_data = JSON.parse(e.data);
+            let rerender = false;
+            new_data.forEach((update) => {
+                console.log(update);
+                if (update.type === "Schnick") {
+                    data.schnicks.push([update.a, update.b])
+                    rerender = true;
+                } else if (update.type === "UserCreated") {
+                    data.users.push([update.id, update.parent, update.name])
+                } else if (update.type === "UserRenamed") {
+                    rerender = true;
+                    data.users.map((user) => {
+                        if (user[0] === update.id) {
+                            return [user[0], user[1], update.name];
+                        } else {
+                            return user;
+                        }
+                    })
+                }
+            });
+            console.log(data);
+            if (rerender) {
+                Graph.graphData(preprocess(data));
+            }
+    }});
 </script>
 {% endblock %}

@@ -8,10 +8,7 @@ use diesel_async::RunQueryDsl;
 use serde::Deserialize;
 
 use crate::{
-    auth,
-    error::{Error, Result},
-    state::State,
-    users::Settings,
+    auth, error::{Error, Result}, graphs::Graphs, state::State, users::Settings
 };
 
 #[derive(Template)]
@@ -66,7 +63,7 @@ pub async fn settings_username(
     use crate::schema::users;
     use crate::schema::users::username;
     diesel::update(users::table.find(id))
-        .set(username.eq(username_value))
+        .set(username.eq(&username_value))
         .execute(
             &mut state
                 .pool
@@ -76,6 +73,7 @@ pub async fn settings_username(
         )
         .await
         .map_err(|_| Error::DuplicateUsername)?;
+    Graphs::send_update(crate::graphs::GraphUpdate::UserRenamed { id, name: username_value }, &state.graphs).await;
     Ok(Redirect::to("/settings"))
 }
 

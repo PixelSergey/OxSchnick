@@ -1,126 +1,179 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
-use axum::response::sse::Event;
 use chrono::Local;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl, pooled_connection::bb8::PooledConnection};
-use log::{error, trace};
+use log::{error};
 use serde::Serialize;
-use tokio::sync::{RwLock, broadcast, mpsc};
+use serde_json::json;
+use tokio::sync::{broadcast, mpsc, oneshot};
+
+use crate::error::{Result, Error};
 
 const GRAPHS_CHANNEL_BUFFER: usize = 128usize;
 const GRAPHS_UPDATE_INTERVAL: i64 = 10i64;
 
-#[derive(Debug, Clone, Default, Serialize)]
-pub struct GraphData {
-    pub vertices: Vec<(i32, i32, String)>,
-    pub edges: Vec<(i32, i32)>,
-}
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "type")]
 pub enum GraphUpdate {
-    Schnick((i32, i32)),
-    User((i32, i32, String)),
-}
-
-impl GraphData {
-    pub fn merge_into(&mut self, other: &mut Self) {
-        self.vertices.append(&mut other.vertices);
-        self.edges.append(&mut other.edges);
-    }
-
-    pub fn add_schnick(&mut self, schnick: (i32, i32)) {
-        self.edges.push(schnick);
-    }
-
-    pub fn add_user(&mut self, user: (i32, i32, String)) {
-        self.vertices.push(user);
-    }
+    Schnick { a: i32, b: i32 },
+    UserCreated { id: i32, parent: i32, name: String },
+    UserRenamed { id: i32, name: String },
 }
 
 #[derive(Debug)]
-pub struct Graph {
-    persistent_cache: GraphData,
-    rolling_cache: GraphData,
-    graph_cache: Arc<RwLock<String>>,
-    _sender: mpsc::Sender<GraphUpdate>,
-    receiver: mpsc::Receiver<GraphUpdate>,
-    update: broadcast::Sender<Arc<Event>>,
-    timestamp: i64,
+pub enum GraphRequest {
+    Update { update: GraphUpdate },
+    GetCache { callback: oneshot::Sender<Arc<String>> },
+    GetEvents { callback: oneshot::Sender<(Arc<String>, broadcast::Receiver<Arc<String>>)> },
+    Tick
 }
 
-impl Graph {
+#[derive(Debug)]
+pub struct Graphs {
+    users: HashMap<i32, (i32, String)>,
+    schnicks: Vec<(i32, i32)>,
+    cache: Arc<String>,
+    updates: Vec<GraphUpdate>,
+    update_cache: Arc<String>,
+    sender: mpsc::Sender<GraphRequest>,
+    receiver: mpsc::Receiver<GraphRequest>,
+    update: broadcast::Sender<Arc<String>>,
+    cache_time: i64
+}
+
+impl Graphs {
     pub async fn with_connection(
         connection: &mut PooledConnection<'_, AsyncPgConnection>,
-    ) -> anyhow::Result<(Self, mpsc::Sender<GraphUpdate>)> {
+    ) -> anyhow::Result<Self> {
         use crate::schema::{schnicks, users};
-        let persistent_vertices = users::table
+        let persistent_users = users::table
             .select((users::id, users::parent, users::username))
             .load::<(i32, i32, String)>(connection)
-            .await?;
-        let persistent_edges = schnicks::table
+            .await?
+            .into_iter().map(|(id, parent, name)| (id, (parent, name))).collect();
+        let persistent_schnicks = schnicks::table
             .select((schnicks::winner, schnicks::loser))
             .load::<(i32, i32)>(connection)
             .await?;
-        let persistent_cache = GraphData {
-            vertices: persistent_vertices,
-            edges: persistent_edges,
-        };
+        let persistent_cache = Arc::new(Self::build_cache(&persistent_users, &persistent_schnicks));
         let (tx, rx) = mpsc::channel(GRAPHS_CHANNEL_BUFFER);
-        let graph_cache = Arc::new(RwLock::new(serde_json::to_string(&persistent_cache)?));
-        Ok((
+        Ok(
             Self {
-                persistent_cache,
-                rolling_cache: Default::default(),
-                graph_cache,
-                _sender: tx.clone(),
+                users: persistent_users,
+                schnicks: persistent_schnicks,
+                cache: persistent_cache,
+                updates: vec![],
+                update_cache: Arc::new("[]".to_string()),
+                sender: tx,
                 receiver: rx,
                 update: broadcast::Sender::new(GRAPHS_CHANNEL_BUFFER),
-                timestamp: Local::now().timestamp(),
-            },
-            tx,
-        ))
+                cache_time: Local::now().timestamp(),
+            }
+        )
+    }
+
+    fn build_cache(users: &HashMap<i32, (i32, String)>, schnicks: &Vec<(i32, i32)>) -> String {
+        let value = json!({
+            "users": users.iter().map(|(id, (parent, name))| (id, parent, name)).collect::<Vec<(&i32, &i32, &String)>>(),
+            "schnicks": schnicks
+        });
+        value.to_string()
+    }
+
+    fn handle_update(&mut self, update: GraphUpdate) {
+        match update {
+            GraphUpdate::UserCreated { id, parent, name } => {self.users.insert(id, (parent, name));},
+            GraphUpdate::Schnick { a, b } => {self.schnicks.push((a, b));},
+            GraphUpdate::UserRenamed { id, name } => {
+                if let Some((_, old_name)) = self.users.get_mut(&id) {
+                    *old_name = name;
+                }
+            }
+        };
     }
 
     pub async fn worker(mut self) {
-        while let Some(update) = self.receiver.recv().await {
-            match update {
-                GraphUpdate::Schnick(schnick) => self.rolling_cache.add_schnick(schnick),
-                GraphUpdate::User(user) => self.rolling_cache.add_user(user),
-            };
-            if Local::now().timestamp() - self.timestamp >= GRAPHS_UPDATE_INTERVAL {
-                trace!(target: "graphs::worker", "exceeded timeout, dumping cache");
-                let payload = match serde_json::to_string(&self.rolling_cache) {
-                    Ok(s) => s,
-                    Err(e) => {
-                        error!(target: "graphs::worker", "error serializing graph update: {e:?}");
+        while let Some(request) = self.receiver.recv().await {
+            match request {
+                GraphRequest::Update { update } => {
+                    self.updates.push(update.clone());
+                    if let Ok(s) = serde_json::to_string(&self.updates) {
+                        self.update_cache = Arc::new(s);
+                    } else {
+                        error!(target: "graphs::worker", "error building update cache");
                         continue;
-                    }
-                };
-                if let Err(_) = self.update.send(Arc::new(Event::default().data(payload))) {
-                    error!(target: "graphs::worker", "dead channel");
+                    };
+                    if let Err(e) = self.update.send(Arc::new(json!([update]).to_string())) {
+                        error!(target: "graphs::worker", "dead channel: {e:?}");
+                    };
                 }
-                self.persistent_cache.merge_into(&mut self.rolling_cache);
-                let new = match serde_json::to_string(&self.persistent_cache) {
-                    Ok(s) => s,
-                    Err(e) => {
-                        error!(target: "graphs::worker", "error serializing graph cache: {e:?}");
-                        continue;
+                GraphRequest::GetCache { callback } => {
+                    if let Err(e) = callback.send(Arc::clone(&self.cache)) {
+                        error!(target: "graphs::worker", "dead channel: {e:?}");
                     }
-                };
-                self.timestamp = Local::now().timestamp();
-                let mut cache = self.graph_cache.write().await;
-                cache.clear();
-                cache.push_str(&new);
+                }
+                GraphRequest::GetEvents { callback } => {
+                    if let Err(_) = callback.send((Arc::clone(&self.update_cache), self.update.subscribe())) {
+                        error!(target: "graphs::worker", "dead channel");
+                    }
+                },
+                GraphRequest::Tick => {}
+            }
+            let now = Local::now().timestamp();
+            if Local::now().timestamp() - self.cache_time >= GRAPHS_UPDATE_INTERVAL {
+                let updates = self.updates.drain(..).collect::<Vec<GraphUpdate>>();
+                for update in updates.into_iter() {
+                    self.handle_update(update);
+                }
+                self.update_cache = Arc::new("[]".to_string());
+                self.cache = Arc::new(Self::build_cache(&self.users, &self.schnicks));
+                self.cache_time = now;
             }
         }
     }
 
-    pub fn graph_cache(&self) -> Arc<RwLock<String>> {
-        Arc::clone(&self.graph_cache)
+    pub async fn send_update(update: GraphUpdate, sender: &mpsc::Sender<GraphRequest>) {
+        if let Err(e) = sender.send(GraphRequest::Update { update }).await {
+            error!(target: "graphs::send_update", "dead channel: {e:?}");
+        };
     }
 
-    pub fn update_receiver(&self) -> broadcast::Receiver<Arc<Event>> {
-        self.update.subscribe()
+    pub async fn request_cache(
+        sender: &mpsc::Sender<GraphRequest>
+    ) -> Result<Arc<String>> {
+        let (tx, rx) = oneshot::channel();
+        sender
+            .send(GraphRequest::GetCache { callback: tx })
+            .await
+            .map_err(|e| {
+                error!(target: "auth::request", "dead channel: {:?}", e);
+                Error::InternalServerError
+            })?;
+        rx.await.map_err(|e| {
+            error!(target: "auth::request", "dead channel: {:?}", e);
+            Error::InternalServerError
+        })
+    }
+
+    pub async fn request_events(
+        sender: &mpsc::Sender<GraphRequest>
+    ) -> Result<(Arc<String>, broadcast::Receiver<Arc<String>>)> {
+        let (tx, rx) = oneshot::channel();
+        sender
+            .send(GraphRequest::GetEvents { callback: tx })
+            .await
+            .map_err(|e| {
+                error!(target: "auth::request", "dead channel: {:?}", e);
+                Error::InternalServerError
+            })?;
+        rx.await.map_err(|e| {
+            error!(target: "auth::request", "dead channel: {:?}", e);
+            Error::InternalServerError
+        })
+    }
+
+    pub fn sender(&self) -> mpsc::Sender<GraphRequest> {
+        self.sender.clone()
     }
 }
