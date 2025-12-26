@@ -26,8 +26,13 @@
 <header>
     <h1 id="greeting"><img class="weapon-inline" src="assets/home.svg"><span>Hi {{ user.username }}!</span></h1>
 </header>
+{% match invite %}
+{% when Some with (invite_url) %}
 <a href="home/invite" id="invite" class="button button-single">Let's schnick!</a>
-<a href="{{ invite }}">invite link</a>
+<a href="{{ invite_url }}">invite link</a>
+{% when None %}
+<p>Finish a schnick with another user first to invite other people to schnick.</p>
+{% endmatch %}
 <h2>Metrics</h2>
 <table class="home">
     <tbody>

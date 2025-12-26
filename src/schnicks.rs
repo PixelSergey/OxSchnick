@@ -2,8 +2,7 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::Arc};
 
 use axum::extract::FromRequestParts;
 use diesel::{
-    dsl::{exists, select},
-    prelude::*,
+    dsl::{exists, select}, prelude::*
 };
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use log::error;
@@ -12,7 +11,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use tokio::sync::{RwLock, mpsc, oneshot, watch};
 
 use crate::{
-    auth::AuthenticatorEntry, error::{Error, Result}, graphs::{Graphs, GraphRequest, GraphUpdate}, metrics::Metrics, state::State
+    auth::{AuthenticationRequest, Authenticator, AuthenticatorEntry}, error::{Error, Result}, graphs::{GraphRequest, GraphUpdate, Graphs}, metrics::Metrics, state::State
 };
 
 const SCHNICKS_CHANNEL_BUFFER: usize = 128usize;
@@ -68,6 +67,7 @@ pub struct Schnicker {
     >,
     sender: mpsc::Sender<SchnickRequest>,
     receiver: mpsc::Receiver<SchnickRequest>,
+    auth: mpsc::Sender<AuthenticationRequest>,
     graphs: mpsc::Sender<GraphRequest>,
     metrics: Arc<RwLock<Metrics>>
 }
@@ -108,10 +108,11 @@ pub struct SavedSchnick {
 }
 
 impl Schnicker {
-    pub fn with_connection_graphs_and_metrics(
+    pub fn with_connection_graphs_metrics_and_auth(
         connection: AsyncPgConnection,
         graphs: mpsc::Sender<GraphRequest>,
-        metrics: Arc<RwLock<Metrics>>
+        metrics: Arc<RwLock<Metrics>>,
+        auth: mpsc::Sender<AuthenticationRequest>
     ) -> Self {
         let (tx, rx) = mpsc::channel(SCHNICKS_CHANNEL_BUFFER);
         Self {
@@ -119,6 +120,7 @@ impl Schnicker {
             active: Default::default(),
             sender: tx,
             receiver: rx,
+            auth,
             graphs,
             metrics
         }
@@ -254,6 +256,8 @@ impl Schnicker {
                     })?;
                 sender.send_replace(Outcome::Concluded);
                 Graphs::send_update(GraphUpdate::Schnick { a: old_id, b: id }, &self.graphs).await;
+                Authenticator::request_create_invite_if_not_exists(id, &self.auth).await?;
+                Authenticator::request_create_invite_if_not_exists(old_id, &self.auth).await?;
                 self.metrics.write().await.update(&mut self.connection).await?;
                 self.active.remove(&id);
                 self.active.remove(&old_id);

@@ -5,7 +5,7 @@ CREATE TABLE users (
     parent integer references users(id) NOT NULL,
     token uuid NOT NULL DEFAULT uuidv4(),
     created timestamptz NOT NULL DEFAULT now(),
-    active boolean NOT NULL DEFAULT true
+    active boolean NOT NULL DEFAULT false
 );
 
 INSERT INTO users (username, dect, parent, token, created, active) VALUES ('root', '5000', lastval(), uuidv4(), now(), true);

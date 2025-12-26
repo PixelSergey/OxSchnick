@@ -19,6 +19,7 @@ pub enum Error {
     InvalidSettings,
     InvalidDect,
     DuplicateUsername,
+    NotActive,
 }
 
 #[derive(Template)]
@@ -96,6 +97,11 @@ impl IntoResponse for Error {
                 "The username you tried to set is already taken, sorry! You can try another one.",
                 "/settings",
             ),
+            Self::NotActive => (
+                StatusCode::BAD_REQUEST,
+                "You need to finish a schnick initiated by another person before you can invite new users.",
+                "/"
+            )
         };
         let body = match (ErrorTemplate {
             message: message,

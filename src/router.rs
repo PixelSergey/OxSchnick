@@ -38,7 +38,7 @@ pub async fn router(
     let mut connection = pool.dedicated_connection().await?;
     let metrics_o = Arc::new(RwLock::new(Metrics::new(&mut connection).await?));
     let schnicker =
-        Schnicker::with_connection_graphs_and_metrics(connection, graphs_o.sender(), Arc::clone(&metrics_o));
+        Schnicker::with_connection_graphs_metrics_and_auth(connection, graphs_o.sender(), Arc::clone(&metrics_o), authenticator.sender());
     let state = State {
         base_url,
         pool,

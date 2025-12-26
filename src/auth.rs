@@ -43,12 +43,16 @@ pub enum AuthenticationRequest {
         id: i32,
         callback: oneshot::Sender<Result<()>>,
     },
+    CreateInviteIfNotExists {
+        id: i32,
+        callback: oneshot::Sender<Result<()>>,
+    },
 }
 
 #[derive(Debug, Clone)]
 pub struct AuthenticatorEntry {
     pub token: Uuid,
-    pub invite: Uuid,
+    pub invite: Option<Uuid>,
     pub channel: watch::Sender<()>,
 }
 
@@ -104,7 +108,7 @@ impl Authenticator {
     ) -> Result<(i32, AuthenticatorEntry)> {
         use crate::schema::users;
         let entry = self.cache.get(&parent).ok_or(Error::InvalidInvite)?.clone();
-        if &entry.invite != submitted_invite {
+        if entry.invite.as_ref() != Some(submitted_invite) {
             return Err(Error::InvalidInvite)
         }
         let username = generate_username();
@@ -120,7 +124,7 @@ impl Authenticator {
             })?;
         let new_entry = AuthenticatorEntry {
             token: new_token,
-            invite: Uuid::new_v4(),
+            invite: None,
             channel: watch::Sender::new(()),
         };
         self.cache.insert(new_id, new_entry.clone());
@@ -133,6 +137,7 @@ impl Authenticator {
         id: i32,
         submitted_token: &Uuid,
     ) -> Result<AuthenticatorEntry> {
+        use crate::schema::users;
         if let Some(entry) = self.cache.get(&id) {
             if &entry.token == submitted_token {
                 Ok(entry.clone())
@@ -140,34 +145,44 @@ impl Authenticator {
                 Err(Error::InvalidLogin)
             }
         } else {
-            let authenticated = Authenticated::query()
+            let Some((Authenticated { token, .. }, active)) = users::table
                 .find(id)
-                .first(&mut self.connection)
+                .select(((users::id, users::token), users::active))
+                .first::<(Authenticated, bool)>(&mut self.connection)
                 .await
                 .optional()
                 .map_err(|e| {
                     error!(target: "auth::authenticate", "{:?}", e);
                     Error::InternalServerError
-                })?;
-            match authenticated {
-                Some(Authenticated { token, .. }) if &token == submitted_token => {
+                })? else {
+                    return Err(Error::InvalidLogin);
+                };
+                if &token == submitted_token {
                     let entry = AuthenticatorEntry {
                         token,
-                        invite: Uuid::new_v4(),
+                        invite: if active {Some(Uuid::new_v4())} else {None},
                         channel: watch::Sender::new(()),
                     };
                     let _ = self.cache.insert(id, entry.clone());
                     Ok(entry)
-                }
-                _ => Err(Error::InvalidLogin),
-            }
+                } else {
+                    Err(Error::InvalidLogin)
+                } 
         }
     }
 
     async fn renew_invite(&mut self, id: i32) -> Result<()> {
         let entry = self.cache.get_mut(&id).ok_or(Error::InvalidInvite)?;
-        entry.invite = Uuid::new_v4();
+        entry.invite = Some(Uuid::new_v4());
         entry.channel.send_replace(());
+        Ok(())
+    }
+
+    async fn create_invite_if_not_exists(&mut self, id: i32) -> Result<()> {
+        let Some(entry) = self.cache.get_mut(&id) else {
+            return Err(Error::InternalServerError);
+        };
+        entry.invite = entry.invite.or_else(|| Some(Uuid::new_v4()));
         Ok(())
     }
 
@@ -196,6 +211,13 @@ impl Authenticator {
                 }
                 AuthenticationRequest::RenewInvite { id, callback } => {
                     let response = self.renew_invite(id).await;
+                    if let Err(_) = callback.send(response) {
+                        error!(target: "auth::worker", "dead receiver");
+                    }
+                }
+                ,
+                AuthenticationRequest::CreateInviteIfNotExists { id, callback } => {
+                    let response = self.create_invite_if_not_exists(id).await;
                     if let Err(_) = callback.send(response) {
                         error!(target: "auth::worker", "dead receiver");
                     }
@@ -261,6 +283,24 @@ impl Authenticator {
         let (tx, rx) = oneshot::channel();
         sender
             .send(AuthenticationRequest::RenewInvite { id, callback: tx })
+            .await
+            .map_err(|e| {
+                error!(target: "auth::request", "dead channel: {:?}", e);
+                Error::InternalServerError
+            })?;
+        rx.await.map_err(|e| {
+            error!(target: "auth::request", "dead channel: {:?}", e);
+            Error::InternalServerError
+        })?
+    }
+
+    pub async fn request_create_invite_if_not_exists(
+        id: i32,
+        sender: &mpsc::Sender<AuthenticationRequest>,
+    ) -> Result<()> {
+        let (tx, rx) = oneshot::channel();
+        sender
+            .send(AuthenticationRequest::CreateInviteIfNotExists { id, callback: tx })
             .await
             .map_err(|e| {
                 error!(target: "auth::request", "dead channel: {:?}", e);
@@ -348,10 +388,10 @@ impl Authenticator {
             .ok()?;
         self.cache
             .get(&authenticated.id)
-            .map(|AuthenticatorEntry { invite, .. }| Invite {
+            .map(|AuthenticatorEntry { invite, .. }| Some(Invite {
                 id: authenticated.id,
-                token: *invite,
-            })
+                token: (*invite)?,
+            }))?
     }
 }
 

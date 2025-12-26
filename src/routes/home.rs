@@ -45,7 +45,7 @@ pub async fn home_invite(
     User(id): User,
     AuthenticatorEntry { invite, .. }: AuthenticatorEntry,
 ) -> Result<impl IntoResponse> {
-    let invite_url = invite_url(&state.base_url, id, &invite).ok_or(Error::InternalServerError)?;
+    let invite_url = invite_url(&state.base_url, id, &invite.ok_or(Error::NotActive)?).ok_or(Error::InternalServerError)?;
     let qrcode = QrCode::new(invite_url.as_str()).map_err(|_| Error::InternalServerError)?;
     let svg = qrcode.render::<svg::Color>().build();
     Ok(Html(
@@ -60,7 +60,7 @@ pub async fn home_invite(
 struct HomeTemplate<'a> {
     pub user: &'a Settings,
     pub stats: &'a Stats,
-    pub invite: &'a str,
+    pub invite: Option<&'a str>,
 }
 
 pub async fn home(
@@ -68,13 +68,17 @@ pub async fn home(
     (user, stats): (Settings, Stats),
     AuthenticatorEntry { invite, .. }: AuthenticatorEntry,
 ) -> Result<impl IntoResponse> {
+    let url = if let Some(invite) = invite {
+        Some(invite_url(&state.base_url, user.id, &invite)
+                .ok_or(Error::InternalServerError)?.to_string())
+    } else {
+        None
+    };
     Ok(Html(
         HomeTemplate {
             user: &user,
             stats: &stats,
-            invite: invite_url(&state.base_url, user.id, &invite)
-                .ok_or(Error::InternalServerError)?
-                .as_str(),
+            invite: url.as_ref().map(|x| x.as_str())
         }
         .render()
         .map_err(|_| Error::InternalServerError)?,
