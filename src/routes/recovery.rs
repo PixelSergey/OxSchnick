@@ -1,7 +1,7 @@
 use axum::{extract::Query, response::{IntoResponse, Redirect}};
 use axum_extra::extract::{CookieJar, cookie::{Cookie, SameSite}};
 
-use crate::{auth::{self, AUTHENTICATOR_COOKIE_NAME, Authenticated}, error::{Error, Result}};
+use crate::{auth::{AUTHENTICATOR_COOKIE_NAME, Authenticated}, error::{Error, Result}};
 
 pub async fn recovery(
     cookies: CookieJar,

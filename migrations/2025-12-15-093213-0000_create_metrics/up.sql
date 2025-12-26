@@ -14,6 +14,8 @@ CREATE TABLE metrics (
     FOREIGN KEY(id) REFERENCES users(id)
 );
 
+INSERT INTO metrics (id) VALUES (1);
+
 -- function to update number of schnicks and wins on new schnick
 CREATE FUNCTION update_num_schnicks()
     RETURNS trigger
