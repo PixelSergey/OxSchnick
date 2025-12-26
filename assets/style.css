@@ -244,15 +244,21 @@ form:valid #select {
     justify-content: center;
     flex-grow: 1;
     font-size: 1em;
+    gap: 0.5em;
 
     .input {
         display: flex;
         gap: 0.2em;
+        width: 100%;
+        min-width: 5em;
     }
 
-    .settings-input {
-        /* vertical spacing between forms */
-        margin: 0.5em 0;
+    button {
+        flex: 0 0 auto;
+    }
+
+    button:active {
+        background-color: var(--shadow-gray);
     }
 
     label {
@@ -270,9 +276,16 @@ form:valid #select {
     font-family: inherit;
 }
 
-.settings input {
-    min-width: 5em;
-    flex: 1 1 auto;
+#dect_form {
+    position: relative;
+}
+
+#dect_form button {
+    position: absolute;
+    right: 0;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
 }
 
 .settings .error {
@@ -282,16 +295,8 @@ form:valid #select {
     margin-top: 0.3em;
 }
 
-.settings-input:has(input:invalid) .error {
+.settings form:has(input:invalid) .error {
     display: inline;
-}
-
-.settings button {
-    flex: 0 0 auto;
-}
-
-.settings button:active {
-    background-color: var(--shadow-gray);
 }
 
 .settings-links {

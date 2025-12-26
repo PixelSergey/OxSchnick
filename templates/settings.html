@@ -3,26 +3,25 @@
 {% block main %}
     <div class="settings">
         <form action="settings/username" method="post" onsubmit="return this.checkValidity()" novalidate>
-            <div class="settings-input">
-                <div class="input">
-                    <input type="text" name="username_value" id="username" value="{{ username_value }}" maxlength="32" required>
-                    <button>Change</button>
-                </div>
-                <label for="username">Username<span class="error"> cannot be empty</span></label>
+            <div class="input">
+                <input class="input" type="text" name="username_value" id="username" value="{{ username_value }}" maxlength="32" required>
+                <button>Change</button>
             </div>
+            <label for="username">Username<span class="error"> cannot be empty</span></label>
         </form>
         <form action="settings/dect" method="post" onsubmit="return this.checkValidity()" novalidate>
-            <div class="settings-input">
-                <div class="input">
+            <div class="input">
+                <div class="input" id="dect_form">
                     {% if let Some(dect_value) = dect_value %}
-                        <input type="text" name="dect_value" id="dect" value="{{ dect_value }}" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
+                        <input class="input" type="text" name="dect_value" id="dect" value="{{ dect_value }}" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
                     {% else %}
-                        <input type="text" name="dect_value" id="dect" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
+                        <input class="input" type="text" name="dect_value" id="dect" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
                     {% endif %}
-                    <button>Change</button>
+                    <button type="button" class="info-btn" onclick="showInfo()">ⓘ</button>
                 </div>
-                <label for="dect">Dect<span class="error"> must be 4 digits or empty</span></label>
+                <button>Change</button>
             </div>
+            <label for="dect">Dect<span class="error"> must be 4 digits or empty</span></label>
         </form>
     </div>
     <div class="settings-links">
