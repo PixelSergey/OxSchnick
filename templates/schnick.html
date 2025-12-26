@@ -21,7 +21,8 @@
         <p>(when one of you has won, click anywhere to enter the result of your match)</p>
     </div>
     <div id="banner-retry" class="banner banner-red">
-        <img src="/assets/lost.svg" alt=""> You and your opponents inputs didn't match. Please try again
+        <img class="inline-icon" src="/assets/lost.svg" alt="">
+        <span>You and your opponents inputs didn't match. Please try again</span>
     </div>
     <script>
         const urlParams = new URLSearchParams(window.location.search);
@@ -32,8 +33,12 @@
             let elem = document.getElementById("banner-retry");
             elem.style.display = "flex";
             setTimeout(() => {
-                elem.style.display = "none";
-            }, 5000);
+                elem.classList.add("fade-out");
+
+                setTimeout(() => {
+                    elem.style.display = "none";
+                }, 2000);
+            }, 1000);
         }
     </script>
     <div class="centered-page">

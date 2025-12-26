@@ -516,15 +516,19 @@ table.metrics td {
  ***********/
 .banner {
     display: none;
-    font-size: 2em;
     font-weight: bold;
-    padding: 1em;
-    color: var(--background-color);
+    padding: 0.5em 2em;
+    color: var(--our-black);
+    align-self: center;
+    align-items: center;
+    border-style: solid;
+    border-radius: 1.5em;
+    margin-top: auto;
 }
 
-.banner img {
-    width: 1lh;
-    height: 1lh;
+#banner-retry {
+    position: absolute;
+    margin: 0 2em;
 }
 
 .banner-green {
@@ -533,4 +537,9 @@ table.metrics td {
 
 .banner-red {
     background-color: var(--highlight-red);
+}
+
+.fade-out {
+    opacity: 0;
+    transition: opacity 2s;
 }
