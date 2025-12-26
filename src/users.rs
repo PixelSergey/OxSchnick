@@ -1,4 +1,4 @@
-use crate::{auth::AuthenticatorEntry, schnicks::Weapon, state::State};
+use crate::{auth::AuthenticatorEntry, metrics::score_function, schnicks::Weapon, state::State};
 use axum::{extract::FromRequestParts, http::StatusCode};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -87,7 +87,7 @@ impl FromRequestParts<State> for Settings {
     }
 }
 
-impl FromRequestParts<State> for (Settings, Stats) {
+impl FromRequestParts<State> for (Settings, Stats, i32) {
     type Rejection = StatusCode;
 
     async fn from_request_parts(
@@ -103,8 +103,8 @@ impl FromRequestParts<State> for (Settings, Stats) {
         users::table
             .filter(users::id.eq(id))
             .inner_join(metrics::table)
-            .select((Settings::as_select(), Stats::as_select()))
-            .first::<(Settings, Stats)>(&mut state.pool.get().await.map_err(|e| {
+            .select((Settings::as_select(), Stats::as_select(), score_function()))
+            .first::<(Settings, Stats, i32)>(&mut state.pool.get().await.map_err(|e| {
                 error!(target: "users::from_request_parts", "{:?}", e);
                 StatusCode::INTERNAL_SERVER_ERROR
             })?)

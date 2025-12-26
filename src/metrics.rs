@@ -12,7 +12,7 @@ use crate::schema::{metrics, users};
 
 pub const METRICS_LEADERBOARD_LENGTH: i64 = 10;
 
-fn score_function() -> SqlLiteral<Integer> {
+pub fn score_function() -> SqlLiteral<Integer> {
     sql::<Integer>(
         "CAST((erf(((num_won - num_schnicks * 0.5) / sqrt(num_schnicks * 0.25)) / sqrt(2)) * 10) ^ 3 AS INTEGER)"
     )

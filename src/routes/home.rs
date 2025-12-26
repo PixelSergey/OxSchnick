@@ -60,12 +60,13 @@ pub async fn home_invite(
 struct HomeTemplate<'a> {
     pub user: &'a Settings,
     pub stats: &'a Stats,
+    pub score: i32,
     pub invite: Option<&'a str>,
 }
 
 pub async fn home(
     extract::State(state): extract::State<State>,
-    (user, stats): (Settings, Stats),
+    (user, stats, score): (Settings, Stats, i32),
     AuthenticatorEntry { invite, .. }: AuthenticatorEntry,
 ) -> Result<impl IntoResponse> {
     let url = if let Some(invite) = invite {
@@ -78,6 +79,7 @@ pub async fn home(
         HomeTemplate {
             user: &user,
             stats: &stats,
+            score,
             invite: url.as_ref().map(|x| x.as_str())
         }
         .render()
