@@ -36,19 +36,21 @@
             }, 5000);
         }
     </script>
-    <h1>Enter result:</h1>
-    <form action="schnick" method="post" id="schnick">
-        <div class="outcome-selection">
-            <input type="radio" id="won" name="won" value="true" required><label class="button button-left" for="won"><img class="weapon" src="assets/won.svg" alt="won"></label>
-            <input type="radio" id="lost" name="won" value="false" required><label class="button button-right" for="lost"><img class="weapon" src="assets/lost.svg" alt="lost"></label>
-        </div>
-        <div class="weapon-selection">
-            <input type="radio" id="rock" name="weapon" value="0" required><label class="button button-left" for="rock"><img class="weapon" src="assets/rock.svg" alt="rock"></label>
-            <input type="radio" id="paper" name="weapon" value="2" required><label class="button button-middle" for="paper"><img class="weapon" src="assets/paper.svg" alt="paper"></label>
-            <input type="radio" id="scissors" name="weapon" value="1" required><label class="button button-right" for="scissors"><img class="weapon" src="assets/scissors.svg" alt="scissors"></label>
-        </div>
-        <button type="submit" class="button button-single" id="select">select</button>
-    </form>
+    <div class="centered-page">
+        <h1>Enter result:</h1>
+        <form action="schnick" method="post" id="schnick">
+            <div class="outcome-selection">
+                <input type="radio" id="won" name="won" value="true" required><label class="button button-left" for="won"><img class="inline-icon" src="assets/won.svg" alt="won"> Won</label>
+                <input type="radio" id="lost" name="won" value="false" required><label class="button button-right" for="lost"><img class="inline-icon" src="assets/lost.svg" alt="lost"> Lost</label>
+            </div>
+            <div class="weapon-selection">
+                <input type="radio" id="rock" name="weapon" value="0" required><label class="button button-left" for="rock"><img class="weapon" src="assets/rock.svg" alt="rock"></label>
+                <input type="radio" id="paper" name="weapon" value="2" required><label class="button button-middle" for="paper"><img class="weapon" src="assets/paper.svg" alt="paper"></label>
+                <input type="radio" id="scissors" name="weapon" value="1" required><label class="button button-right" for="scissors"><img class="weapon" src="assets/scissors.svg" alt="scissors"></label>
+            </div>
+            <button type="submit" class="button button-single" id="select">Submit</button>
+        </form>
+    </div>
 {% endblock %}
 {% block footer %}
     <nav>

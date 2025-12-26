@@ -181,18 +181,17 @@ table.home {
 
 .weapon-selection, .outcome-selection {
     display: flex;
-    justify-content: space-evenly;
+    gap: 0.1em;
 }
 
 #schnick {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: stretch;
-    gap: 1em;
+    gap: 0.5em;
     width: 100%;
-    flex-grow: 1;
-    margin: 1em auto;
+    font-weight: bold;
+    color: var(--our-black);
 }
 
 #schnick input[type=radio] {
@@ -223,7 +222,7 @@ table.home {
 #select {
     appearance: none;
     margin: 0;
-    font-size: 3em;
+    font-size: 2em;
     font-family: inherit;
     height: fit-content;
 }
@@ -236,7 +235,7 @@ form:valid #select {
  * accept invite *
  *****************/
 
- #accept {
+.centered-page {
     margin: auto 0;
     display: flex;
     flex-direction: column;
