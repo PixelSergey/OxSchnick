@@ -255,6 +255,7 @@ form:valid #select {
 
     button {
         flex: 0 0 auto;
+        cursor: pointer;
     }
 
     button:active {
@@ -285,7 +286,6 @@ form:valid #select {
     right: 0;
     border: none;
     background-color: transparent;
-    cursor: pointer;
 }
 
 #dect-info {
@@ -295,7 +295,7 @@ form:valid #select {
     background-color: var(--shadow-gray);
     border-radius: 0.5em;
     text-align: center;
-    opacity: 0;
+    display: none;
 }
 
 #dect-info::before {
@@ -310,7 +310,7 @@ form:valid #select {
 }
 
 #dect-info.visible {
-    opacity: 100%;
+    display: block;
 }
 
 .settings .error {

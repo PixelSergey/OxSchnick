@@ -17,7 +17,7 @@
                     {% else %}
                         <input class="input" type="text" name="dect_value" id="dect" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
                     {% endif %}
-                    <button type="button" id="info-button" onclick="toggleInfo()">ⓘ</button>
+                    <button id="info-button" onclick="toggleInfo()">ⓘ</button>
                     <div id="dect-info">
                         This allows other schnick fans to find you with the match making service on our hotline (#5000). You can also find DECT numbers by clicking on the nodes in the graphs.
                     </div>
@@ -26,6 +26,8 @@
             </div>
             <label for="dect">Dect<span class="error"> must be 4 digits or empty</span></label>
         </form>
+        <button id="copyLink" onclick="copyLink()">Copy session</button>
+        <label for="copyLink">Open this link in another browser to transfer your account.</label>
     </div>
     <div class="settings-links">
         <a href="about">About Us</a>
@@ -46,5 +48,9 @@
         document.getElementById('dect-info').addEventListener('click', function (e) {
             e.stopPropagation();
         });
+
+        function copyLink() {
+            navigator.clipboard.writeText("{{ recovery_link | safe }}");
+        }
     </script>
 {% endblock %}
