@@ -20,11 +20,14 @@
     </script>
 {% endblock %}
 {% block main %}
-You've been invited to schnick.
-<a class="button button-single" href="invite/accept?id={{ id }}&token={{ token }}">Accept invite</a>
+    <div id="accept">
+        <h1>You've been challenged to a schnick.</h1>
+        <a id="accept-button" class="button button-single text-style" href="invite/accept?id={{ id }}&token={{ token }}"><img class="inline-icon" src="assets/won.svg" alt="accept">Accept challenge</a>
+        <p><span style="vertical-align: super;">*</span>Accepting automatically sets cookies in your browser that log you into your account</p>
+    </div>
 {% endblock %}
 {% block footer %}
     <nav>
-        <a class="button button-single button-active" href="/"><img class="icon" src="assets/arrow_back.svg" alt="abort">  go back</a>
+        <a class="button button-single button-active text-style" href="/"><img class="inline-icon" src="assets/lost.svg" alt="decline">Decline challenge</a>
     </nav>
 {% endblock %}

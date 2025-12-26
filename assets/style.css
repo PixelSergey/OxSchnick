@@ -1,4 +1,6 @@
 :root {
+    --our-black: #141414;
+    --our-white: #faf5f5;
     --background-color: #141414;
     --foreground-color: #faf5f5;
     --highlight-red: #ff3719;
@@ -30,7 +32,7 @@ footer {
 }
 
 .icon {
-    filter: grayscale(100);
+    height: 2em;
 }
 
 .button {
@@ -47,6 +49,7 @@ nav .button {
 .button-single {
     border-width: 0.2rem;
     border-radius: 0.5rem;
+    text-align: center;
 }
 
 .button-middle {
@@ -70,9 +73,10 @@ nav .button {
 nav {
     display: flex;
 
-    div, a {
+    .nav-icon {
         display: flex;
         justify-content: center;
+
         img {
             height: 2em;
         }
@@ -232,6 +236,30 @@ table.home {
 form:valid #select {
     background-color: var(--highlight-purple);
 }
+
+/*****************
+ * accept invite *
+ *****************/
+
+ #accept {
+    margin: auto 0;
+    display: flex;
+    flex-direction: column;
+ }
+
+ #accept-button {
+    background: var(--highlight-green);
+}
+.text-style {
+    font-weight: bold;
+    color: var(--our-black)
+}
+
+ .inline-icon {
+    height: 2em;
+    vertical-align: middle;
+    padding-right: 0.5em;
+ }
 
 
 /*****************
