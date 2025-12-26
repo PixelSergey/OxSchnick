@@ -1,7 +1,10 @@
+use std::f64;
+
 use crate::{auth::AuthenticatorEntry, metrics::score_function, schnicks::Weapon, state::State};
 use axum::{extract::FromRequestParts, http::StatusCode};
-use diesel::prelude::*;
+use diesel::{dsl::sql, expression::SqlLiteral, prelude::*, sql_types::Integer};
 use diesel_async::RunQueryDsl;
+use libm::erf;
 use log::error;
 
 #[derive(Debug, Clone, Identifiable, HasQuery, QueryableByName, AsChangeset)]
@@ -100,11 +103,11 @@ impl FromRequestParts<State> for (Settings, Stats, i32) {
             .extensions
             .get::<(i32, AuthenticatorEntry)>()
             .ok_or(StatusCode::FORBIDDEN)?;
-        users::table
+        let (settings, stats) = users::table
             .filter(users::id.eq(id))
             .inner_join(metrics::table)
-            .select((Settings::as_select(), Stats::as_select(), score_function()))
-            .first::<(Settings, Stats, i32)>(&mut state.pool.get().await.map_err(|e| {
+            .select((Settings::as_select(), Stats::as_select()))
+            .first::<(Settings, Stats)>(&mut state.pool.get().await.map_err(|e| {
                 error!(target: "users::from_request_parts", "{:?}", e);
                 StatusCode::INTERNAL_SERVER_ERROR
             })?)
@@ -112,6 +115,16 @@ impl FromRequestParts<State> for (Settings, Stats, i32) {
             .map_err(|e| {
                 error!(target: "users::from_request_parts", "{:?}", e);
                 StatusCode::INTERNAL_SERVER_ERROR
-            })
+            })?;
+        let score = if stats.num_schnicks == 0 {
+            0
+        } else {
+            /* "CAST(
+                (erf(((num_won - num_schnicks * 0.5) / sqrt(num_schnicks * 0.25)) / sqrt(2)) * 10) ^ 3 AS INTEGER)" */
+            let num_won = stats.num_won as f64;
+            let num_schnicks = stats.num_schnicks as f64;
+            (erf(((num_won - num_schnicks * 0.5) / (num_schnicks * 0.25).sqrt()) / f64::consts::SQRT_2) * 10.0).powi(3) as i32
+        };
+        Ok((settings, stats, score))
     }
 }

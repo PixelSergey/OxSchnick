@@ -54,6 +54,7 @@ impl Interaction {
 pub enum Outcome {
     Concluded,
     Retry,
+    Aborted
 }
 
 pub struct Schnicker {

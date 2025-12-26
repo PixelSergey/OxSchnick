@@ -19,7 +19,7 @@ pub async fn schnick_abort(
     User(id): User,
 ) -> Result<impl IntoResponse> {
     Schnicker::request_abort_schnick(id, &state.schnicker).await?;
-    Ok(Redirect::to("../home"))
+    Ok(Redirect::to("../home?banner=aborted"))
 }
 
 pub async fn schnick_submit(
@@ -30,6 +30,7 @@ pub async fn schnick_submit(
     match Schnicker::request_handle_interaction(id, interaction, &state.schnicker).await? {
         Some(Outcome::Concluded) => Ok(Redirect::to("home?banner=concluded").into_response()),
         Some(Outcome::Retry) => Ok(Redirect::to("schnick?banner=retry").into_response()),
+        Some(Outcome::Aborted) => Ok(Redirect::to("home?banner=aborted").into_response()),
         None => Ok(Html(
             WaitingTemplate
                 .render()
@@ -48,6 +49,7 @@ pub async fn schnick_sse(
         let redirect = match outcome {
             Outcome::Concluded => "home?banner=concluded",
             Outcome::Retry => "schnick?banner=retry",
+            Outcome::Aborted => "home?banner=aborted"
         };
         Ok::<Event, Infallible>(Event::default().data(redirect))
     })
