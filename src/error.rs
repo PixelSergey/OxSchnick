@@ -33,12 +33,12 @@ impl IntoResponse for Error {
         let (code, message, redirect) = match self {
             Self::NoLogin => (
                 StatusCode::FORBIDDEN,
-                "This page is only accessible with a user account. You have to be invited to obtain a user account.",
+                "This page is only accessible with a user account, but you can call #5000 to find a partner to schnick with to get invited. <br><br> If you already have an account in a different browser, you can go to the settings to copy your account to this new one.",
                 "/",
             ),
             Self::InvalidLogin => (
                 StatusCode::FORBIDDEN,
-                "The login token you saved is invalid. Try restoring your cookies or clear them and get invited again.",
+                "Your login token is invalid. Try restoring your cookies or clear them and get invited again.",
                 "/",
             ),
             Self::InvalidInvite => (
@@ -48,37 +48,37 @@ impl IntoResponse for Error {
             ),
             Self::InternalServerError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "An internal error occured while loading this page. Try again later.",
+                "An internal error occured while loading this page, sorry! Try again later.",
                 "/",
             ),
             Self::CannotSchnickOneself => (
                 StatusCode::CONFLICT,
-                "You cannot start a schnick with yourself. Try inviting another person.",
+                "You cannot start a schnick with yourself. Nice try though!",
                 "/",
             ),
             Self::CannotSchnickTwice => (
                 StatusCode::CONFLICT,
-                "You cannot schnick with the same person twice. Try schnicking with another person.",
+                "You cannot schnick with the same person twice. Have you tried meeting new people?",
                 "/",
             ),
             Self::AlreadySchnicking => (
                 StatusCode::CONFLICT,
-                "You are already currently schnicking. Finish or abort your current schnick before starting another one.",
+                "You are already in a schnick. Finish or abort your current schnick before starting another one.",
                 "/schnick",
             ),
             Self::NotFound => (
                 StatusCode::NOT_FOUND,
-                "The page you tried to open does not exist.",
+                "The page you tried to open does not exist. We are happy to receive your bug report via our hotline (#5000).",
                 "/",
             ),
             Self::NotInSchnick => (
                 StatusCode::NOT_FOUND,
-                "You are not currently in a schnick. This page is only accessible while schnicking.",
+                "You are not currently in a schnick. Maybe your opponent was scared of you and aborted the schnick?",
                 "/",
             ),
             Self::AlreadySubmitted => (
                 StatusCode::CONFLICT,
-                "You have already submitted a result for this schnick. Wait for the other person to submit their result.",
+                "You have already submitted a result for this schnick. Please wait for the other person to submit their result.",
                 "/schnick",
             ),
             Self::InvalidSettings => (
