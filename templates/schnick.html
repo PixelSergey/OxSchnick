@@ -1,25 +1,24 @@
 {% extends "base.html" %}
 {% block main %}
-    <div id="overlay" hx-on:click='document.getElementById("overlay").remove()'>
-        <div id="overlay-center">
-            <h1>Schnick!</h1>
-            <div class="rules">
-                <img src="assets/rock.svg" alt="rock">
-                <img class="icon" src="assets/arrow_right.svg" alt="beats">
-                <img src="assets/scissors.svg" alt="scissors">
-            </div>
-            <div class="rules">
-                <img src="assets/scissors.svg" alt="scissors">
-                <img class="icon" src="assets/arrow_right.svg" alt="beats">
-                <img src="assets/paper.svg" alt="paper">
-            </div>
-            <div class="rules">
-                <img src="assets/paper.svg" alt="paper">
-                <img class="icon" src="assets/arrow_right.svg" alt="beats">
-                <img src="assets/rock.svg" alt="rock">
-            </div>
+    <div id="overlay" onclick="document.getElementById('overlay').remove()">
+        <h1>Now Schnick!</h1>
+        <h2>Rules:</h2>
+        <div class="rules">
+            <img class="rule-icon" src="assets/rock.svg" alt="rock">
+            <img class="rule-icon" src="assets/arrow_right.svg" alt="beats">
+            <img class="rule-icon" src="assets/scissors.svg" alt="scissors">
         </div>
-        <div id="overlay-bottom">(click anywhere to continue)</div>
+        <div class="rules">
+            <img class="rule-icon" src="assets/scissors.svg" alt="scissors">
+            <img class="rule-icon" src="assets/arrow_right.svg" alt="beats">
+            <img class="rule-icon" src="assets/paper.svg" alt="paper">
+        </div>
+        <div class="rules">
+            <img class="rule-icon" src="assets/paper.svg" alt="paper">
+            <img class="rule-icon" src="assets/arrow_right.svg" alt="beats">
+            <img class="rule-icon" src="assets/rock.svg" alt="rock">
+        </div>
+        <p>(when one of you has won, click anywhere to enter the result of your match)</p>
     </div>
     <div id="banner-retry" class="banner banner-red">
         <img src="/assets/lost.svg" alt=""> You and your opponents inputs didn't match. Please try again
@@ -29,7 +28,7 @@
         const banner = urlParams.get('banner');
         if (banner === "retry") {
             let overlay = document.getElementById("overlay");
-            overlay.style.display = "none";
+            overlay.remove();
             let elem = document.getElementById("banner-retry");
             elem.style.display = "flex";
             setTimeout(() => {
