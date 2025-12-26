@@ -9,26 +9,6 @@
 {% endblock %}
 {% block nav_home %}button-active{% endblock %}
 {% block main %}
-<div id="banner-concluded" class="banner banner-green">
-    <img src="/assets/won.svg" alt=""> Your schnick was successful.
-</div>
-<div id="banner-aborted" class="banner banner-red">
-    <img src="/assets/lost.svg" alt=""> Your schnick was aborted.
-</div>
-<script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const banner = urlParams.get('banner');
-    let elem;
-    if (banner === "concluded") {
-        elem = document.getElementById("banner-concluded");
-    } else if (banner === "aborted") {
-        elem = document.getElementById("banner-aborted");
-    }
-    elem.style.display = "flex";
-    setTimeout(() => {
-        elem.style.display = "none";
-    }, 5000);
-</script>
 <header>
     <h1 id="greeting"><img class="weapon-inline" src="assets/home.svg"><span>Hi {{ user.username }}!</span></h1>
 </header>
@@ -86,19 +66,26 @@
     <img class="inline-icon" src="/assets/won.svg" alt="success">
     Schnick logged!
 </div>
+<div id="banner-aborted" class="banner banner-red">
+    <img class="inline-icon" src="/assets/lost.svg" alt="abort">
+    Schnick aborted
+</div>
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const banner = urlParams.get('banner');
+    let elem;
     if (banner === "concluded") {
-        let elem = document.getElementById("banner-concluded");
-        elem.style.display = "flex";
-        setTimeout(() => {
-            elem.classList.add("fade-out");
-
-            setTimeout(() => {
-                elem.style.display = "none";
-            }, 2000);
-        }, 1000);
+        elem = document.getElementById("banner-concluded");
+    } else if (banner === "aborted") {
+        elem = document.getElementById("banner-aborted");
     }
+    elem.style.display = "flex";
+    setTimeout(() => {
+        elem.classList.add("fade-out");
+
+        setTimeout(() => {
+            elem.style.display = "none";
+        }, 2000);
+    }, 1000);
 </script>
 {% endblock %}
