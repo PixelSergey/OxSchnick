@@ -305,7 +305,7 @@ impl Schnicker {
             .remove(&opponent)
             .ok_or(Error::InternalServerError)?;
         if let Some((_, _, sender)) = active.borrow().clone() {
-            sender.send_replace(Outcome::Concluded);
+            sender.send_replace(Outcome::Aborted);
         }
         Ok(())
     }
