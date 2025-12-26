@@ -6,9 +6,10 @@ use axum::{
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde::Deserialize;
+use url::Url;
 
 use crate::{
-    auth, error::{Error, Result}, graphs::Graphs, state::State, users::Settings
+    auth::{self, AuthenticatorEntry}, error::{Error, Result}, graphs::Graphs, state::State, users::Settings
 };
 
 #[derive(Template)]
@@ -16,6 +17,7 @@ use crate::{
 pub struct SettingsTemplate<'a> {
     username_value: &'a str,
     dect_value: Option<&'a str>,
+    recovery_link: &'a Url
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -77,11 +79,19 @@ pub async fn settings_username(
     Ok(Redirect::to("/settings"))
 }
 
-pub async fn settings(Settings { username, dect, .. }: Settings) -> Result<impl IntoResponse> {
+pub async fn settings(
+    extract::State(state): extract::State<State>,
+    Settings { username, dect, .. }: Settings,
+    auth::User(id): auth::User,
+    AuthenticatorEntry { token, .. }: AuthenticatorEntry
+) -> Result<impl IntoResponse> {
+    let mut recovery = state.base_url.join("recovery").map_err(|_| Error::InternalServerError)?;
+    recovery.set_query(Some(&format!("id={id}&token={token}")));
     Ok(Html(
         SettingsTemplate {
             username_value: &username,
             dect_value: dect.as_deref(),
+            recovery_link: &recovery
         }
         .render()
         .map_err(|_| Error::InternalServerError)?,

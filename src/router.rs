@@ -9,7 +9,7 @@ use url::Url;
 
 use crate::{
     auth::{Authenticator, User}, error::Error, graphs::Graphs, metrics::Metrics, routes::{
-        about, assets, graphs, graphs_cache, graphs_global, graphs_graph, graphs_sse, graphs_tree, home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, metrics_num_invites, metrics_num_schnicks, metrics_score, metrics_streak, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_dect, settings_username
+        about, assets, graphs, graphs_cache, graphs_global, graphs_graph, graphs_sse, graphs_tree, home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, metrics_num_invites, metrics_num_schnicks, metrics_score, metrics_streak, recovery, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_dect, settings_username
     }, schnicks::Schnicker, state::State
 };
 
@@ -63,6 +63,7 @@ pub async fn router(
         .route("/graphs/cache", get(graphs_cache))
         .route("/graphs/sse", get(graphs_sse))
         .route("/graphs/global", get(graphs_global))
+        .route("/recovery", get(recovery))
         .with_state(state.clone());
     let authenticated = Router::new()
         .route("/home", get(home))
