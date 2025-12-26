@@ -7,6 +7,8 @@
 <script type="module">
     function preprocess(raw) {
         console.log(raw);
+        let names = new Map(raw.users.map(a => [a[0], a[2]]));
+        console.log(names);
         let nodes = new Set([]);
         let links = [];
         raw.schnicks.forEach(element => {
@@ -14,7 +16,7 @@
             nodes.add(element[1]);
             links.push({"source": element[0], "target": element[1]});
         });
-        nodes = Array.from(nodes).map((x) => {return {"id": x, "name": x.toString()}; });
+        nodes = Array.from(nodes).map((x) => {return {"id": x, "name": names.get(x)}; });
         const nodesById = Object.fromEntries(
             nodes.map(n => [n.id, n])
         );
