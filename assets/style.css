@@ -124,7 +124,7 @@ a {
     padding: 1em 1em;
     font-weight: bold;
     background: var(--highlight-red);
-    color: var(--foreground-color);
+    color: var(--our-black);
     align-self: center;
 }
 
