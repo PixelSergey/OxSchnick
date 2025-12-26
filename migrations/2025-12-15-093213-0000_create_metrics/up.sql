@@ -28,6 +28,7 @@ BEGIN
     UPDATE metrics
         SET num_won = num_won + 1
     WHERE id = NEW.winner;
+    UPDATE users SET active = true WHERE (id = NEW.winner) OR (id = NEW.loser);
     RETURN NEW;
 END;
 $$;
