@@ -384,7 +384,7 @@ form:valid #select {
 .settings-links {
     display: flex;
     justify-content: center;
-    gap: 2em;
+    gap: 1.5em;
 }
 
 /****************
