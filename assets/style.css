@@ -141,7 +141,7 @@ a {
 
 #invite {
     display: block;
-    padding: 1em 1em;
+    padding: 2em 1em;
     font-weight: bold;
     background: var(--highlight-red);
     color: var(--our-black);
