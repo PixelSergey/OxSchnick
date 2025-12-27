@@ -19,6 +19,7 @@ pub enum GraphUpdate {
     Schnick { a: i32, b: i32 },
     UserCreated { id: i32, parent: i32, name: String },
     UserRenamed { id: i32, name: String },
+    DectSet { id: i32, dect: Option<String> }
 }
 
 #[derive(Debug)]
@@ -31,7 +32,7 @@ pub enum GraphRequest {
 
 #[derive(Debug)]
 pub struct Graphs {
-    users: HashMap<i32, (i32, String)>,
+    users: HashMap<i32, (i32, String, Option<String>)>,
     schnicks: Vec<(i32, i32)>,
     cache: Arc<String>,
     updates: Vec<GraphUpdate>,
@@ -48,10 +49,10 @@ impl Graphs {
     ) -> anyhow::Result<Self> {
         use crate::schema::{schnicks, users};
         let persistent_users = users::table
-            .select((users::id, users::parent, users::username))
-            .load::<(i32, i32, String)>(connection)
+            .select((users::id, users::parent, users::username, users::dect))
+            .load::<(i32, i32, String, Option<String>)>(connection)
             .await?
-            .into_iter().map(|(id, parent, name)| (id, (parent, name))).collect();
+            .into_iter().map(|(id, parent, name, dect)| (id, (parent, name, dect))).collect::<HashMap<i32, (i32, String, Option<String>)>>();
         let persistent_schnicks = schnicks::table
             .select((schnicks::winner, schnicks::loser))
             .load::<(i32, i32)>(connection)
@@ -73,9 +74,9 @@ impl Graphs {
         )
     }
 
-    fn build_cache(users: &HashMap<i32, (i32, String)>, schnicks: &Vec<(i32, i32)>) -> String {
+    fn build_cache(users: &HashMap<i32, (i32, String, Option<String>)>, schnicks: &Vec<(i32, i32)>) -> String {
         let value = json!({
-            "users": users.iter().map(|(id, (parent, name))| (id, parent, name)).collect::<Vec<(&i32, &i32, &String)>>(),
+            "users": users.iter().map(|(id, (parent, name, dect))| (id, parent, name, dect)).collect::<Vec<(&i32, &i32, &String, &Option<String>)>>(),
             "schnicks": schnicks
         });
         value.to_string()
@@ -83,11 +84,16 @@ impl Graphs {
 
     fn handle_update(&mut self, update: GraphUpdate) {
         match update {
-            GraphUpdate::UserCreated { id, parent, name } => {self.users.insert(id, (parent, name));},
+            GraphUpdate::UserCreated { id, parent, name } => {self.users.insert(id, (parent, name, None));},
             GraphUpdate::Schnick { a, b } => {self.schnicks.push((a, b));},
             GraphUpdate::UserRenamed { id, name } => {
-                if let Some((_, old_name)) = self.users.get_mut(&id) {
+                if let Some((_, old_name, _)) = self.users.get_mut(&id) {
                     *old_name = name;
+                }
+            },
+            GraphUpdate::DectSet { id, dect } => {
+                if let Some((_, _, old_dect)) = self.users.get_mut(&id) {
+                    *old_dect = dect;
                 }
             }
         };

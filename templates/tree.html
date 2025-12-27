@@ -28,7 +28,7 @@
                     return {
                     id: x[0],
                     parent_id: x[0] === x[1] ? null : x[1],
-                    name: x[2]
+                    name: x[3] ? `${x[2]} (DECT #${x[3]})` : x[2]
                     }
                 });
                 console.log(m);
@@ -112,6 +112,13 @@
                                 }
                             });
                             console.log(data.users);
+                        } else if (update.type === "DectSet") {
+                            rerender = true;
+                            data.users.forEach(user => {
+                                if (user[0] === update.id) {
+                                    user[3] = update.dect;
+                                }
+                            });
                         }
                     });
                     if (rerender) {

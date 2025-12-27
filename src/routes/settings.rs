@@ -39,7 +39,7 @@ pub async fn settings_dect(
         }
     }
     diesel::update(users::table.find(id))
-        .set(dect.eq(dect_value))
+        .set(dect.eq(&dect_value))
         .execute(
             &mut state
                 .pool
@@ -49,6 +49,7 @@ pub async fn settings_dect(
         )
         .await
         .map_err(|_| Error::InvalidDect)?;
+    Graphs::send_update(crate::graphs::GraphUpdate::DectSet { id, dect: dect_value }, &state.graphs).await;
     Ok(Redirect::to("/settings"))
 }
 

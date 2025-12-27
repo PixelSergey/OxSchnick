@@ -7,7 +7,7 @@
 <script type="module">
     function preprocess(raw) {
         console.log(raw);
-        let names = new Map(raw.users.map(a => [a[0], a[2]]));
+        let names = new Map(raw.users.map(a => [a[0], [a[2], a[3]]]));
         console.log(names);
         let nodes = new Set([]);
         let links = [];
@@ -16,7 +16,14 @@
             nodes.add(element[1]);
             links.push({"source": element[0], "target": element[1]});
         });
-        nodes = Array.from(nodes).map((x) => {return {"id": x, "name": names.get(x)}; });
+        nodes = Array.from(nodes).map((x) => {
+            let entry = names.get(x);
+            if (entry[1]) {
+                return {"id": x, "name": `${entry[0]} (DECT #${entry[1]})`};
+            } else {
+                return {"id": x, "name": `${entry[0]}`};
+            }
+        });
         const nodesById = Object.fromEntries(
             nodes.map(n => [n.id, n])
         );
@@ -86,7 +93,16 @@
                     rerender = true;
                     data.users.map((user) => {
                         if (user[0] === update.id) {
-                            return [user[0], user[1], update.name];
+                            return [user[0], user[1], update.name, user[3]];
+                        } else {
+                            return user;
+                        }
+                    })
+                } else if (update.type === "DectSet") {
+                    rerender = true;
+                    data.users.map((user) => {
+                        if (user[0] === update.id) {
+                            return [user[0], user[1], user[2], update.dect];
                         } else {
                             return user;
                         }
