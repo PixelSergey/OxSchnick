@@ -212,6 +212,10 @@ table.home {
     gap: 0.1em;
 }
 
+.outcome-selection {
+    font-size: 2em;
+}
+
 #schnick {
     display: flex;
     flex-direction: column;
@@ -278,9 +282,9 @@ form:valid #select {
 }
 
  .inline-icon {
-    height: 2em;
+    height: 1.5em;
     vertical-align: middle;
-    padding-right: 0.5em;
+    padding-right: 0.1em;
  }
 
 
