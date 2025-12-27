@@ -55,7 +55,8 @@ pub async fn assets(Path(file): Path<String>) -> Result<impl IntoResponse> {
             ["force-graph.min.js", "../../assets/force-graph.min.js", "text/javascript"],
             ["VictorMono-Bold.woff2", "../../assets/VictorMono-Bold.woff2", "application/font-woff2"],
             ["VictorMono-Italic.woff2", "../../assets/VictorMono-Italic.woff2", "application/font-woff2"],
-            ["VictorMono-Regular.woff2", "../../assets/VictorMono-Regular.woff2", "application/font-woff2"]
+            ["VictorMono-Regular.woff2", "../../assets/VictorMono-Regular.woff2", "application/font-woff2"],
+            ["VictorMono-VariableFont_wght.ttf", "../../assets/VictorMono-VariableFont_wght.ttf", "application/font-woff2"]
         ]
     )
 }
