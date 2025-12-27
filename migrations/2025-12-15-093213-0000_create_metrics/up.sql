@@ -27,7 +27,7 @@ BEGIN
     WHERE (id = NEW.winner OR id = NEW.loser) AND (NEW.winner <> 1 AND NEW.loser <> 1);
     UPDATE metrics
         SET num_won = num_won + 1
-    WHERE id = NEW.winner;
+    WHERE id = NEW.winner AND NEW.loser <> 1 AND NEW.winner <> 1;
     UPDATE users SET active = true WHERE (id = NEW.winner) OR (id = NEW.loser);
     RETURN NEW;
 END;
