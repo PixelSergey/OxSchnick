@@ -1,8 +1,8 @@
 use std::f64;
 
-use crate::{auth::AuthenticatorEntry, metrics::score_function, schnicks::Weapon, state::State};
+use crate::{auth::AuthenticatorEntry, schnicks::Weapon, state::State};
 use axum::{extract::FromRequestParts, http::StatusCode};
-use diesel::{dsl::sql, expression::SqlLiteral, prelude::*, sql_types::Integer};
+use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use libm::erf;
 use log::error;
