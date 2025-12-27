@@ -13,9 +13,9 @@
             <div class="input">
                 <div class="input" id="dect-form">
                     {% if let Some(dect_value) = dect_value %}
-                        <input class="input" type="text" name="dect_value" id="dect" value="{{ dect_value }}" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
+                        <input class="input" type="text" name="dect_value" id="dect" value="{{ dect_value }}" inputmode="numeric" pattern="^$|\d{4,5}" maxlength="5">
                     {% else %}
-                        <input class="input" type="text" name="dect_value" id="dect" inputmode="numeric" pattern="^$|\d{4}" maxlength="4">
+                        <input class="input" type="text" name="dect_value" id="dect" inputmode="numeric" pattern="^$|\d{4,5}" maxlength="5">
                     {% endif %}
                     <button type="button" id="info-button" onclick="toggleInfo()">ⓘ</button>
                     <div id="dect-info">
@@ -24,7 +24,7 @@
                 </div>
                 <button>Change</button>
             </div>
-            <label for="dect">Dect<span class="error"> must be 4 digits or empty</span></label>
+            <label for="dect">Dect<span class="error"> must be 4/5 digits or empty</span></label>
         </form>
         <button id="copyLink" onclick="copyLink()">Copy session</button>
         <label for="copyLink">Open this link in another browser to transfer your account.</label>
