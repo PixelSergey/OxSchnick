@@ -8,8 +8,12 @@
 </script>
 {% endblock %}
 {% block main %}
-{{ qrcode | safe }}
-<p>or copy <a href="{{ invite_url | safe }}">this link.</a></p>
+<div class="centered-page">
+    <div id="qr-code">
+        {{ qrcode | safe }}
+        <p>or copy <a href="{{ invite_url | safe }}" onclick="">this link.</a></p>
+    </div>
+</div>
 {% endblock %}
 {% block footer %}
     <nav>

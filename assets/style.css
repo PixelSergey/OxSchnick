@@ -163,6 +163,14 @@ table.home {
     }
 }
 
+/***************
+ * invite page *
+ ***************/
+
+#qr-code {
+    align-self: center;
+}
+
 /****************
  * schnick page *
  ****************/
