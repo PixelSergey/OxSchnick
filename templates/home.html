@@ -79,13 +79,15 @@
     } else if (banner === "aborted") {
         elem = document.getElementById("banner-aborted");
     }
-    elem.style.display = "flex";
-    setTimeout(() => {
-        elem.classList.add("fade-out");
-
+    if (elem) {
+        elem.style.display = "flex";
         setTimeout(() => {
-            elem.style.display = "none";
-        }, 2000);
-    }, 1000);
+            elem.classList.add("fade-out");
+
+            setTimeout(() => {
+                elem.style.display = "none";
+            }, 2000);
+        }, 1000);
+    }
 </script>
 {% endblock %}
