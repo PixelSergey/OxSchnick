@@ -16,12 +16,37 @@
     }
 }
 
+@font-face {
+    font-family: "Victor Mono";
+    src: url(/assets/VictorMono-Regular.woff2) format('woff2');
+    font-weight: 100 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Victor Mono";
+    src: url(/assets/VictorMono-Italic.woff2) format('woff2');
+    font-weight: 100 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Victor Mono";
+    src: url(/assets/VictorMono-Bold.woff2) format('woff2');
+    font-weight: 100 700;
+    font-style: bold;
+    font-display: swap;
+}
+
 body {
     background-color: var(--background-color);
     color: var(--foreground-color);
     margin: 0;
     padding: 0;
     font-family: "Victor Mono", monospace;
+    font-optical-sizing: auto;
     display: flex;
     flex-direction: column;
     height: 100svh;

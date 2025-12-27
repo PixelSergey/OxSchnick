@@ -1,11 +1,11 @@
 {% extends "graphs.html" %}
 {% block tab_tree %}tab-active{% endblock %}
 {% block head %}
-<script src="//cdn.jsdelivr.net/npm/force-graph"></script>
+<script src="/assets/force-graph.min.js"></script>
 {% endblock %}
 {% block graph_container %}
         <script type="module">
-            import {stratify, tree} from "https://cdn.skypack.dev/d3-hierarchy@3";
+            import {stratify, tree} from "/assets/d3-hierarchy.esm.js";
 
             const defaultColor = getComputedStyle(document.documentElement)
                 .getPropertyValue('--foreground-color');
