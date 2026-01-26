@@ -12,7 +12,8 @@ axum-extra = { version = "0.12.2", features = ["typed-header", "cookie"] }
 chrono = { version = "0.4.42", features = ["serde"] }
 clap = { version = "4.5.53", features = ["derive", "cargo"] }
 diesel = { version = "2.3.3", features = ["postgres", "chrono", "uuid"] }
-diesel-async = { version = "0.7.4", features = ["postgres", "bb8"] }
+diesel-async = { version = "0.7.4", features = ["postgres", "bb8", "migrations"] }
+diesel_migrations = "2.3.1"
 dotenvy = "0.15.7"
 either = "1.15.0"
 env_logger = "0.11.8"
