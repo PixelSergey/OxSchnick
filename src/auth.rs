@@ -377,6 +377,21 @@ impl Authenticator {
         Ok(next.run(request).await)
     }
 
+    pub async fn root_recovery(&mut self) -> Option<Authenticated> {
+        let authenticated = Authenticated::query()
+            .find(AUTHENTICATOR_ROOT_ID)
+            .first(&mut self.connection)
+            .await
+            .ok()?;
+        self.authenticate(authenticated.id, &authenticated.token)
+            .await
+            .ok()?;
+        Some(Authenticated {
+            id: authenticated.id,
+            token: (authenticated.token),
+        })
+    }
+
     pub async fn root_invite(&mut self) -> Option<Invite> {
         let authenticated = Authenticated::query()
             .find(AUTHENTICATOR_ROOT_ID)
