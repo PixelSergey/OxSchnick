@@ -12,11 +12,15 @@
         <form action="settings/college" method="post" onsubmit="return this.checkValidity()" novalidate>
             <div class="input">
                 <div class="input" id="college-form">
-                    {% if let Some(college_value) = college_value %}
-                        <input class="input" type="text" name="college_value" id="college" value="{{ college_value }}" inputmode="numeric">
-                    {% else %}
-                        <input class="input" type="text" name="college_value" id="college" inputmode="numeric">
-                    {% endif %}
+                    <select class="input" name="college_value" id="college">
+                        {% for (id, name) in colleges %}
+                            {% if let Some(current) = college_value %}
+                                <option value="{{ id }}" {% if *current == id %}selected{% endif %}>{{ name }}</option>
+                            {% else %}
+                                <option value="{{ id }}" {% if *id == 0 %}selected{% endif %}>{{ name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
                     <button type="button" id="info-button" onclick="toggleInfo()">ⓘ</button>
                     <div id="college-info">
                         You can see other people's colleges by clicking on the nodes in the graphs.

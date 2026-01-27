@@ -17,7 +17,8 @@ use crate::{
 pub struct SettingsTemplate<'a> {
     username_value: &'a str,
     college_value: Option<&'a i32>,
-    recovery_link: &'a Url
+    recovery_link: &'a Url,
+    colleges: &'a [(i32, String)]
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -85,13 +86,26 @@ pub async fn settings(
     auth::User(id): auth::User,
     AuthenticatorEntry { token, .. }: AuthenticatorEntry
 ) -> Result<impl IntoResponse> {
+    use crate::schema::colleges;
     let mut recovery = state.base_url.join("recovery").map_err(|_| Error::InternalServerError)?;
     recovery.set_query(Some(&format!("id={id}&token={token}")));
+    let colleges_list: Vec<(i32, String)> = colleges::table
+        .select((colleges::id, colleges::college))
+        .load::<(i32, String)>(
+            &mut state
+                .pool
+                .get()
+                .await
+                .map_err(|_| Error::InternalServerError)?,
+        )
+        .await
+        .map_err(|_| Error::InternalServerError)?;
     Ok(Html(
         SettingsTemplate {
             username_value: &username,
             college_value: college.as_ref(),
-            recovery_link: &recovery
+            recovery_link: &recovery,
+            colleges: &colleges_list
         }
         .render()
         .map_err(|_| Error::InternalServerError)?,
