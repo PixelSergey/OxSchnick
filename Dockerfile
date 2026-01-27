@@ -7,6 +7,14 @@ FROM rust:${RUST_VERSION}-slim AS build
 ARG APP_NAME
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    pkg-config \
+    libpq-dev \
+    libssl-dev \
+    ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
 COPY . /app
 
 RUN --mount=type=bind,source=src,target=src \
@@ -22,6 +30,8 @@ FROM debian:bookworm-slim AS final
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
+    ca-certificates \
+    libssl3 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /bin/server /bin/server
