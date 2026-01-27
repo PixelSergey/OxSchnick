@@ -334,7 +334,7 @@ form:valid #select {
     font-family: inherit;
 }
 
-#dect-form {
+#college-form {
     position: relative;
 }
 
@@ -345,7 +345,7 @@ form:valid #select {
     background-color: transparent;
 }
 
-#dect-info {
+#college-info {
     position: absolute;
     top: calc(100% + 1.5em);
     right: 0;
@@ -355,7 +355,7 @@ form:valid #select {
     display: none;
 }
 
-#dect-info::before {
+#college-info::before {
     content: "";
     position: absolute;
     top: -19px;
@@ -366,7 +366,7 @@ form:valid #select {
     border-color: transparent transparent var(--shadow-gray) transparent;
 }
 
-#dect-info.visible {
+#college-info.visible {
     display: block;
 }
 

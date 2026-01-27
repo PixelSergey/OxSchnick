@@ -9,7 +9,7 @@ use url::Url;
 
 use crate::{
     auth::{Authenticator, User}, error::Error, graphs::Graphs, metrics::Metrics, routes::{
-        about, assets, graphs, graphs_cache, graphs_global, graphs_graph, graphs_sse, graphs_tree, home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, metrics_num_invites, metrics_num_schnicks, metrics_score, metrics_streak, recovery, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_dect, settings_username
+        about, assets, graphs, graphs_cache, graphs_global, graphs_graph, graphs_sse, graphs_tree, home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, metrics_num_invites, metrics_num_schnicks, metrics_score, metrics_streak, recovery, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_college, settings_username
     }, schnicks::Schnicker, state::State
 };
 
@@ -83,7 +83,7 @@ pub async fn router(
         .route("/schnick", post(schnick_submit))
         .route("/schnick/sse", get(schnick_sse))
         .route("/schnick/abort", get(schnick_abort))
-        .route("/settings/dect", post(settings_dect))
+        .route("/settings/college", post(settings_college))
         .route("/settings/username", post(settings_username))
         .route_layer(from_fn_with_state(state.clone(), Authenticator::layer))
         .with_state(state.clone());

@@ -6,7 +6,7 @@ diesel::table! {
         timestamp -> Nullable<Timestamp>,
         call_duration -> Nullable<Interval>,
         caller_id -> Nullable<Text>,
-        caller_dect -> Nullable<Text>,
+        caller_college -> Nullable<Int4>,
         time_on_hold -> Nullable<Interval>,
         question1 -> Nullable<Text>,
         answer1 -> Nullable<Text>,
@@ -17,7 +17,7 @@ diesel::table! {
         prophecy -> Nullable<Text>,
         language -> Nullable<Text>,
         match_id -> Nullable<Int4>,
-        match_dect -> Nullable<Text>,
+        match_college -> Nullable<Int4>,
         feedback_path -> Nullable<Text>,
         completed -> Nullable<Bool>,
     }
@@ -50,12 +50,19 @@ diesel::table! {
 }
 
 diesel::table! {
+    colleges (id) {
+        id -> Int4,
+        #[max_length = 32]
+        college -> Varchar,
+    }
+}
+
+diesel::table! {
     users (id) {
         id -> Int4,
         #[max_length = 32]
         username -> Varchar,
-        #[max_length = 5]
-        dect -> Nullable<Varchar>,
+        college -> Nullable<Int4>,
         parent -> Int4,
         token -> Uuid,
         created -> Timestamptz,

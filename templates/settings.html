@@ -9,44 +9,43 @@
             </div>
             <label for="username">Username<span class="error"> cannot be empty</span></label>
         </form>
-        <form action="settings/dect" method="post" onsubmit="return this.checkValidity()" novalidate>
+        <form action="settings/college" method="post" onsubmit="return this.checkValidity()" novalidate>
             <div class="input">
-                <div class="input" id="dect-form">
-                    {% if let Some(dect_value) = dect_value %}
-                        <input class="input" type="text" name="dect_value" id="dect" value="{{ dect_value }}" inputmode="numeric" pattern="^$|\d{4,5}" maxlength="5">
+                <div class="input" id="college-form">
+                    {% if let Some(college_value) = college_value %}
+                        <input class="input" type="text" name="college_value" id="college" value="{{ college_value }}" inputmode="numeric">
                     {% else %}
-                        <input class="input" type="text" name="dect_value" id="dect" inputmode="numeric" pattern="^$|\d{4,5}" maxlength="5">
+                        <input class="input" type="text" name="college_value" id="college" inputmode="numeric">
                     {% endif %}
                     <button type="button" id="info-button" onclick="toggleInfo()">ⓘ</button>
-                    <div id="dect-info">
-                        This allows other schnick fans to find you with the match making service on our hotline (#5000). You can also find DECT numbers by clicking on the nodes in the graphs.
+                    <div id="college-info">
+                        You can see other people's colleges by clicking on the nodes in the graphs.
                     </div>
                 </div>
                 <button>Change</button>
             </div>
-            <label for="dect">Dect<span class="error"> must be 4/5 digits or empty</span></label>
+            <label for="dect"><span class="error">Invalid college</span></label>
         </form>
         <button id="copyLink" onclick="copyLink()">Copy session</button>
         <label for="copyLink">Open this link in another browser to transfer your account.</label>
     </div>
     <div class="settings-links">
         <a href="about">About Us</a>
-        <a href="https://chaos.social/@fanschnick">Mastodon</a>
         <a href="imprint">Imprint</a>
     </div>
 
     <script>
         function toggleInfo() {
-            var element = document.getElementById("dect-info");
+            var element = document.getElementById("college-info");
             element.classList.toggle("visible");
         }
         document.addEventListener('click', function () {
-            document.getElementById('dect-info').classList.remove('visible');
+            document.getElementById('college-info').classList.remove('visible');
         });
         document.getElementById('info-button').addEventListener('click', function (e) {
             e.stopPropagation();
         });
-        document.getElementById('dect-info').addEventListener('click', function (e) {
+        document.getElementById('college-info').addEventListener('click', function (e) {
             e.stopPropagation();
         });
 

@@ -28,7 +28,7 @@
                     return {
                     id: x[0],
                     parent_id: x[0] === x[1] ? null : x[1],
-                    name: x[3] ? `${x[2]} (DECT #${x[3]})` : x[2]
+                    name: x[3] ? `${x[2]} (${x[3]})` : x[2]
                     }
                 });
                 console.log(m);
@@ -112,11 +112,11 @@
                                 }
                             });
                             console.log(data.users);
-                        } else if (update.type === "DectSet") {
+                        } else if (update.type === "CollegeSet") {
                             rerender = true;
                             data.users.forEach(user => {
                                 if (user[0] === update.id) {
-                                    user[3] = update.dect;
+                                    user[3] = update.college;
                                 }
                             });
                         }

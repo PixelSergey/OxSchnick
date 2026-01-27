@@ -16,30 +16,29 @@ use crate::{
 #[template(path = "settings.html")]
 pub struct SettingsTemplate<'a> {
     username_value: &'a str,
-    dect_value: Option<&'a str>,
+    college_value: Option<&'a i32>,
     recovery_link: &'a Url
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct DectForm {
-    dect_value: Option<String>,
+pub struct CollegeForm {
+    college_value: Option<i32>,
 }
 
-pub async fn settings_dect(
+pub async fn settings_college(
     extract::State(state): extract::State<State>,
     auth::User(id): auth::User,
-    Form(DectForm { mut dect_value }): Form<DectForm>,
+    Form(CollegeForm { college_value }): Form<CollegeForm>,
 ) -> Result<impl IntoResponse> {
     use crate::schema::users;
-    use crate::schema::users::dect;
-    dect_value.take_if(|inner| inner.is_empty());
-    if let Some(ref d) = dect_value {
-        if !(d.len() == 4 || d.len() == 5) || !d.chars().all(|c| c.is_ascii_digit()) {
-            return Err(Error::InvalidDect);
+    use crate::schema::users::college;
+    if let Some(ref d) = college_value {
+        if !(*d >= 0 && *d <= 43) {
+            return Err(Error::InvalidCollege);
         }
     }
     diesel::update(users::table.find(id))
-        .set(dect.eq(&dect_value))
+        .set(college.eq(&college_value))
         .execute(
             &mut state
                 .pool
@@ -48,8 +47,8 @@ pub async fn settings_dect(
                 .map_err(|_| Error::InternalServerError)?,
         )
         .await
-        .map_err(|_| Error::InvalidDect)?;
-    Graphs::send_update(crate::graphs::GraphUpdate::DectSet { id, dect: dect_value }, &state.graphs).await;
+        .map_err(|_| Error::InvalidCollege)?;
+    Graphs::send_update(crate::graphs::GraphUpdate::CollegeSet { id, college: college_value }, &state.graphs).await;
     Ok(Redirect::to("/settings"))
 }
 
@@ -82,7 +81,7 @@ pub async fn settings_username(
 
 pub async fn settings(
     extract::State(state): extract::State<State>,
-    Settings { username, dect, .. }: Settings,
+    Settings { username, college, .. }: Settings,
     auth::User(id): auth::User,
     AuthenticatorEntry { token, .. }: AuthenticatorEntry
 ) -> Result<impl IntoResponse> {
@@ -91,7 +90,7 @@ pub async fn settings(
     Ok(Html(
         SettingsTemplate {
             username_value: &username,
-            dect_value: dect.as_deref(),
+            college_value: college.as_ref(),
             recovery_link: &recovery
         }
         .render()

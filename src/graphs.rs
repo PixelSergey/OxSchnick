@@ -19,7 +19,7 @@ pub enum GraphUpdate {
     Schnick { a: i32, b: i32 },
     UserCreated { id: i32, parent: i32, name: String },
     UserRenamed { id: i32, name: String },
-    DectSet { id: i32, dect: Option<String> }
+    CollegeSet { id: i32, college: Option<i32> }
 }
 
 #[derive(Debug)]
@@ -32,7 +32,7 @@ pub enum GraphRequest {
 
 #[derive(Debug)]
 pub struct Graphs {
-    users: HashMap<i32, (i32, String, Option<String>)>,
+    users: HashMap<i32, (i32, String, Option<i32>)>,
     schnicks: Vec<(i32, i32)>,
     cache: Arc<String>,
     updates: Vec<GraphUpdate>,
@@ -49,10 +49,10 @@ impl Graphs {
     ) -> anyhow::Result<Self> {
         use crate::schema::{schnicks, users};
         let persistent_users = users::table
-            .select((users::id, users::parent, users::username, users::dect))
-            .load::<(i32, i32, String, Option<String>)>(connection)
+            .select((users::id, users::parent, users::username, users::college))
+            .load::<(i32, i32, String, Option<i32>)>(connection)
             .await?
-            .into_iter().map(|(id, parent, name, dect)| (id, (parent, name, dect))).collect::<HashMap<i32, (i32, String, Option<String>)>>();
+            .into_iter().map(|(id, parent, name, college)| (id, (parent, name, college))).collect::<HashMap<i32, (i32, String, Option<i32>)>>();
         let persistent_schnicks = schnicks::table
             .select((schnicks::winner, schnicks::loser))
             .load::<(i32, i32)>(connection)
@@ -74,9 +74,9 @@ impl Graphs {
         )
     }
 
-    fn build_cache(users: &HashMap<i32, (i32, String, Option<String>)>, schnicks: &Vec<(i32, i32)>) -> String {
+    fn build_cache(users: &HashMap<i32, (i32, String, Option<i32>)>, schnicks: &Vec<(i32, i32)>) -> String {
         let value = json!({
-            "users": users.iter().map(|(id, (parent, name, dect))| (id, parent, name, dect)).collect::<Vec<(&i32, &i32, &String, &Option<String>)>>(),
+            "users": users.iter().map(|(id, (parent, name, college))| (id, parent, name, college)).collect::<Vec<(&i32, &i32, &String, &Option<i32>)>>(),
             "schnicks": schnicks
         });
         value.to_string()
@@ -91,9 +91,9 @@ impl Graphs {
                     *old_name = name;
                 }
             },
-            GraphUpdate::DectSet { id, dect } => {
-                if let Some((_, _, old_dect)) = self.users.get_mut(&id) {
-                    *old_dect = dect;
+            GraphUpdate::CollegeSet { id, college } => {
+                if let Some((_, _, old_college)) = self.users.get_mut(&id) {
+                    *old_college = college;
                 }
             }
         };

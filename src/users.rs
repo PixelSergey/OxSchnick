@@ -13,7 +13,7 @@ use log::error;
 pub struct Settings {
     pub id: i32,
     pub username: String,
-    pub dect: Option<String>,
+    pub college: Option<i32>,
 }
 
 #[derive(Debug, Clone, Identifiable, HasQuery, QueryableByName)]

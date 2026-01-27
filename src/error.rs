@@ -17,7 +17,7 @@ pub enum Error {
     NotInSchnick,
     AlreadySubmitted,
     InvalidSettings,
-    InvalidDect,
+    InvalidCollege,
     DuplicateUsername,
     NotActive,
 }
@@ -87,9 +87,9 @@ impl IntoResponse for Error {
                 "The settings you tried to submit are not valid. Try again.",
                 "/settings",
             ),
-            Self::InvalidDect => (
+            Self::InvalidCollege => (
                 StatusCode::BAD_REQUEST,
-                "The dect you tried to submit is not valid. It needs to either be empty or a number of length 4.",
+                "The college you tried to submit is not valid.",
                 "/settings",
             ),
             Self::DuplicateUsername => (

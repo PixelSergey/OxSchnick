@@ -19,7 +19,7 @@
         nodes = Array.from(nodes).map((x) => {
             let entry = names.get(x);
             if (entry[1]) {
-                return {"id": x, "name": `${entry[0]} (DECT #${entry[1]})`};
+                return {"id": x, "name": `${entry[0]} (${entry[1]})`};
             } else {
                 return {"id": x, "name": `${entry[0]}`};
             }
@@ -98,11 +98,11 @@
                             return user;
                         }
                     })
-                } else if (update.type === "DectSet") {
+                } else if (update.type === "CollegeSet") {
                     rerender = true;
                     data.users.map((user) => {
                         if (user[0] === update.id) {
-                            return [user[0], user[1], user[2], update.dect];
+                            return [user[0], user[1], user[2], update.college];
                         } else {
                             return user;
                         }
