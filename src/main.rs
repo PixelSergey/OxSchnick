@@ -69,7 +69,6 @@ async fn main() -> anyhow::Result<()> {
         .expect("could not bind to listener");
 
     let base_url_2 = base_url.clone();
-    let base_url_str = base_url_2.as_str();
     trace!("building router");
     let (router, mut authenticator, schnicker, graphs) = router(base_url, pool)
         .await
@@ -80,14 +79,18 @@ async fn main() -> anyhow::Result<()> {
         .root_recovery()
         .await
         .ok_or(anyhow!("no root user"))?;
-    println!("Activate the root account: {}recovery?id={}&token={}", base_url_str, recovery.id, recovery.token);
+    let mut url_recovery = base_url_2.join("recovery")?;
+    url_recovery.set_query(Some(&format!("id={}&token={}", recovery.id, recovery.token)));
+    println!("Activate the root account: {}", url_recovery.as_str());
 
     trace!("getting root invite");
     let invite = authenticator
         .root_invite()
         .await
         .ok_or(anyhow!("no root user"))?;
-    println!("Invite your first player: {}invite?id={}&token={}", base_url_str, invite.id, invite.token);
+    let mut url_invite = base_url_2.join("invite")?;
+    url_invite.set_query(Some(&format!("id={}&token={}", invite.id, invite.token)));
+    println!("Invite your first player: {}", url_invite.as_str());
 
     trace!("creating handles");
     let local_set = LocalSet::new();
