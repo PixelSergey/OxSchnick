@@ -57,7 +57,7 @@ pub async fn router(
     let unauthenticated = Router::new()
         .route("/", get(index))
         .route("/about", get(about))
-        .route("/imprint", get(imprint))
+        .route("/credits", get(imprint))
         .route("/invite", get(invite))
         .route("/assets/{file}", get(assets))
         .route("/graphs/cache", get(graphs_cache))

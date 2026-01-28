@@ -34,7 +34,7 @@ impl IntoResponse for Error {
         let (code, message, redirect) = match self {
             Self::NoLogin => (
                 StatusCode::FORBIDDEN,
-                "This page is only accessible with a user account, but you can call #5000 to find a partner to schnick with to get invited. <br><br> If you already have an account in a different browser, you can go to the settings to copy your account to this new one.",
+                "This page is only accessible with a user account. Find a partner to schnick with to get invited. <br><br> If you already have an account in a different browser, you can go to the settings to copy your account to this new one.",
                 "/",
             ),
             Self::InvalidLogin => (
@@ -69,7 +69,7 @@ impl IntoResponse for Error {
             ),
             Self::NotFound => (
                 StatusCode::NOT_FOUND,
-                "The page you tried to open does not exist. We are happy to receive your bug report via our hotline (#5000).",
+                "The page you tried to open does not exist. We are happy to receive your bug report via a GitHub issue (<a href=\"https://github.com/PixelSergey/OxSchnick/issues\">here</a>).",
                 "/",
             ),
             Self::NotInSchnick => (
