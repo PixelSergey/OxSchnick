@@ -9,8 +9,8 @@ CREATE TABLE metrics (
     current_losing_streak integer NOT NULL DEFAULT 0,
     num_children integer NOT NULL DEFAULT 0,
     num_rock integer NOT NULL DEFAULT 0,
-    num_scissors integer NOT NULL DEFAULT 0,
     num_paper integer NOT NULL DEFAULT 0,
+    num_scissors integer NOT NULL DEFAULT 0,
     FOREIGN KEY(id) REFERENCES users(id)
 );
 
