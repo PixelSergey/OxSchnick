@@ -27,6 +27,7 @@ pub enum GraphRequest {
     Update { update: GraphUpdate },
     GetCache { callback: oneshot::Sender<Arc<String>> },
     GetEvents { callback: oneshot::Sender<(Arc<String>, broadcast::Receiver<Arc<String>>)> },
+    RefreshCache,
     Tick
 }
 
@@ -129,6 +130,15 @@ impl Graphs {
                         error!(target: "graphs::worker", "dead channel");
                     }
                 },
+                GraphRequest::RefreshCache => {
+                    let updates = self.updates.drain(..).collect::<Vec<GraphUpdate>>();
+                    for update in updates.into_iter() {
+                        self.handle_update(update);
+                    }
+                    self.update_cache = Arc::new("[]".to_string());
+                    self.cache = Arc::new(Self::build_cache(&self.users, &self.schnicks));
+                    self.cache_time = Local::now().timestamp();
+                }
                 GraphRequest::Tick => {}
             }
             let now = Local::now().timestamp();
@@ -182,6 +192,18 @@ impl Graphs {
             error!(target: "auth::request", "dead channel: {:?}", e);
             Error::InternalServerError
         })
+    }
+
+    pub async fn request_refresh(
+        sender: &mpsc::Sender<GraphRequest>
+    ) -> Result<()> {
+        sender
+            .send(GraphRequest::RefreshCache)
+            .await
+            .map_err(|e| {
+                error!(target: "graphs::request_refresh", "dead channel: {:?}", e);
+                Error::InternalServerError
+            })
     }
 
     pub fn sender(&self) -> mpsc::Sender<GraphRequest> {

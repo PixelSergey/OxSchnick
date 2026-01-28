@@ -39,8 +39,10 @@ struct TreeTemplate {
 }
 
 pub async fn graphs_tree(
+    extract::State(state): extract::State<State>,
     User(id): User,
 ) -> Result<impl IntoResponse> {
+    Graphs::request_refresh(&state.graphs).await?;
     Ok(Html(
         TreeTemplate {
             id,
@@ -57,8 +59,10 @@ struct GraphTemplate {
 }
 
 pub async fn graphs_graph(
+    extract::State(state): extract::State<State>,
     User(id): User,
 ) -> Result<impl IntoResponse> {
+    Graphs::request_refresh(&state.graphs).await?;
     Ok(Html(
         GraphTemplate {
             id,
@@ -76,7 +80,10 @@ pub async fn graphs() -> impl IntoResponse {
 #[template(path = "global.html")]
 struct GlobalTemplate;
 
-pub async fn graphs_global() -> Result<impl IntoResponse> {
+pub async fn graphs_global(
+    extract::State(state): extract::State<State>,
+) -> Result<impl IntoResponse> {
+    Graphs::request_refresh(&state.graphs).await?;
     Ok(Html(
         GlobalTemplate
             .render()
