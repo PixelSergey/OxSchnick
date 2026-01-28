@@ -70,6 +70,14 @@ pub async fn setup_set(
     Graphs::send_update(crate::graphs::GraphUpdate::CollegeSet { id, college: college_name }, &state.graphs).await;
     Graphs::send_update(crate::graphs::GraphUpdate::UserRenamed { id, name: username_value }, &state.graphs).await;
     
+    // Update metrics cache
+    let mut conn = state
+        .pool
+        .get()
+        .await
+        .map_err(|_| Error::InternalServerError)?;
+    state.metrics.write().await.update(&mut conn).await?;
+    
     Ok(Redirect::to("/"))
 }
 

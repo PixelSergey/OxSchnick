@@ -66,6 +66,12 @@ pub async fn settings_college(
         .map_err(|_| Error::InternalServerError)?;
     
     Graphs::send_update(crate::graphs::GraphUpdate::CollegeSet { id, college: college_name }, &state.graphs).await;
+    let mut conn = state
+        .pool
+        .get()
+        .await
+        .map_err(|_| Error::InternalServerError)?;
+    state.metrics.write().await.update(&mut conn).await?;
     Ok(Redirect::to("/settings"))
 }
 
@@ -93,6 +99,12 @@ pub async fn settings_username(
         .await
         .map_err(|_| Error::DuplicateUsername)?;
     Graphs::send_update(crate::graphs::GraphUpdate::UserRenamed { id, name: username_value }, &state.graphs).await;
+    let mut conn = state
+        .pool
+        .get()
+        .await
+        .map_err(|_| Error::InternalServerError)?;
+    state.metrics.write().await.update(&mut conn).await?;
     Ok(Redirect::to("/settings"))
 }
 
