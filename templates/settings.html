@@ -7,7 +7,7 @@
                 <input class="input" type="text" name="username_value" id="username" value="{{ username_value }}" maxlength="32" required>
                 <button>Change</button>
             </div>
-            <label for="username">Username<span class="error"> cannot be empty</span></label>
+            <label for="username">Name<span class="error"> cannot be empty</span></label>
         </form>
         <form action="settings/college" method="post" onsubmit="return this.checkValidity()" novalidate>
             <div class="input">
@@ -28,7 +28,7 @@
                 </div>
                 <button>Change</button>
             </div>
-            <label for="dect"><span class="error">Invalid college</span></label>
+            <label for="college"><span class="error">Invalid college</span></label>
         </form>
         <button id="copyLink" onclick="copyLink()">Copy session</button>
         <label for="copyLink">Open this link in another browser to transfer your account.</label>

@@ -51,7 +51,7 @@ INSERT INTO colleges (id, college) VALUES
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    username varchar(32) NOT NULL UNIQUE,
+    username varchar(32) NOT NULL,
     college integer references colleges(id),
     parent integer references users(id) NOT NULL,
     token uuid NOT NULL DEFAULT uuidv4(),

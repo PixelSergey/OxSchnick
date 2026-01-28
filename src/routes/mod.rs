@@ -7,6 +7,7 @@ mod invite;
 mod metrics;
 mod schnick;
 mod settings;
+mod setup;
 mod recovery;
 
 pub use about::{about, imprint};
@@ -18,4 +19,5 @@ pub use invite::{invite, invite_accept};
 pub use metrics::{metrics, metrics_score, metrics_num_schnicks, metrics_streak, metrics_num_invites};
 pub use schnick::{schnick, schnick_abort, schnick_sse, schnick_submit};
 pub use settings::{settings, settings_college, settings_username};
+pub use setup::{setup, setup_set};
 pub use recovery::recovery;

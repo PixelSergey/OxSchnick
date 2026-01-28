@@ -5,6 +5,8 @@ use axum::{
     Form, extract,
     response::{Html, IntoResponse, Redirect, Sse, sse::Event},
 };
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use futures::FutureExt;
 
 use crate::{
@@ -28,7 +30,30 @@ pub async fn schnick_submit(
     Form(interaction): Form<Interaction>,
 ) -> Result<impl IntoResponse> {
     match Schnicker::request_handle_interaction(id, interaction, &state.schnicker).await? {
-        Some(Outcome::Concluded) => Ok(Redirect::to("home?banner=concluded").into_response()),
+        Some(Outcome::Concluded) => {
+            // Check if user is a new invited user (hasn't completed setup)
+            use crate::schema::users;
+            let user_college: Option<Option<i32>> = users::table
+                .select(users::college)
+                .find(id)
+                .first::<Option<i32>>(
+                    &mut state
+                        .pool
+                        .get()
+                        .await
+                        .map_err(|_| Error::InternalServerError)?,
+                )
+                .await
+                .ok();
+            
+            if user_college.flatten().is_none() {
+                // User hasn't set a college, redirect to setup
+                Ok(Redirect::to("../setup").into_response())
+            } else {
+                // User has completed setup, redirect to home
+                Ok(Redirect::to("home?banner=concluded").into_response())
+            }
+        },
         Some(Outcome::Retry) => Ok(Redirect::to("schnick?banner=retry").into_response()),
         Some(Outcome::Aborted) => Ok(Redirect::to("home?banner=aborted").into_response()),
         None => Ok(Html(
@@ -41,13 +66,36 @@ pub async fn schnick_submit(
 }
 
 pub async fn schnick_sse(
+    extract::State(state): extract::State<State>,
+    User(id): User,
     SchnickOutcomeReceiver(mut receiver): SchnickOutcomeReceiver,
 ) -> impl IntoResponse {
+    // Check if user has completed setup
+    use crate::schema::users;
+    let has_college = if let Ok(mut conn) = state.pool.get().await {
+        users::table
+            .select(users::college)
+            .find(id)
+            .first::<Option<i32>>(&mut conn)
+            .await
+            .ok()
+            .flatten()
+            .is_some()
+    } else {
+        true // Fail safe - if we can't check, assume they've completed setup
+    };
+
     let stream = (async move {
         let _ = receiver.changed().await;
         let outcome = *receiver.borrow();
         let redirect = match outcome {
-            Outcome::Concluded => "home?banner=concluded",
+            Outcome::Concluded => {
+                if has_college {
+                    "home?banner=concluded"
+                } else {
+                    "../setup"
+                }
+            },
             Outcome::Retry => "schnick?banner=retry",
             Outcome::Aborted => "home?banner=aborted"
         };

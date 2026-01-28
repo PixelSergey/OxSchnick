@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block main %}
+    <div class="settings">
+        <form action="/setup/set" method="post" onsubmit="return this.checkValidity()" novalidate>
+            <div class="setup-container">
+                <div class="form-group">
+                    <input class="input" type="text" name="username_value" id="username" maxlength="32" required>
+                    <label for="username">Name</label>
+                    <span class="error" style="display: none;">Name cannot be empty</span>
+                </div>
+                <div class="form-group">
+                    <select class="input select-input" name="college_value" id="college" required>
+                        <option value="" disabled selected>Choose a college...</option>
+                        {% for (id, name) in colleges %}
+                            <option value="{{ id }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="college">College</label>
+                    <span class="error" style="display: none;">Please select a college</span>
+                    <button type="button" id="info-button" class="info-button" onclick="toggleInfo()">ⓘ</button>
+                    <div id="college-info" class="info-popup">
+                        You can see other people's colleges by clicking on the nodes in the graphs.
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="submit-button">Complete Setup</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.querySelector('form');
+        const usernameInput = document.getElementById('username');
+        const collegeSelect = document.getElementById('college');
+        const usernameError = usernameInput.parentElement.querySelector('.error');
+        const collegeError = collegeSelect.parentElement.querySelector('.error');
+        
+        form.checkValidity = function() {
+            let isValid = true;
+            
+            // Validate username
+            if (usernameInput.value.trim() === '') {
+                usernameError.style.display = 'block';
+                usernameInput.style.border = '2px solid #e74c3c';
+                isValid = false;
+            } else {
+                usernameError.style.display = 'none';
+                usernameInput.style.border = 'none';
+            }
+            
+            // Validate college
+            if (collegeSelect.value === '') {
+                collegeError.style.display = 'block';
+                collegeSelect.style.border = '2px solid #e74c3c';
+                isValid = false;
+            } else {
+                collegeError.style.display = 'none';
+                collegeSelect.style.border = 'none';
+            }
+            
+            return isValid;
+        };
+
+        function toggleInfo() {
+            var element = document.getElementById("college-info");
+            element.classList.toggle("visible");
+        }
+        document.addEventListener('click', function () {
+            document.getElementById('college-info').classList.remove('visible');
+        });
+        document.getElementById('info-button').addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+        document.getElementById('college-info').addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+    </script>
+{% endblock %}
+{% block footer %}
+{% endblock %}

@@ -9,7 +9,7 @@ use url::Url;
 
 use crate::{
     auth::{Authenticator, User}, error::Error, graphs::Graphs, metrics::Metrics, routes::{
-        about, assets, graphs, graphs_cache, graphs_global, graphs_graph, graphs_sse, graphs_tree, home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, metrics_num_invites, metrics_num_schnicks, metrics_score, metrics_streak, recovery, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_college, settings_username
+        about, assets, graphs, graphs_cache, graphs_global, graphs_graph, graphs_sse, graphs_tree, home, home_invite, home_sse, imprint, index, invite, invite_accept, metrics, metrics_num_invites, metrics_num_schnicks, metrics_score, metrics_streak, recovery, schnick, schnick_abort, schnick_sse, schnick_submit, settings, settings_college, settings_username, setup, setup_set
     }, schnicks::Schnicker, state::State
 };
 
@@ -68,6 +68,7 @@ pub async fn router(
     let authenticated = Router::new()
         .route("/home", get(home))
         .route("/settings", get(settings))
+        .route("/setup", get(setup))
         .route("/graphs", get(graphs))
         .route("/graphs/graph", get(graphs_graph))
         .route("/graphs/tree", get(graphs_tree))
@@ -85,6 +86,7 @@ pub async fn router(
         .route("/schnick/abort", get(schnick_abort))
         .route("/settings/college", post(settings_college))
         .route("/settings/username", post(settings_username))
+        .route("/setup/set", post(setup_set))
         .route_layer(from_fn_with_state(state.clone(), Authenticator::layer))
         .with_state(state.clone());
     let router = Router::new()

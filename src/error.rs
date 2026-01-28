@@ -17,6 +17,7 @@ pub enum Error {
     NotInSchnick,
     AlreadySubmitted,
     InvalidSettings,
+    InvalidSetup,
     InvalidCollege,
     DuplicateUsername,
     NotActive,
@@ -91,6 +92,11 @@ impl IntoResponse for Error {
                 StatusCode::BAD_REQUEST,
                 "The college you tried to submit is not valid.",
                 "/settings",
+            ),
+            Self::InvalidSetup => (
+                StatusCode::BAD_REQUEST,
+                "The settings you tried to submit are not valid. Try again.",
+                "/setup",
             ),
             Self::DuplicateUsername => (
                 StatusCode::BAD_REQUEST,
