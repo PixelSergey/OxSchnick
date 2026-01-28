@@ -71,5 +71,6 @@ diesel::table! {
 }
 
 diesel::joinable!(metrics -> users (id));
+diesel::joinable!(users -> colleges (id));
 
-diesel::allow_tables_to_appear_in_same_query!(calls, metrics, schnicks, users,);
+diesel::allow_tables_to_appear_in_same_query!(calls, colleges, metrics, schnicks, users,);

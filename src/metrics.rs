@@ -4,13 +4,15 @@ use anyhow::anyhow;
 use diesel::expression::SqlLiteral;
 use diesel::dsl::sql;
 use diesel::prelude::*;
-use diesel::sql_types::Integer;
+use diesel::sql_types::{Integer, Nullable};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 use crate::error::{Error, Result};
-use crate::schema::{metrics, users};
+use crate::schema::{metrics, users, colleges};
 
 pub const METRICS_LEADERBOARD_LENGTH: i64 = 10;
+
+define_sql_function! { fn coalesce(x: Nullable<Integer>, y: Integer) -> Integer; }
 
 pub fn score_function() -> SqlLiteral<Integer> {
     sql::<Integer>(
@@ -18,12 +20,11 @@ pub fn score_function() -> SqlLiteral<Integer> {
     )
 }
 
-#[derive(Debug, Clone, HasQuery, Identifiable, QueryableByName)]
-#[diesel(table_name=crate::schema::users)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
+#[derive(Debug, Clone, Queryable)]
 pub struct MetricsUser {
     pub id: i32,
     pub username: String,
+    pub college: String,
 }
 
 pub struct Metrics {
@@ -53,7 +54,8 @@ impl Metrics {
             .filter(metrics::num_schnicks.gt(0))
             .limit(METRICS_LEADERBOARD_LENGTH)
             .inner_join(users::table)
-            .select(((users::id, users::username), metrics::num_won, metrics::num_schnicks, score.clone()))
+            .inner_join(colleges::table.on(colleges::id.eq(coalesce(users::college, 0))))
+            .select(((users::id, users::username, colleges::college), metrics::num_won, metrics::num_schnicks, score.clone()))
             .order_by(score.desc())
             .get_results::<(MetricsUser, i32, i32, i32)>(conn)
             .await
@@ -66,7 +68,8 @@ impl Metrics {
             .order(metrics::num_schnicks.desc())
             .limit(METRICS_LEADERBOARD_LENGTH)
             .inner_join(users::table)
-            .select(((users::id, users::username), metrics::num_schnicks))
+            .inner_join(colleges::table.on(colleges::id.eq(coalesce(users::college, 0))))
+            .select(((users::id, users::username, colleges::college), metrics::num_schnicks))
             .get_results::<(MetricsUser, i32)>(conn)
             .await
             .map_err(|_| Error::InternalServerError)?)
@@ -78,7 +81,8 @@ impl Metrics {
             .order(metrics::longest_winning_streak.desc())
             .limit(METRICS_LEADERBOARD_LENGTH)
             .inner_join(users::table)
-            .select(((users::id, users::username), metrics::longest_winning_streak))
+            .inner_join(colleges::table.on(colleges::id.eq(coalesce(users::college, 0))))
+            .select(((users::id, users::username, colleges::college), metrics::longest_winning_streak))
             .get_results::<(MetricsUser, i32)>(conn)
             .await
             .map_err(|_| Error::InternalServerError)?)
@@ -90,7 +94,8 @@ impl Metrics {
             .order(metrics::longest_losing_streak.desc())
             .limit(METRICS_LEADERBOARD_LENGTH)
             .inner_join(users::table)
-            .select(((users::id, users::username), metrics::longest_losing_streak))
+            .inner_join(colleges::table.on(colleges::id.eq(coalesce(users::college, 0))))
+            .select(((users::id, users::username, colleges::college), metrics::longest_losing_streak))
             .get_results::<(MetricsUser, i32)>(conn)
             .await
             .map_err(|_| Error::InternalServerError)?)
@@ -102,7 +107,8 @@ impl Metrics {
             .order(metrics::num_children.desc())
             .limit(METRICS_LEADERBOARD_LENGTH)
             .inner_join(users::table)
-            .select(((users::id, users::username), metrics::num_children))
+            .inner_join(colleges::table.on(colleges::id.eq(coalesce(users::college, 0))))
+            .select(((users::id, users::username, colleges::college), metrics::num_children))
             .get_results::<(MetricsUser, i32)>(conn)
             .await
             .map_err(|_| Error::InternalServerError)?)

@@ -521,11 +521,11 @@ form:valid #select {
 
 table.metrics {
     display: grid;
-    grid-template-columns: auto auto auto;
+    grid-template-columns: auto auto auto auto;
 }
 
-#four-cols {
-    grid-template-columns: auto auto auto auto;
+#five-cols {
+    grid-template-columns: auto auto auto auto auto;
 }
 
 table.metrics thead,

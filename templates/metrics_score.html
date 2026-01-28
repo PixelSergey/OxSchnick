@@ -3,10 +3,11 @@
 {% block metrics %}
     <div>
         <h2>Best Schnickers</h2>
-        <table class="metrics" id="four-cols">
+        <table class="metrics" id="five-cols">
             <thead>
                 <th>Rank</th>
                 <th>User</th>
+                <th>College</th>
                 <th>#Wins/#Games</th>
                 <th>#Score</th>
             </thead>
@@ -15,8 +16,9 @@
                 <tr>
                     <td>{{ n + 1 }}.</td>
                     <td>{{ user.username }}</td>
+                    <td>{{ user.college }}</td>
                     <td>{{ wins }}/{{ games }}</td>
-                    <td>{{ score}}</td>
+                    <td>{{ score }}</td>
                 </tr>
             {% endfor %}
             </tbody>
