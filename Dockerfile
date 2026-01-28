@@ -36,6 +36,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=build /bin/server /bin/server
 
-EXPOSE 8080
+ARG BASE_URL="http://localhost:8080"
+ENV BASE_URL=$BASE_URL
+ARG BIND_PORT=8080
+ENV BIND_PORT=$BIND_PORT
 
-CMD ["/bin/server", "https://localhost:8080", "0.0.0.0:8080"]
+EXPOSE $BIND_PORT
+
+CMD ["/bin/sh", "-c", "/bin/server $BASE_URL 0.0.0.0:$BIND_PORT"]

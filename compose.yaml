@@ -3,11 +3,14 @@ services:
     build:
       context: .
       target: final
+      args:
+        - BASE_URL=$BASE_URL
     ports:
       - 8080:8080
     environment:
       - DATABASE_PASSWORD
       - DATABASE_URL=postgresql://postgres:${DATABASE_PASSWORD}@db/fanschnick
+      - BASE_URL
     depends_on:
       db:
         condition: service_healthy
