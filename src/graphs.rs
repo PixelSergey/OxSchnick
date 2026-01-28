@@ -19,7 +19,7 @@ pub enum GraphUpdate {
     Schnick { a: i32, b: i32 },
     UserCreated { id: i32, parent: i32, name: String },
     UserRenamed { id: i32, name: String },
-    CollegeSet { id: i32, college: Option<i32> }
+    CollegeSet { id: i32, college: String }
 }
 
 #[derive(Debug)]
@@ -32,7 +32,7 @@ pub enum GraphRequest {
 
 #[derive(Debug)]
 pub struct Graphs {
-    users: HashMap<i32, (i32, String, Option<i32>)>,
+    users: HashMap<i32, (i32, String, String)>,
     schnicks: Vec<(i32, i32)>,
     cache: Arc<String>,
     updates: Vec<GraphUpdate>,
@@ -47,12 +47,17 @@ impl Graphs {
     pub async fn with_connection(
         connection: &mut PooledConnection<'_, AsyncPgConnection>,
     ) -> anyhow::Result<Self> {
-        use crate::schema::{schnicks, users};
+        use crate::schema::{schnicks, users, colleges};
+        use diesel::sql_types::Integer;
+        
+        define_sql_function! { fn coalesce(x: diesel::sql_types::Nullable<Integer>, y: Integer) -> Integer; }
+        
         let persistent_users = users::table
-            .select((users::id, users::parent, users::username, users::college))
-            .load::<(i32, i32, String, Option<i32>)>(connection)
+            .inner_join(colleges::table.on(colleges::id.eq(coalesce(users::college, 0))))
+            .select((users::id, users::parent, users::username, colleges::college))
+            .load::<(i32, i32, String, String)>(connection)
             .await?
-            .into_iter().map(|(id, parent, name, college)| (id, (parent, name, college))).collect::<HashMap<i32, (i32, String, Option<i32>)>>();
+            .into_iter().map(|(id, parent, name, college)| (id, (parent, name, college))).collect::<HashMap<i32, (i32, String, String)>>();
         let persistent_schnicks = schnicks::table
             .select((schnicks::winner, schnicks::loser))
             .load::<(i32, i32)>(connection)
@@ -74,9 +79,9 @@ impl Graphs {
         )
     }
 
-    fn build_cache(users: &HashMap<i32, (i32, String, Option<i32>)>, schnicks: &Vec<(i32, i32)>) -> String {
+    fn build_cache(users: &HashMap<i32, (i32, String, String)>, schnicks: &Vec<(i32, i32)>) -> String {
         let value = json!({
-            "users": users.iter().map(|(id, (parent, name, college))| (id, parent, name, college)).collect::<Vec<(&i32, &i32, &String, &Option<i32>)>>(),
+            "users": users.iter().map(|(id, (parent, name, college))| (id, parent, name, college)).collect::<Vec<(&i32, &i32, &String, &String)>>(),
             "schnicks": schnicks
         });
         value.to_string()
@@ -84,7 +89,7 @@ impl Graphs {
 
     fn handle_update(&mut self, update: GraphUpdate) {
         match update {
-            GraphUpdate::UserCreated { id, parent, name } => {self.users.insert(id, (parent, name, None));},
+            GraphUpdate::UserCreated { id, parent, name } => {self.users.insert(id, (parent, name, "Other".to_string()));},
             GraphUpdate::Schnick { a, b } => {self.schnicks.push((a, b));},
             GraphUpdate::UserRenamed { id, name } => {
                 if let Some((_, old_name, _)) = self.users.get_mut(&id) {

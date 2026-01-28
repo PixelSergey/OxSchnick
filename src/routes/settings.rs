@@ -31,7 +31,7 @@ pub async fn settings_college(
     auth::User(id): auth::User,
     Form(CollegeForm { college_value }): Form<CollegeForm>,
 ) -> Result<impl IntoResponse> {
-    use crate::schema::users;
+    use crate::schema::{users, colleges};
     use crate::schema::users::college;
     if let Some(ref d) = college_value {
         if !(*d >= 0 && *d <= 43) {
@@ -49,7 +49,23 @@ pub async fn settings_college(
         )
         .await
         .map_err(|_| Error::InvalidCollege)?;
-    Graphs::send_update(crate::graphs::GraphUpdate::CollegeSet { id, college: college_value }, &state.graphs).await;
+    
+    // Look up the college name from the database
+    let college_id = college_value.unwrap_or(0);
+    let college_name: String = colleges::table
+        .select(colleges::college)
+        .find(college_id)
+        .first::<String>(
+            &mut state
+                .pool
+                .get()
+                .await
+                .map_err(|_| Error::InternalServerError)?,
+        )
+        .await
+        .map_err(|_| Error::InternalServerError)?;
+    
+    Graphs::send_update(crate::graphs::GraphUpdate::CollegeSet { id, college: college_name }, &state.graphs).await;
     Ok(Redirect::to("/settings"))
 }
 
