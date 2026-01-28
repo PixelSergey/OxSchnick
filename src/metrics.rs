@@ -52,6 +52,7 @@ impl Metrics {
         let score = score_function();
         Ok(metrics::table
             .filter(metrics::num_schnicks.gt(0))
+            .filter(metrics::id.ne(1))
             .limit(METRICS_LEADERBOARD_LENGTH)
             .inner_join(users::table)
             .inner_join(colleges::table.on(colleges::id.eq(coalesce(users::college, 0))))
@@ -65,6 +66,7 @@ impl Metrics {
     async fn get_num_schnicks(conn: &mut AsyncPgConnection) -> Result<Vec<(MetricsUser, i32)>> {
         Ok(metrics::table
             .filter(metrics::num_schnicks.gt(0))
+            .filter(metrics::id.ne(1))
             .order(metrics::num_schnicks.desc())
             .limit(METRICS_LEADERBOARD_LENGTH)
             .inner_join(users::table)
@@ -78,6 +80,7 @@ impl Metrics {
     async fn get_winning_streaks(conn: &mut AsyncPgConnection) -> Result<Vec<(MetricsUser, i32)>> {
         Ok(metrics::table
             .filter(metrics::longest_winning_streak.gt(0))
+            .filter(metrics::id.ne(1))
             .order(metrics::longest_winning_streak.desc())
             .limit(METRICS_LEADERBOARD_LENGTH)
             .inner_join(users::table)
@@ -91,6 +94,7 @@ impl Metrics {
     async fn get_losing_streaks(conn: &mut AsyncPgConnection) -> Result<Vec<(MetricsUser, i32)>> {
         Ok(metrics::table
             .filter(metrics::longest_losing_streak.gt(0))
+            .filter(metrics::id.ne(1))
             .order(metrics::longest_losing_streak.desc())
             .limit(METRICS_LEADERBOARD_LENGTH)
             .inner_join(users::table)
@@ -104,6 +108,7 @@ impl Metrics {
     async fn get_num_children(conn: &mut AsyncPgConnection) -> Result<Vec<(MetricsUser, i32)>> {
         Ok(metrics::table
             .filter(metrics::num_children.gt(0))
+            .filter(metrics::id.ne(1))
             .order(metrics::num_children.desc())
             .limit(METRICS_LEADERBOARD_LENGTH)
             .inner_join(users::table)
