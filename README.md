@@ -10,4 +10,3 @@ Many thanks for the development work!
 Copy `.env.example` to `.env` and adapt as necessary.
 **Note:** the `DATABASE_URL` environment variable is ignored (and reset) if building through Docker Compose.
 Install docker and use `docker compose up` and `docker compose down` to build and destroy.
-Alternatively, building via Nix is supported for historical reasons ;)
