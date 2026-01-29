@@ -17,7 +17,7 @@ services:
       db:
         condition: service_healthy
   db:
-    image: postgres
+    image: postgres:18.1
     restart: always
     env_file: .env
     secrets:
