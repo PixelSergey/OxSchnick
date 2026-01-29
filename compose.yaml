@@ -5,12 +5,14 @@ services:
       target: final
       args:
         - BASE_URL=$BASE_URL
+        - BIND_PORT=$BIND_PORT
     ports:
-      - 8080:8080
+      - $BIND_PORT:$BIND_PORT
     environment:
       - DATABASE_PASSWORD
       - DATABASE_URL=postgresql://postgres:${DATABASE_PASSWORD}@db/fanschnick
       - BASE_URL
+      - BIND_PORT
     depends_on:
       db:
         condition: service_healthy
