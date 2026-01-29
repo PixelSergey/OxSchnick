@@ -17,10 +17,7 @@
                     </select>
                     <label for="college">College</label>
                     <span class="error" style="display: none;">Please select a college</span>
-                    <button type="button" id="info-button" class="info-button" onclick="toggleInfo()">ⓘ</button>
-                    <div id="college-info" class="info-popup">
-                        You can see other people's colleges by clicking on the nodes in the graphs.
-                    </div>
+                    <p class="college-info">You can see other people's colleges by clicking on the nodes in the graph.</p>
                 </div>
             </div>
             <button type="submit" class="submit-button">Complete Setup</button>
@@ -60,19 +57,6 @@
             return isValid;
         };
 
-        function toggleInfo() {
-            var element = document.getElementById("college-info");
-            element.classList.toggle("visible");
-        }
-        document.addEventListener('click', function () {
-            document.getElementById('college-info').classList.remove('visible');
-        });
-        document.getElementById('info-button').addEventListener('click', function (e) {
-            e.stopPropagation();
-        });
-        document.getElementById('college-info').addEventListener('click', function (e) {
-            e.stopPropagation();
-        });
     </script>
 {% endblock %}
 {% block footer %}

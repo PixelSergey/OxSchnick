@@ -12,7 +12,7 @@
         <form action="settings/college" method="post" onsubmit="return this.checkValidity()" novalidate>
             <div class="input">
                 <div class="input" id="college-form">
-                    <select class="input" name="college_value" id="college">
+                    <select class="input select-input" name="college_value" id="college">
                         {% for (id, name) in colleges %}
                             {% if let Some(current) = college_value %}
                                 <option value="{{ id }}" {% if *current == id %}selected{% endif %}>{{ name }}</option>
@@ -21,13 +21,10 @@
                             {% endif %}
                         {% endfor %}
                     </select>
-                    <button type="button" id="info-button" onclick="toggleInfo()">ⓘ</button>
-                    <div id="college-info">
-                        You can see other people's colleges by clicking on the nodes in the graphs.
-                    </div>
                 </div>
                 <button>Change</button>
             </div>
+            <p class="college-info">You can see other people's colleges by clicking on the nodes in the graph.</p>
             <label for="college"><span class="error">Invalid college</span></label>
         </form>
         <button id="copyLink" onclick="copyLink()">Copy session</button>
@@ -39,20 +36,6 @@
     </div>
 
     <script>
-        function toggleInfo() {
-            var element = document.getElementById("college-info");
-            element.classList.toggle("visible");
-        }
-        document.addEventListener('click', function () {
-            document.getElementById('college-info').classList.remove('visible');
-        });
-        document.getElementById('info-button').addEventListener('click', function (e) {
-            e.stopPropagation();
-        });
-        document.getElementById('college-info').addEventListener('click', function (e) {
-            e.stopPropagation();
-        });
-
         function copyLink() {
             navigator.clipboard.writeText("{{ recovery_link | safe }}");
         }

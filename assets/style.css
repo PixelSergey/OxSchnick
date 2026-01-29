@@ -61,6 +61,7 @@ footer {
     padding: 1rem;
     border-color: black;
     border-style: solid;
+    text-decoration: none;
 }
 
 nav .button {
@@ -121,7 +122,7 @@ main.qrcode {
 }
 
 a {
-    text-decoration: none;
+    text-decoration: underline;
     color: inherit;
 }
 
@@ -157,6 +158,13 @@ table.home {
     td {
         border-bottom: 1px solid var(--shadow-gray);
     }
+}
+
+.made-with {
+    margin-top: auto;
+    padding-top: 1.5em;
+    text-align: center;
+    opacity: 0.8;
 }
 
 /***************
@@ -330,13 +338,48 @@ form:valid #select {
     }
 }
 
-.settings input, .settings button {
+.settings form {
+    width: 100%;
+    max-width: 50vw;
+    margin: 0 auto;
+}
+
+.settings #copyLink {
+    width: 100%;
+    max-width: 50vw;
+    margin: 0 auto;
+}
+
+.settings label[for="copyLink"] {
+    width: 100%;
+    max-width: 50vw;
+    margin: 0 auto;
+    text-align: left;
+}
+
+@media (max-width: 600px) {
+    .settings form,
+    .settings #copyLink,
+    .settings label[for="copyLink"] {
+        max-width: 100%;
+    }
+}
+
+.settings input, .settings button, .settings select {
     background-color: var(--foreground-color);
     color: var(--background-color);
     padding: 0.8em 1em;
     border-radius: 0.5em;
     font-size: inherit;
     font-family: inherit;
+}
+
+.settings select.select-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.5rem;
 }
 
 #college-form {
@@ -384,6 +427,12 @@ form:valid #select {
 
 .settings form:has(input:invalid) .error {
     display: inline;
+}
+
+.settings .college-info {
+    margin: 0.5em 0 0 1em;
+    font-size: 0.9em;
+    opacity: 0.8;
 }
 
 .settings-links {
@@ -601,6 +650,7 @@ table.metrics td {
     border: none;
     border-radius: 4px;
     font-size: 1rem;
+    box-sizing: border-box;
 }
 
 .form-group label {
