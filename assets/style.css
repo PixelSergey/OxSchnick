@@ -592,9 +592,20 @@ table.metrics th,
 table.metrics td {
     padding: 2px;
     border-bottom: 1px solid var(--shadow-gray);
-    white-space: nowrap;
-    overflow-x: auto;
+    white-space: normal;
+    overflow: visible;
+    word-break: break-word;
     text-align: center;
+    display: flex;
+    justify-content: center;
+}
+
+table.metrics th {
+    align-items: flex-end;
+}
+
+table.metrics td {
+    align-items: center;
 }
 
 /***********
