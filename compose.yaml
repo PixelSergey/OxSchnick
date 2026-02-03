@@ -7,7 +7,7 @@ services:
         - BASE_URL=$BASE_URL
         - BIND_PORT=$BIND_PORT
     ports:
-      - $BIND_PORT:$BIND_PORT
+      - "127.0.0.1:$BIND_PORT:$BIND_PORT/tcp"
     environment:
       - DATABASE_PASSWORD
       - DATABASE_URL=postgresql://postgres:${DATABASE_PASSWORD}@db/fanschnick
